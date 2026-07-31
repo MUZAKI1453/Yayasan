@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Kelola Section - {{ page.title }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb Navigasi -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('admin.list_pages') }}">Daftar Campaign</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Kelola Section</li>
+  </ol>
+</nav>
+
+<!-- Header & Preview Button -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1">{{ page.title }}</h3>
+        <p class="text-muted mb-0">Slug: <code>/{{ page.slug }}</code></p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.list_pages') }}" class="btn btn-outline-secondary me-2">
+            ← Kembali ke Campaign
+        </a>
+        <a href="/{{ page.slug }}" target="_blank" class="btn btn-outline-primary">
+            Lihat Preview Halaman
+        </a>
+    </div>
+</div>
+
+<!-- Form Tambah Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Tambah Section Baru</h5>
+        <form action="{{ url_for('admin.add_section', page_id=page.id) }}" method="POST" class="row g-3">
+            <div class="col-md-8">
+                <select name="type" class="form-select" required>
+                    <option value="">-- Pilih Jenis Section --</option>
+
+                    <optgroup label="Struktur Utama & Header">
+                        <option value="navbar">Navbar / Header Navigasi</option>
+                        <option value="hero">Hero (Banner Utama + CTA)</option>
+                        <option value="progress">Progress Donasi & Target</option>
+                    </optgroup>
+
+                    <optgroup label="Konten & Informasi Campaign">
+                        <option value="about">Tentang Campaign / Cerita</option>
+                        <option value="features">Keunggulan / Manfaat</option>
+                        <option value="updates">Kabar Terbaru / Timeline Update</option>
+                        <option value="budget_breakdown">Rincian Penggunaan Dana</option>
+                        <option value="location">Lokasi / Peta Penyaluran</option>
+                    </optgroup>
+
+                    <optgroup label="Dokumentasi & Social Proof">
+                        <option value="gallery">Galeri Foto / Video</option>
+                        <option value="testimonial">Testimoni Tokoh / Penerima</option>
+                        <option value="donor_list">Daftar Donatur Terbaru</option>
+                        <option value="team">Tim Pengelola / Relawan</option>
+                    </optgroup>
+
+                    <optgroup label="Aksi & Penutup">
+                        <option value="faq">FAQ (Pertanyaan Umum)</option>
+                        <option value="cta">Ajakan Donasi (CTA Banner)</option>
+                        <option value="footer">Footer (Informasi Hak Cipta & Kontak)</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-success w-100">+ Tambah Section</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Daftar Section -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <strong class="text-secondary">Daftar Section (bisa di-drag untuk mengurutkan)</strong>
+    </div>
+    <ul class="list-group list-group-flush" id="section-list">
+        {% for section in page.sections %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3" data-id="{{ section.id }}">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-secondary me-3">{{ loop.index }}</span>
+                <div>
+                    <strong>{{ section.type|replace('_', ' ')|title }}</strong>
+                    {% if section.content.get('title') %}
+                        <span class="text-muted ms-2">— {{ section.content.get('title')[:50] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('admin.edit_section', section_id=section.id) }}" class="btn btn-sm btn-primary me-1">Edit Konten</a>
+                <form action="{{ url_for('admin.delete_section', section_id=section.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus section ini?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+                </form>
+            </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-4">
+            Belum ada section. Silakan tambahkan section menggunakan form di atas.
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    const el = document.getElementById('section-list');
+    if (el) {
+        new Sortable(el, {
+            animation: 150,
+            onEnd: function () {
+                const order = [];
+                document.querySelectorAll('#section-list li').forEach((li, index) => {
+                    order.push({
+                        id: parseInt(li.dataset.id),
+                        order: index + 1
+                    });
+                });
+
+                fetch("{{ url_for('admin.reorder_sections', page_id=page.id) }}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ order: order })
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

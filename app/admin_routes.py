@@ -3,11 +3,109 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.models import User, Page, Section
 from app.extensions import db
 
 admin_bp = Blueprint("admin", __name__)
+
+
+# ==============================================================================
+# DICTIONARY KONTEN DEFAULT UNTUK SETIAP SECTION
+# ==============================================================================
+DEFAULT_SECTION_CONTENTS = {
+    "navbar": {
+        "brand_name": "SDIP Baitussalam",
+        "logo_url": "",
+        "nav_text_1": "Beranda", "nav_url_1": "#beranda",
+        "nav_text_2": "Tentang", "nav_url_2": "#tentang",
+        "nav_text_3": "Program", "nav_url_3": "#program",
+        "nav_text_4": "Kontak", "nav_url_4": "#kontak",
+        "button_text": "Donasi Sekarang",
+        "button_link": "#donasi"
+    },
+    "hero": {
+        "eyebrow": "Campaign Baru 2026",
+        "title": "Judul Utama Campaign",
+        "subtitle": "Tuliskan ringkasan atau kutipan singkat diawal halaman...",
+        "button_text": "Donasi Sekarang",
+        "button_link": "#donasi",
+        "background_image": ""
+    },
+    "progress": {
+        "title": "Progress Donasi",
+        "target": 100000000,
+        "collected": 0,
+        "extra_text": "Mari bersama-sama membantu sesama"
+    },
+    "about": {
+        "eyebrow": "Tentang Campaign",
+        "title": "Cerita Campaign",
+        "content": "Tuliskan latar belakang dan cerita lengkap mengenai campaign ini...",
+        "image": "",
+        "image_caption": ""
+    },
+    "features": {
+        "title": "Keunggulan",
+        "subtitle": "Mengapa harus berdonasi di sini?",
+        "item1_title": "Transparan", "item1_desc": "Laporan keuangan diperbarui secara berkala.",
+        "item2_title": "Amanah", "item2_desc": "Penyaluran langsung ke penerima manfaat.",
+        "item3_title": "Cepat", "item3_desc": "Proses donasi yang praktis dan mudah.",
+        "item4_title": "Bermanfaat", "item4_desc": "Dampak jangka panjang bagi sesama."
+    },
+    "gallery": {
+        "title": "Galeri Dokumentasi",
+        "subtitle": "Foto-foto kegiatan dan penyaluran donasi",
+        "image1": "", "image2": "", "image3": "", "image4": "", "image5": "", "image6": ""
+    },
+    "testimonial": {
+        "title": "Apa Kata Mereka",
+        "name1": "Hamba Allah", "role1": "Donatur", "quote1": "Semoga amanah dan bermanfaat.",
+        "name2": "Ibu Dermawan", "role2": "Donatur", "quote2": "Senang bisa membantu sesama.",
+        "name3": "Anak Sholeh", "role3": "Donatur", "quote3": "Terima kasih atas kerja kerasnya."
+    },
+    "faq": {
+        "title": "Pertanyaan Umum (FAQ)",
+        "faq_q1": "Bagaimana cara berdonasi?", "faq_a1": "Klik tombol Donasi Sekarang lalu ikuti petunjuk instruksi pembayaran.",
+        "faq_q2": "Apakah donasi saya tercatat?", "faq_a2": "Ya, setiap transaksi akan langsung masuk dalam riwayat donasi.",
+        "faq_q3": "Apakah ada batasan nominal?", "faq_a3": "Tidak ada, Anda bisa berdonasi dengan nominal berapa pun.",
+        "faq_q4": "Siapa yang mengelola dana ini?", "faq_a4": "Tim yayasan bekerja sama dengan relawan lapangan terverifikasi."
+    },
+    "cta": {
+        "title": "Mari Bersama Membantu",
+        "subtitle": "Ulurkan tangan Anda untuk kebaikan dan kemanusiaan",
+        "button_text": "Donasi Sekarang",
+        "button_link": "#donasi"
+    },
+    "footer": {
+        "copyright": "© 2026 Yayasan Kita. All rights reserved.",
+        "description": "Lembaga nirlaba yang berfokus pada pendidikan dan kemanusiaan.",
+        "facebook": "#",
+        "instagram": "#",
+        "whatsapp": "#"
+    },
+    "updates": {
+        "title": "Kabar Terbaru / Perkemabangan",
+        "content": "Penyaluran bantuan tahap 1 telah berhasil dilaksanakan..."
+    },
+    "budget_breakdown": {
+        "title": "Rincian Alokasi Dana",
+        "content": "70% Bantuan Langsung, 20% Operasional Lapangan, 10% Pengembangan."
+    },
+    "donor_list": {
+        "title": "Donatur Terbaru",
+        "content": "Terima kasih kepada para donatur yang telah menyalurkan bantuannya."
+    },
+    "team": {
+        "title": "Tim Pengelola Campaign",
+        "content": "Tim kami terdiri dari para relawan terverifikasi."
+    },
+    "location": {
+        "title": "Lokasi Penyaluran",
+        "content": "Penyaluran bantuan dipusatkan di lokasi target penerima."
+    }
+}
 
 
 # ==============================================================================
@@ -23,12 +121,10 @@ def login():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
 
-        # 1. Cek validasi input
         if not username or not password:
             flash("Username dan password wajib diisi!", "warning")
             return render_template("admin/login.html")
 
-        # 2. Cek keberadaan user dan kecocokan password
         user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
@@ -74,6 +170,8 @@ def list_pages():
 def new_page():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
+        creation_mode = request.form.get("creation_mode", "template")
+
         if not title:
             flash("Judul wajib diisi", "danger")
             return redirect(url_for("admin.new_page"))
@@ -83,18 +181,40 @@ def new_page():
         base_slug = slug
         counter = 1
 
-        # Pastikan slug unik
         while Page.query.filter_by(slug=slug).first():
             slug = f"{base_slug}-{counter}"
             counter += 1
 
-        # Buat page dan otomatis ter-publish
         page = Page(title=title, slug=slug, is_published=True)
         db.session.add(page)
-        db.session.commit()
+        db.session.flush()
 
-        flash("Campaign berhasil dibuat dan otomatis dipublikasikan!", "success")
-        return redirect(f"/{page.slug}")  # Direct ke live-edit
+        if creation_mode == "template":
+            default_sections = [
+                ("navbar", DEFAULT_SECTION_CONTENTS["navbar"]),
+                ("hero", {**DEFAULT_SECTION_CONTENTS["hero"], "title": title}),
+                ("progress", DEFAULT_SECTION_CONTENTS["progress"]),
+                ("about", DEFAULT_SECTION_CONTENTS["about"]),
+                ("cta", DEFAULT_SECTION_CONTENTS["cta"]),
+                ("footer", DEFAULT_SECTION_CONTENTS["footer"])
+            ]
+
+            for idx, (s_type, s_content) in enumerate(default_sections, start=1):
+                sec = Section(
+                    page_id=page.id,
+                    type=s_type,
+                    order=idx,
+                    content=s_content
+                )
+                db.session.add(sec)
+
+            db.session.commit()
+            flash("Campaign berhasil dibuat menggunakan template!", "success")
+            return redirect(f"/{page.slug}")
+
+        db.session.commit()
+        flash("Campaign berhasil dibuat! Silakan tambahkan section secara manual.", "success")
+        return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
 
     return render_template("admin/new_page.html")
 
@@ -116,10 +236,7 @@ def toggle_publish(page_id):
 def delete_page(page_id):
     page = Page.query.get_or_404(page_id)
 
-    # Hapus semua section terkait terlebih dahulu
     Section.query.filter_by(page_id=page.id).delete()
-
-    # Hapus page
     db.session.delete(page)
     db.session.commit()
 
@@ -128,14 +245,14 @@ def delete_page(page_id):
 
 
 # ==============================================================================
-# 4. SECTIONS MANAGEMENT (Form Based)
+# 4. SECTIONS MANAGEMENT (Form Based - Manual)
 # ==============================================================================
 
-@admin_bp.route("/page/<int:page_id>/sections")
+@admin_bp.route("/page/<int:page_id>/sections-manual")
 @login_required
-def manage_sections(page_id):
+def manage_sections_manual(page_id):
     page = Page.query.get_or_404(page_id)
-    return render_template("admin/manage_sections.html", page=page)
+    return render_template("admin/manage_sections_manual.html", page=page)
 
 
 @admin_bp.route("/page/<int:page_id>/add-section", methods=["POST"])
@@ -146,15 +263,18 @@ def add_section(page_id):
 
     if not section_type:
         flash("Jenis section wajib dipilih", "danger")
-        return redirect(url_for("admin.manage_sections", page_id=page.id))
+        return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
 
     last_order = db.session.query(db.func.max(Section.order)).filter_by(page_id=page.id).scalar() or 0
+
+    # Ambil nilai default berdasarkan tipe section
+    initial_content = DEFAULT_SECTION_CONTENTS.get(section_type, {"title": section_type.title()})
 
     section = Section(
         page_id=page.id,
         type=section_type,
         order=last_order + 1,
-        content={}
+        content=initial_content
     )
     db.session.add(section)
     db.session.commit()
@@ -176,12 +296,14 @@ def edit_section(section_id):
                 content[key] = value
 
         section.content = content
+        flag_modified(section, "content")  # Memastikan SQLAlchemy mendeteksi perubahan JSON
+
         section.updated_at = datetime.utcnow()
         page.updated_at = datetime.utcnow()
         db.session.commit()
 
         flash("Section berhasil disimpan", "success")
-        return redirect(url_for("admin.manage_sections", page_id=page.id))
+        return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
 
     return render_template("admin/edit_section.html", section=section, page=page)
 
@@ -195,12 +317,11 @@ def delete_section(section_id):
     db.session.delete(section)
     db.session.commit()
 
-    # Handling response untuk Fetch/AJAX Request
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({"status": "success", "message": "Section berhasil dihapus"})
 
     flash("Section berhasil dihapus", "success")
-    return redirect(url_for("admin.manage_sections", page_id=page_id))
+    return redirect(url_for("admin.manage_sections_manual", page_id=page_id))
 
 
 @admin_bp.route("/page/<int:page_id>/reorder", methods=["POST"])
@@ -230,58 +351,7 @@ def add_section_live(page_id):
 
     if section_type:
         last_order = db.session.query(db.func.max(Section.order)).filter_by(page_id=page.id).scalar() or 0
-
-        # Template bawaan isi dummy untuk live preview
-        default_contents = {
-            "hero": {
-                "eyebrow": "Campaign Baru",
-                "title": "Judul Utama Campaign",
-                "subtitle": "Tulis deskripsi singkat di sini...",
-                "button_text": "Donasi Sekarang",
-                "button_link": "#"
-            },
-            "progress": {
-                "title": "Progress Donasi",
-                "target": 100000000,
-                "collected": 0,
-                "extra_text": "Mari bersama-sama membantu"
-            },
-            "about": {
-                "eyebrow": "Tentang Campaign",
-                "title": "Cerita Campaign",
-                "content": "Tuliskan latar belakang dan cerita lengkap mengenai campaign ini...",
-                "image": "",
-                "image_caption": ""
-            },
-            "features": {
-                "title": "Keunggulan",
-                "subtitle": "Mengapa harus berdonasi di sini?",
-                "item1_title": "Poin 1", "item1_desc": "Deskripsi poin pertama...",
-                "item2_title": "Poin 2", "item2_desc": "Deskripsi poin kedua...",
-                "item3_title": "Poin 3", "item3_desc": "Deskripsi poin ketiga...",
-                "item4_title": "Poin 4", "item4_desc": "Deskripsi poin keempat..."
-            },
-            "gallery": {
-                "title": "Galeri Dokumentasi",
-                "subtitle": "Foto kegiatan terkait",
-                "image1": "",
-                "image2": ""
-            },
-            "testimonial": {
-                "title": "Testimoni Donatur",
-                "name1": "Hamba Allah", "role1": "Donatur", "quote1": "Semoga amanah dan bermanfaat.",
-                "name2": "Ibu Dermawan", "role2": "Donatur", "quote2": "Senang bisa membantu sesama.",
-                "name3": "Anak Sholeh", "role3": "Donatur", "quote3": "Terima kasih atas kerja kerasnya."
-            },
-            "cta": {
-                "title": "Mari Bersama Membantu",
-                "subtitle": "Ulurkan tangan Anda untuk kebaikan",
-                "button_text": "Donasi Sekarang",
-                "button_link": "#"
-            }
-        }
-
-        initial_content = default_contents.get(section_type, {"title": "Section Baru"})
+        initial_content = DEFAULT_SECTION_CONTENTS.get(section_type, {"title": section_type.title()})
 
         section = Section(
             page_id=page.id,
@@ -317,151 +387,12 @@ def live_edit_sections():
                     current_content[key] = value
 
                 section.content = current_content
+                flag_modified(section, "content")  # Menandai field JSON telah berubah
                 section.updated_at = datetime.utcnow()
 
         db.session.commit()
         return jsonify({"status": "success", "message": "Berhasil disimpan!"})
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
-# ==============================================================================
-# TEMPLATE PRESETS (Untuk Klien Non-Teknis)
-# ==============================================================================
-PRESET_TEMPLATES = {
-    "wakaf_pembangunan": {
-        "title": "Wakaf Pembangunan Gedung Ruang Kelas",
-        "sections": [
-            {
-                "type": "hero",
-                "content": {
-                    "eyebrow": "YPI Baitussalam • Program Wakaf",
-                    "title": "Mari Tabung Amal Jariah Lewat Pembangunan Ruang Kelas Santri",
-                    "subtitle": "Pahala tak terputus dengan menghadirkan fasilitas belajar yang layak dan nyaman bagi generasi penghafal Al-Qur'an.",
-                    "button_text": "Wakaf Sekarang",
-                    "button_link": "#donasi",
-                    "bg_image": "https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=1200&q=80"
-                }
-            },
-            {
-                "type": "progress",
-                "content": {
-                    "title": "Capaian Dana Wakaf",
-                    "target": 250000000,
-                    "collected": 85000000,
-                    "extra_text": "Dibutuhkan Rp 165.000.000 lagi untuk menyelesaikan tahap pencetus struktur dasar."
-                }
-            },
-            {
-                "type": "about",
-                "content": {
-                    "eyebrow": "Latar Belakang",
-                    "title": "Mengapa Program Ini Penting?",
-                    "content": "Seiring bertambahnya jumlah santri dan murid baru di Yayasan Pendidikan Islam Baitussalam, kapasitas kelas yang ada saat ini sudah tidak mencukupi. Melalui program wakaf ini, kita bersama-sama membangun gedung 2 lantai...",
-                    "image": "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=800&q=80",
-                    "image_caption": "Rancangan maket pembangunan ruang kelas baru YPI Baitussalam"
-                }
-            },
-            {
-                "type": "cta",
-                "content": {
-                    "title": "Salurkan Wakaf Terbaik Anda Hari Ini",
-                    "subtitle": "Setiap bata yang terpasang menjadi saksi kebaikan Anda di akhirat kelak.",
-                    "button_text": "Konfirmasi Wakaf via WhatsApp",
-                    "button_link": "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20berwakaf"
-                }
-            }
-        ]
-    },
-    "ppdb_beasiswa": {
-        "title": "Penerimaan Santri Baru & Beasiswa Yatim",
-        "sections": [
-            {
-                "type": "hero",
-                "content": {
-                    "eyebrow": "PPDB & Orang Tua Asuh",
-                    "title": "Bantu Beasiswa Pendidikan Santri Yatim & Dhuafa",
-                    "subtitle": "Mencetak generasi Rabbani yang berakhlak mulia, berprestasi, dan mandiri.",
-                    "button_text": "Daftar / Jadi Donatur",
-                    "button_link": "#donasi",
-                    "bg_image": "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80"
-                }
-            },
-            {
-                "type": "features",
-                "content": {
-                    "title": "Keunggulan Pendidikan YPI Baitussalam",
-                    "subtitle": "Kurikulum terpadu sains dan keislaman",
-                    "item1_title": "Tahfidz Al-Qur'an", "item1_desc": "Target hafalan 30 Juz dengan tajwid yang shahih.",
-                    "item2_title": "Pendidikan Karakter", "item2_desc": "Pembiasaan adab dan akhlakul karimah sehari-hari.",
-                    "item3_title": "Fasilitas Lengkap", "item3_desc": "Laboratorium komputer, perpustakaan, dan area olahraga.",
-                    "item4_title": "Tenaga Pengajar Kompeten", "item4_desc": "Lulusan perguruan tinggi Islam ternama & berpengalaman."
-                }
-            }
-        ]
-    }
-}
-
-
-# --- ROUTE TAMBAHAN UNTUK APLIKASI PRESET TEMPLATE ---
-@admin_bp.route("/page/<int:page_id>/apply-preset/<preset_key>", methods=["POST"])
-@login_required
-def apply_preset(page_id, preset_key):
-    page = Page.query.get_or_404(page_id)
-    preset = PRESET_TEMPLATES.get(preset_key)
-
-    if not preset:
-        flash("Preset template tidak ditemukan!", "danger")
-        return redirect(url_for("admin.manage_sections", page_id=page.id))
-
-    # Hapus section lama jika ada
-    Section.query.filter_by(page_id=page.id).delete()
-
-    # Masukkan section preset baru
-    for index, sec_data in enumerate(preset["sections"], start=1):
-        section = Section(
-            page_id=page.id,
-            type=sec_data["type"],
-            order=index,
-            content=sec_data["content"]
-        )
-        db.session.add(section)
-
-    db.session.commit()
-    flash(f"Template '{preset['title']}' berhasil diterapkan!", "success")
-    return redirect(f"/{page.slug}")
-
-
-# ==============================================================================
-# ROUTE LIVE EDIT DENGAN DUKUNGAN API BARU
-# ==============================================================================
-@admin_bp.route("/page/<int:page_id>/save-live-edit", methods=["POST"])
-@login_required
-def save_live_edit(page_id):
-    page = Page.query.get_or_404(page_id)
-    data = request.get_json()
-
-    if not data or "sections" not in data:
-        return jsonify({"status": "error", "message": "Data tidak valid"}), 400
-
-    try:
-        for item in data["sections"]:
-            sec_id = item.get("section_id")
-            content_updates = item.get("content", {})
-
-            section = Section.query.filter_by(id=sec_id, page_id=page.id).first()
-            if section:
-                # Merge data lama dengan data baru
-                updated_content = dict(section.content or {})
-                updated_content.update(content_updates)
-                section.content = updated_content
-                section.updated_at = datetime.utcnow()
-
-        page.updated_at = datetime.utcnow()
-        db.session.commit()
-        return jsonify({"status": "success", "message": "Halaman berhasil diperbarui!"})
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500

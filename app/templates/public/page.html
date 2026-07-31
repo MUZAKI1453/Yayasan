@@ -3,442 +3,770 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page.title }} | YPI Baitussalam</title>
 
-    <!-- Bootstrap 5.3 & Icons -->
+    <title>{{ page.meta_title or page.title }}</title>
+    <meta name="description" content="{{ page.meta_description or '' }}">
+
+    {% if page.og_image %}
+    <meta property="og:image" content="{{ page.og_image }}">
+    {% endif %}
+    <meta property="og:title" content="{{ page.meta_title or page.title }}">
+    <meta property="og:description" content="{{ page.meta_description or '' }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
         :root {
-            --bs-primary: #16a34a;
-            --bs-primary-dark: #15803d;
-            --bs-accent: #f59e0b;
-            --bs-dark-bg: #0f172a;
+            --primary: #0d6efd;
+            --dark: #1a1a2e;
         }
-
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #334155;
-            background-color: #ffffff;
-            overflow-x: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: #333;
         }
-
-        /* Navbar & Header */
-        .navbar-baitussalam {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        .hero-section {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 100px 0 80px;
+            position: relative;
+            overflow: hidden;
         }
-        .brand-text {
-            font-weight: 800;
-            color: #15803d;
-            letter-spacing: -0.5px;
+        .hero-section h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            line-height: 1.2;
         }
-
-        /* Section Global */
-        .section-padding {
+        .hero-section .eyebrow {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .section {
             padding: 80px 0;
         }
-        @media (max-width: 768px) {
-            .section-padding { padding: 50px 0; }
-        }
-
         .section-title {
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.5px;
-            margin-bottom: 12px;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
         }
-
-        /* Hero Section */
-        .hero-wrapper {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(21, 128, 61, 0.85)),
-                        url('https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
-            color: #ffffff;
-            padding: 120px 0 90px;
-            position: relative;
+        .progress-section {
+            background: #f8f9fa;
         }
-
-        /* Feature Cards */
+        .progress {
+            height: 28px;
+            border-radius: 50px;
+        }
+        .progress-bar {
+            border-radius: 50px;
+            font-weight: 600;
+        }
         .feature-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: white;
             border-radius: 16px;
-            padding: 32px 24px;
-            transition: all 0.3s ease;
+            padding: 28px;
             height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
         }
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
-            border-color: #86efac;
         }
-        .feature-icon {
-            width: 56px;
-            height: 56px;
-            background: #f0fdf4;
-            color: #16a34a;
-            border-radius: 12px;
+        .feature-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
-
-        /* Testimonial Card */
-        .testimonial-card {
-            background: #f8fafc;
-            border-left: 4px solid #16a34a;
-            padding: 24px;
+        .gallery-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
             border-radius: 12px;
+        }
+        .testimonial-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
             height: 100%;
         }
+        .cta-section {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+        }
+        .btn-lg {
+            padding: 12px 32px;
+            font-weight: 600;
+        }
 
-        /* Editable Highlight (When Admin Active) */
-        [contenteditable="true"] {
-            outline: 2px dashed #16a34a !important;
+        /* Style saat elemen masuk mode edit */
+        .live-editable[contenteditable="true"] {
+            outline: 2px dashed #0d6efd !important;
             outline-offset: 4px;
+            cursor: text;
+            min-height: 20px;
             border-radius: 4px;
-            background-color: rgba(22, 163, 74, 0.05);
         }
-
-        /* Footer Stylings */
-        footer {
-            background-color: #0f172a;
-            color: #94a3b8;
-        }
-        footer a {
-            color: #cbd5e1;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        footer a:hover {
-            color: #4ade80;
+        .live-editable[contenteditable="true"]:hover {
+            background-color: rgba(13, 110, 253, 0.1);
         }
     </style>
 </head>
 <body>
 
-<!-- ADMIN LIVE CONTROL BAR (HANYA MUNCUL JIKA USER LOGIN) -->
+<!-- TOOLBAR LIVE EDIT (Hanya terlihat oleh Admin) -->
 {% if current_user.is_authenticated %}
-<div class="sticky-top bg-dark text-white py-2.5 px-3 shadow-lg" style="z-index: 1090;">
-    <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-warning text-dark"><i class="bi bi-shield-lock-fill"></i> Mode Administrator</span>
-            <small class="d-none d-md-inline text-light">Klik teks langsung di layar untuk mengedit isinya.</small>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <button id="btn-edit" onclick="toggleLiveEdit()" class="btn btn-sm btn-primary fw-semibold rounded-3">
-                <i class="bi bi-pencil-square"></i> Edit Langsung di Layar
-            </button>
-            <button id="btn-save" onclick="saveLiveEdit()" class="btn btn-sm btn-success fw-semibold rounded-3 d-none">
-                <i class="bi bi-check-lg"></i> Simpan Perubahan
-            </button>
-            <a href="{{ url_for('admin.manage_sections', page_id=page.id) }}" class="btn btn-sm btn-outline-light rounded-3">
-                <i class="bi bi-sliders"></i> Pengaturan Form
-            </a>
-        </div>
+<div class="bg-dark text-white p-3 d-flex justify-content-between align-items-center sticky-top shadow-sm z-3">
+    <div>
+        <span class="badge bg-primary me-2">Mode Admin</span>
+        <strong>Preview & Live Edit: {{ page.title }}</strong>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-light me-2">Kembali ke Dashboard</a>
+        <button id="btn-edit" onclick="toggleLiveEdit()" class="btn btn-sm btn-primary fw-bold">
+            <i class="bi bi-pencil-square"></i> Edit Langsung di Layar
+        </button>
+        <button id="btn-save" onclick="saveLiveEdit()" class="btn btn-sm btn-success fw-bold d-none">
+            <i class="bi bi-save"></i> Simpan Perubahan
+        </button>
     </div>
 </div>
 {% endif %}
 
-<!-- NAVBAR / HEADER YAYASAN -->
-<nav class="navbar navbar-expand-lg navbar-baitussalam sticky-top">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2.5" href="#">
-            <!-- Logo Yayasan -->
-            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                <i class="bi bi-building-fill fs-5"></i>
-            </div>
-            <div>
-                <span class="brand-text d-block lh-1 fs-5">YPI BAITUSSALAM</span>
-                <small class="text-muted fs-8 fw-medium">Yayasan Pendidikan Islam</small>
-            </div>
-        </a>
+{% for section in page.sections if section.is_active %}
 
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
+    {# ========== HERO ========== #}
+    {% if section.type == 'hero' %}
+    {% set bg_image = section.content.get('bg_image', '') %}
+    <section class="hero-section position-relative" data-section-id="{{ section.id }}"
+             style="{% if bg_image %}background: linear-gradient(rgba(26,26,46,0.85), rgba(22,33,62,0.85)), url('{{ bg_image }}') no-repeat center center; background-size: cover;{% endif %}">
+
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
         </button>
 
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-row navbar-nav ms-auto align-items-lg-center gap-lg-3 my-3 my-lg-0">
-                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#about">Tentang Kami</a></li>
-                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#program">Program</a></li>
-                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#galeri">Galeri</a></li>
-                <li class="nav-item">
-                    <a href="https://wa.me/6281234567890" target="_blank" class="btn btn-outline-success fw-semibold rounded-pill px-3 py-2 btn-sm">
-                        <i class="bi bi-whatsapp me-1"></i> Kontak WA
-                    </a>
-                </li>
-                <li class="nav-item ms-lg-1">
-                    <a href="#donasi" class="btn btn-success fw-bold rounded-pill px-4 py-2 text-white shadow-sm btn-sm">
-                        <i class="bi bi-heart-fill me-1"></i> Donasi Sekarang
-                    </a>
-                </li>
-            </ul>
+        <!-- Tombol Ganti Latar Hero (Hanya muncul saat mode edit) -->
+        <div class="position-absolute top-0 start-0 m-3 d-none hero-bg-controls" style="z-index: 1099;">
+            <button type="button" class="btn btn-warning btn-sm fw-bold shadow" onclick="changeHeroBg(this)">
+                <i class="bi bi-image"></i> Ganti Gambar Latar Hero
+            </button>
         </div>
-    </div>
-</nav>
 
-<!-- DYNAMIC SECTIONS LOOP -->
-<main id="main-content">
-{% for section in page.sections %}
-
-    {# ========== 1. HERO SECTION ========== #}
-    {% if section.type == 'hero' %}
-    <section class="hero-wrapper position-relative" data-section-id="{{ section.id }}"
-             style="{% if section.content.get('bg_image') %}background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(21,128,61,0.82)), url('{{ section.content.bg_image }}') center/cover no-repeat;{% endif %}">
-        <div class="container text-center py-4">
-            <div class="row justify-content-center">
-                <div class="col-lg-9">
-                    {% if section.content.get('eyebrow') %}
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fs-7 fw-bold mb-3 live-editable" data-field="eyebrow">
-                            {{ section.content.eyebrow }}
-                        </span>
-                    {% endif %}
-                    <h1 class="display-4 fw-extrabold mb-3 text-white live-editable" data-field="title">
-                        {{ section.content.get('title', 'Judul Utama Campaign') }}
-                    </h1>
-                    <p class="lead opacity-90 mb-4 live-editable" data-field="subtitle">
-                        {{ section.content.get('subtitle', 'Deskripsi campaign singkat...') }}
-                    </p>
-                    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
-                        <a href="{{ section.content.get('button_link', '#donasi') }}" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-lg">
-                            <span class="live-editable" data-field="button_text">{{ section.content.get('button_text', 'Donasi Sekarang') }}</span>
-                            <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    {# ========== 2. PROGRESS SECTION ========== #}
-    {% if section.type == 'progress' %}
-    {% set target = section.content.get('target', 100000000)|int %}
-    {% set collected = section.content.get('collected', 0)|int %}
-    {% set percent = ((collected / target) * 100)|round|int if target > 0 else 0 %}
-    <section class="section-padding bg-light position-relative" id="donasi" data-section-id="{{ section.id }}">
         <div class="container">
-            <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5 bg-white">
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold text-dark live-editable" data-field="title">{{ section.content.get('title', 'Progress Donasi') }}</h3>
-                </div>
-                <div class="row align-items-center g-4">
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between text-muted mb-2 font-monospace">
-                            <span>Terkumpul: <strong class="text-success fs-5">Rp {{ "{:,.0f}".format(collected) }}</strong></span>
-                            <span>Target: <strong>Rp {{ "{:,.0f}".format(target) }}</strong></span>
-                        </div>
-                        <div class="progress rounded-pill style-bar" style="height: 22px;">
-                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated fw-bold" role="progressbar" style="width: {{ percent if percent <= 100 else 100 }}%">
-                                {{ percent }}%
-                            </div>
-                        </div>
-                        <small class="text-muted mt-2 d-block live-editable" data-field="extra_text">{{ section.content.get('extra_text', '') }}</small>
-                    </div>
-                    <div class="col-md-6 text-center text-md-end">
-                        <a href="https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20berdonasi" target="_blank" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold text-dark shadow-sm">
-                            <i class="bi bi-whatsapp me-2"></i> Konfirmasi Transfer WA
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    {% if section.content.get('eyebrow') %}
+                        <div class="eyebrow live-editable" data-field="eyebrow">{{ section.content.eyebrow }}</div>
+                    {% endif %}
+
+                    <h1 class="live-editable" data-field="title">{{ section.content.get('title', page.title) }}</h1>
+
+                    {% if section.content.get('subtitle') %}
+                        <p class="lead mt-3 mb-4 opacity-75 live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
+                    {% endif %}
+
+                    {% if section.content.get('button_text') %}
+                        <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg mt-2">
+                            {{ section.content.button_text }}
                         </a>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </section>
     {% endif %}
 
-    {# ========== 3. ABOUT SECTION ========== #}
+    {# ========== PROGRESS ========== #}
+    {% if section.type == 'progress' %}
+    <section class="section progress-section position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Progress Donasi') }}</h2>
+
+                    {% set target = section.content.get('target', 0)|int %}
+                    {% set collected = section.content.get('collected', 0)|int %}
+                    {% set percent = (collected / target * 100) if target > 0 else 0 %}
+                    {% if percent > 100 %}{% set percent = 100 %}{% endif %}
+
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                            style="width: 0%;"
+                            onload="this.style.width = '{{ percent }}%';">
+                            {{ "%.0f"|format(percent) }}%
+                        </div>
+                    </div>
+
+                    <p class="fs-5 mb-1">
+                        <strong>Rp {{ "{:,.0f}".format(collected) }}</strong>
+                        terkumpul dari
+                        <strong>Rp {{ "{:,.0f}".format(target) }}</strong>
+                    </p>
+
+                    {% if section.content.get('extra_text') %}
+                        <p class="text-muted live-editable" data-field="extra_text">{{ section.content.extra_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== ABOUT ========== #}
     {% if section.type == 'about' %}
-    <section class="section-padding position-relative" id="about" data-section-id="{{ section.id }}">
+    <section class="section position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
+
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
                     {% if section.content.get('eyebrow') %}
-                        <span class="text-success fw-bold text-uppercase tracking-wider small live-editable" data-field="eyebrow">{{ section.content.eyebrow }}</span>
+                        <div class="text-primary fw-semibold mb-2 live-editable" data-field="eyebrow">{{ section.content.eyebrow }}</div>
                     {% endif %}
-                    <h2 class="section-title fs-1 mt-1 live-editable" data-field="title">{{ section.content.get('title', 'Tentang Program Ini') }}</h2>
-                    <div class="text-secondary lead fs-6 lh-lg live-editable" data-field="content" style="white-space: pre-line;">
-                        {{ section.content.get('content', '') }}
-                    </div>
+                    <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', '') }}</h2>
+                    <div class="text-muted live-editable" data-field="content" style="white-space: pre-line;">{{ section.content.get('content', '') }}</div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="position-relative">
-                        {% if section.content.get('image') %}
-                            <img src="{{ section.content.image }}" alt="About" class="img-fluid rounded-4 shadow-lg w-100 object-fit-cover" style="max-height: 420px;">
+                <div class="col-lg-6 text-center position-relative">
+                    {% set about_img = section.content.get('image', '') %}
+
+                    <!-- Area Gambar About -->
+                    <div class="about-img-container position-relative d-inline-block w-100">
+                        {% if about_img %}
+                            <img src="{{ about_img }}" alt="About Image" class="img-fluid rounded-4 shadow live-about-img" data-field="image" style="max-height: 350px; width: 100%; object-fit: cover;">
                         {% else %}
-                            <div class="bg-light border rounded-4 p-5 text-center text-muted">
+                            <div class="p-5 bg-light border border-2 border-dashed rounded-4 text-muted live-about-placeholder" data-field="image">
                                 <i class="bi bi-image fs-1 d-block mb-2"></i>
-                                <span>Belum ada gambar diset</span>
+                                <span>Belum ada gambar cerita campaign</span>
                             </div>
                         {% endif %}
+
+                        <!-- Tombol Ubah/Tambah Gambar About (Muncul saat Mode Edit) -->
+                        <div class="mt-3 d-none about-img-controls">
+                            <button type="button" class="btn btn-warning btn-sm fw-bold shadow" onclick="changeAboutImage(this)">
+                                <i class="bi bi-pencil-square"></i> {{ 'Ganti Gambar Cerita' if about_img else 'Tambah Gambar Cerita' }}
+                            </button>
+                        </div>
                     </div>
+
+                    {% if section.content.get('image_caption') or current_user.is_authenticated %}
+                        <p class="text-muted text-center mt-2 small live-editable" data-field="image_caption">{{ section.content.get('image_caption', '') }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </section>
     {% endif %}
 
-    {# ========== 4. FEATURES SECTION ========== #}
+    {# ========== FEATURES ========== #}
     {% if section.type == 'features' %}
-    <section class="section-padding bg-light position-relative" id="program" data-section-id="{{ section.id }}">
+    <section class="section bg-light position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Keunggulan Kami') }}</h2>
-                <p class="text-muted live-editable" data-field="subtitle">{{ section.content.get('subtitle', '') }}</p>
-            </div>
-            <div class="row g-4">
-                {% for i in range(1, 5) %}
-                {% if section.content.get('item' ~ i ~ '_title') %}
-                <div class="col-md-6 col-lg-3">
-                    <div class="feature-card">
-                        <div class="feature-icon"><i class="bi bi-star-fill"></i></div>
-                        <h5 class="fw-bold text-dark live-editable" data-field="item{{ i }}_title">{{ section.content.get('item' ~ i ~ '_title') }}</h5>
-                        <p class="text-muted small mb-0 live-editable" data-field="item{{ i }}_desc">{{ section.content.get('item' ~ i ~ '_desc') }}</p>
-                    </div>
-                </div>
+                <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Keunggulan') }}</h2>
+                {% if section.content.get('subtitle') %}
+                    <p class="text-muted live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
                 {% endif %}
+            </div>
+
+            <!-- Bungkus row dengan id khusus agar bisa ditambah via JS -->
+            <div class="row g-4 features-container">
+                {% for i in range(1, 10) %}
+                    {% set title = section.content.get('item' ~ i ~ '_title') %}
+                    {% if title %}
+                    <div class="col-md-6 col-lg-3 feature-item-wrapper" data-index="{{ i }}">
+                        <div class="feature-card position-relative">
+                            <!-- Tombol Hapus Item (Hanya muncul saat mode edit) -->
+                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-m-2 d-none btn-remove-feature" onclick="removeFeatureItem(this)" style="z-index: 10;">&times;</button>
+
+                            <div class="feature-number">{{ i }}</div>
+                            <h5 class="live-editable" data-field="item{{ i }}_title">{{ title }}</h5>
+                            <p class="text-muted mb-0 live-editable" data-field="item{{ i }}_desc">{{ section.content.get('item' ~ i ~ '_desc', '') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 {% endfor %}
+            </div>
+
+            <!-- Tombol Tambah Poin (Hanya muncul saat mode edit) -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-outline-success btn-sm d-none btn-add-feature" onclick="addFeatureItem(this)">
+                    <i class="bi bi-plus-circle"></i> Tambah Poin Fitur
+                </button>
             </div>
         </div>
     </section>
     {% endif %}
 
-    {# ========== 5. CTA SECTION ========== #}
-    {% if section.type == 'cta' %}
-    <section class="section-padding bg-success text-white text-center position-relative" data-section-id="{{ section.id }}">
+    {# ========== GALLERY ========== #}
+    {% if section.type == 'gallery' %}
+    <section class="section position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
         <div class="container">
-            <h2 class="display-6 fw-bold mb-3 text-white live-editable" data-field="title">{{ section.content.get('title', 'Mari Bergandeng Tangan') }}</h2>
-            <p class="lead mb-4 opacity-90 live-editable" data-field="subtitle">{{ section.content.get('subtitle', '') }}</p>
-            <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg rounded-pill px-5 fw-bold text-success shadow">
-                <span class="live-editable" data-field="button_text">{{ section.content.get('button_text', 'Donasi Sekarang') }}</span>
-            </a>
+            <div class="text-center mb-5">
+                <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Galeri') }}</h2>
+                {% if section.content.get('subtitle') %}
+                    <p class="text-muted live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
+                {% endif %}
+            </div>
+
+            <div class="row g-3 gallery-container">
+                {% for i in range(1, 13) %}
+                    {% set img = section.content.get('image' ~ i) %}
+                    {% if img %}
+                    <div class="col-6 col-md-4 position-relative gallery-item-wrapper" data-index="{{ i }}">
+                        <!-- Tombol Ganti URL Gambar & Hapus -->
+                        <div class="position-absolute top-0 start-0 p-2 d-none gallery-controls" style="z-index: 10;">
+                            <button type="button" class="btn btn-warning btn-sm" onclick="changeImageURL(this)" title="Ganti URL Gambar"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeGalleryImage(this)" title="Hapus Gambar">&times;</button>
+                        </div>
+                        <img src="{{ img }}" alt="Galeri {{ i }}" class="gallery-img shadow-sm live-img" data-field="image{{ i }}">
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Tombol Tambah Foto Galeri -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-outline-primary btn-sm d-none btn-add-gallery" onclick="addGalleryImage(this)">
+                    <i class="bi bi-plus-circle"></i> Tambah Foto Galeri Baru
+                </button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== TESTIMONIAL ========== #}
+    {% if section.type == 'testimonial' %}
+    <section class="section bg-light position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Testimoni') }}</h2>
+            </div>
+
+            <!-- Bungkus row dengan class testimonial-container -->
+            <div class="row g-4 testimonial-container">
+                {% for i in range(1, 10) %}
+                    {% set name = section.content.get('name' ~ i) %}
+                    {% if name %}
+                    <div class="col-md-4 testimonial-item-wrapper" data-index="{{ i }}">
+                        <div class="testimonial-card position-relative">
+                            <!-- Tombol Hapus Testimoni (Hanya muncul saat mode edit) -->
+                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 d-none btn-remove-testimonial" onclick="removeTestimonialItem(this)" style="z-index: 10;">&times;</button>
+
+                            <p class="mb-3 live-editable" data-field="quote{{ i }}">"{{ section.content.get('quote' ~ i, '') }}"</p>
+                            <div class="fw-bold live-editable" data-field="name{{ i }}">{{ name }}</div>
+                            <div class="text-muted small live-editable" data-field="role{{ i }}">{{ section.content.get('role' ~ i, '') }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Tombol Tambah Testimoni Baru (Hanya muncul saat mode edit) -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-outline-success btn-sm d-none btn-add-testimonial" onclick="addTestimonialItem(this)">
+                    <i class="bi bi-plus-circle"></i> Tambah Testimoni Baru
+                </button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== CTA ========== #}
+    {% if section.type == 'cta' %}
+    <section class="cta-section position-relative" data-section-id="{{ section.id }}">
+        <!-- Tombol Hapus Section -->
+        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)" style="z-index: 1099;" title="Hapus Section Ini">
+            <i class="bi bi-trash"></i> Hapus
+        </button>
+        <div class="container">
+            <h2 class="mb-3 live-editable" data-field="title">{{ section.content.get('title', 'Mari Bersama Membantu') }}</h2>
+            {% if section.content.get('subtitle') %}
+                <p class="lead mb-4 opacity-75 live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
+            {% endif %}
+            {% if section.content.get('button_text') %}
+                <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg">
+                    {{ section.content.button_text }}
+                </a>
+            {% endif %}
         </div>
     </section>
     {% endif %}
 
 {% endfor %}
-</main>
+<!-- AREA TAMBAH SECTION (Hanya untuk Admin) -->
+{% if current_user.is_authenticated %}
+<div class="container my-5 text-center">
+    <button class="btn btn-outline-primary border-2 px-5 py-3 fw-bold" style="border-style: dashed !important; border-radius: 12px; background-color: rgba(13, 110, 253, 0.05);" data-bs-toggle="modal" data-bs-target="#modalAddSection">
+        <i class="bi bi-plus-circle-fill me-2"></i> Tambah Section Baru ke Halaman Ini
+    </button>
+</div>
 
-<!-- FOOTER YAYASAN (INFORMASI LENGKAP) -->
-<footer class="pt-5 pb-4 border-top border-secondary">
+<!-- MODAL PILIH JENIS SECTION -->
+<div class="modal fade" id="modalAddSection" tabindex="-1" aria-labelledby="modalAddSectionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <form action="{{ url_for('admin.add_section_live', page_id=page.id) }}" method="POST">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalAddSectionLabel">Pilih Jenis Section</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Section akan ditambahkan di bagian paling bawah halaman.</p>
+                    <select name="type" class="form-select form-select-lg rounded-3" required>
+                        <option value="">-- Pilih Komponen --</option>
+                        <option value="hero">Hero (Judul Utama & Banner)</option>
+                        <option value="progress">Progress Bar Donasi</option>
+                        <option value="about">Tentang Campaign / Cerita</option>
+                        <option value="features">Keunggulan / Fitur</option>
+                        <option value="gallery">Galeri Foto</option>
+                        <option value="testimonial">Testimoni</option>
+                        <option value="cta">CTA (Ajakan Donasi Akhir)</option>
+                    </select>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-bold">Tambah ke Halaman</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+<footer class="bg-dark text-white text-center py-4">
     <div class="container">
-        <div class="row g-4 mb-5">
-            <div class="col-lg-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                        <i class="bi bi-building-fill fs-6"></i>
-                    </div>
-                    <span class="fw-bold fs-5 text-white">YPI BAITUSSALAM</span>
-                </div>
-                <p class="small text-secondary lh-lg mb-3">
-                    Yayasan Pendidikan Islam Baitussalam berfokus pada pengelolaan lembaga pendidikan Rabbani, pembinaan tahfidz Al-Qur'an, dan penyaluran program sosial keagamaan.
-                </p>
-            </div>
-
-            <div class="col-md-4 col-lg-3 ms-lg-auto">
-                <h6 class="text-white fw-bold mb-3">Kontak & Alamat</h6>
-                <ul class="list-unstyled small text-secondary lh-lg">
-                    <li class="mb-2"><i class="bi bi-geo-alt-fill text-success me-2"></i> Jl. Masjid Baitussalam No. 123, Indonesia</li>
-                    <li class="mb-2"><i class="bi bi-telephone-fill text-success me-2"></i> (021) 1234-5678</li>
-                    <li class="mb-2"><i class="bi bi-whatsapp text-success me-2"></i> +62 812-3456-7890</li>
-                    <li><i class="bi bi-envelope-fill text-success me-2"></i> info@baitussalam.or.id</li>
-                </ul>
-            </div>
-
-            <div class="col-md-4 col-lg-3">
-                <h6 class="text-white fw-bold mb-3">Rekening Donasi</h6>
-                <div class="bg-dark p-3 rounded-3 border border-secondary mb-2">
-                    <small class="d-block text-muted">Bank Syariah Indonesia (BSI)</small>
-                    <strong class="text-white font-monospace fs-6">7123-4567-89</strong>
-                    <small class="d-block text-muted fs-8">a.n. YPI Baitussalam</small>
-                </div>
-            </div>
-        </div>
-
-        <hr class="border-secondary opacity-25">
-
-        <div class="d-flex align-items-center justify-content-between flex-wrap small text-secondary pt-2">
-            <p class="mb-0">&copy; 2026 YPI Baitussalam. All rights reserved.</p>
-            <p class="mb-0">Sistem Landing Page Terpadu</p>
-        </div>
+        <small>&copy; {{ page.title }} — Dibuat dengan ❤️</small>
     </div>
 </footer>
 
-<!-- JS BOOTSTRAP -->
+<!-- 1. WAJIB ADA: Bootstrap JS agar modal bisa diklik -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- JAVASCRIPT LIVE EDIT (ADMIN) -->
+<!-- SCRIPT LOGIKA LIVE EDIT -->
 {% if current_user.is_authenticated %}
 <script>
-    let isEditing = false;
-
     function toggleLiveEdit() {
-        isEditing = !isEditing;
-        const editables = document.querySelectorAll('.live-editable');
+        document.querySelectorAll('a').forEach(a => {
+            a.addEventListener('click', preventClickInEditMode);
+        });
+
+        const editableElements = document.querySelectorAll('.live-editable');
+        editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+        });
+
+        document.querySelectorAll('.btn-remove-feature, .btn-add-feature, .gallery-controls, .btn-add-gallery, .btn-remove-testimonial, .btn-add-testimonial, .btn-remove-section, .hero-bg-controls, .about-img-controls').forEach(el => {
+            el.classList.remove('d-none');
+        });
+
         const btnEdit = document.getElementById('btn-edit');
         const btnSave = document.getElementById('btn-save');
 
-        editables.forEach(el => {
-            el.contentEditable = isEditing;
-        });
+        if (btnEdit) btnEdit.classList.add('d-none');
+        if (btnSave) btnSave.classList.remove('d-none');
+    }
 
-        if (isEditing) {
-            btnEdit.classList.replace('btn-primary', 'btn-outline-light');
-            btnEdit.innerHTML = '<i class="bi bi-x-circle"></i> Batal Edit';
-            btnSave.classList.remove('d-none');
-        } else {
-            btnEdit.classList.replace('btn-outline-light', 'btn-primary');
-            btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Edit Langsung di Layar';
-            btnSave.classList.add('d-none');
+    function preventClickInEditMode(e) {
+        if (e.target.closest('[contenteditable="true"]')) {
+            e.preventDefault();
         }
     }
 
-    function saveLiveEdit() {
-        const payload = [];
+    function deleteSection(button) {
+        const sectionId = button.getAttribute('data-id');
 
-        document.querySelectorAll('section[data-section-id]').forEach(sec => {
-            const sectionId = sec.getAttribute('data-section-id');
-            const fields = {};
+        if (!confirm("Apakah Anda yakin ingin menghapus section ini secara permanen?")) {
+            return;
+        }
 
-            sec.querySelectorAll('.live-editable').forEach(el => {
-                const fieldName = el.getAttribute('data-field');
-                if (fieldName) {
-                    fields[fieldName] = el.innerText.trim();
-                }
-            });
-
-            payload.push({
-                section_id: sectionId,
-                content: fields
-            });
-        });
-
-        fetch("{{ url_for('admin.save_live_edit', page_id=page.id) }}", {
+        fetch(`/admin/section/${sectionId}/delete`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sections: payload })
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            }
         })
         .then(res => res.json())
         .then(data => {
-            if (data.status === 'success') {
-                alert('Semua perubahan berhasil disimpan!');
-                location.reload();
+            if (data.status === "success") {
+                // Hapus elemen section langsung dari layar browser tanpa reload penuh
+                const sectionEl = button.closest('section');
+                if (sectionEl) {
+                    sectionEl.remove();
+                } else {
+                    window.location.reload();
+                }
             } else {
-                alert('Gagal menyimpan: ' + data.message);
+                alert("Gagal menghapus section.");
             }
         })
         .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan koneksi.');
+            console.error("Error:", err);
+            alert("Terjadi kesalahan jaringan.");
+        });
+    }
+
+    function addFeatureItem(btn) {
+        const container = btn.closest('section').querySelector('.features-container');
+        const existingItems = container.querySelectorAll('.feature-item-wrapper');
+        const newIndex = existingItems.length + 1;
+
+        if (newIndex > 10) {
+            alert("Maksimal 10 poin fitur.");
+            return;
+        }
+
+        const html = `
+            <div class="col-md-6 col-lg-3 feature-item-wrapper" data-index="${newIndex}">
+                <div class="feature-card position-relative">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 btn-remove-feature" onclick="removeFeatureItem(this)" style="z-index: 10;">&times;</button>
+                    <div class="feature-number">${newIndex}</div>
+                    <h5 class="live-editable" data-field="item${newIndex}_title" contenteditable="true" style="outline: 2px dashed #0d6efd;">Judul Poin Baru</h5>
+                    <p class="text-muted mb-0 live-editable" data-field="item${newIndex}_desc" contenteditable="true" style="outline: 2px dashed #0d6efd;">Deskripsi poin baru...</p>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeFeatureItem(btn) {
+        btn.closest('.feature-item-wrapper').remove();
+    }
+
+    // 1. Fungsi Ganti Latar Belakang Hero
+    function changeHeroBg(btn) {
+        const section = btn.closest('section');
+        const currentBg = section.style.backgroundImage || "";
+        const url = prompt("Masukkan URL Link Gambar untuk Latar Hero:", "");
+        if (url !== null) {
+            if (url.trim() === "") {
+                section.style.background = "";
+                section.removeAttribute('data-bg-image');
+            } else {
+                section.style.background = `linear-gradient(rgba(26,26,46,0.85), rgba(22,33,62,0.85)), url('${url}') no-repeat center center`;
+                section.style.backgroundSize = "cover";
+                section.setAttribute('data-bg-image', url);
+            }
+        }
+    }
+
+    // 2. Fungsi Ganti/Tambah Gambar About
+    function changeAboutImage(btn) {
+        const container = btn.closest('.col-lg-6');
+        const url = prompt("Masukkan URL Link Gambar untuk Cerita Campaign:", "");
+        if (!url) return;
+
+        let imgEl = container.querySelector('.live-about-img');
+        let placeholderEl = container.querySelector('.live-about-placeholder');
+
+        if (imgEl) {
+            imgEl.src = url;
+        } else if (placeholderEl) {
+            // Jika tadinya kosong berupa placeholder, ubah jadi tag img
+            const newImgHtml = `<img src="${url}" alt="About Image" class="img-fluid rounded-4 shadow live-about-img" data-field="image" style="max-height: 350px; width: 100%; object-fit: cover;">`;
+            placeholderEl.outerHTML = newImgHtml;
+        }
+    }
+
+    // Fungsi Tambah Foto Galeri Baru via URL Prompt
+    function addGalleryImage(btn) {
+        const url = prompt("Masukkan URL / Link Gambar (Contoh: https://images.unsplash.com/...):");
+        if (!url) return;
+
+        const container = btn.closest('section').querySelector('.gallery-container');
+        const existingItems = container.querySelectorAll('.gallery-item-wrapper');
+        const newIndex = existingItems.length + 1;
+
+        if (newIndex > 12) {
+            alert("Maksimal 12 foto galeri.");
+            return;
+        }
+
+        const html = `
+            <div class="col-6 col-md-4 position-relative gallery-item-wrapper" data-index="${newIndex}">
+                <div class="position-absolute top-0 start-0 p-2 gallery-controls" style="z-index: 10;">
+                    <button type="button" class="btn btn-warning btn-sm" onclick="changeImageURL(this)"><i class="bi bi-pencil"></i></button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeGalleryImage(this)">&times;</button>
+                </div>
+                <img src="${url}" alt="Galeri ${newIndex}" class="gallery-img shadow-sm live-img" data-field="image${newIndex}">
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function changeImageURL(btn) {
+        const imgEl = btn.closest('.gallery-item-wrapper').querySelector('.live-img');
+        const newUrl = prompt("Ganti URL Gambar:", imgEl.src);
+        if (newUrl) {
+            imgEl.src = newUrl;
+        }
+    }
+
+    function removeGalleryImage(btn) {
+        btn.closest('.gallery-item-wrapper').remove();
+    }
+
+    // Fungsi Tambah Testimoni Baru secara Dinamis di Layar
+    function addTestimonialItem(btn) {
+        const container = btn.closest('section').querySelector('.testimonial-container');
+        const existingItems = container.querySelectorAll('.testimonial-item-wrapper');
+        const newIndex = existingItems.length + 1;
+
+        if (newIndex > 9) {
+            alert("Maksimal 9 testimoni.");
+            return;
+        }
+
+        const html = `
+            <div class="col-md-4 testimonial-item-wrapper" data-index="${newIndex}">
+                <div class="testimonial-card position-relative">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 btn-remove-testimonial" onclick="removeTestimonialItem(this)" style="z-index: 10;">&times;</button>
+
+                    <p class="mb-3 live-editable" data-field="quote${newIndex}" contenteditable="true" style="outline: 2px dashed #0d6efd;">"Tulis isi testimoni di sini..."</p>
+                    <div class="fw-bold live-editable" data-field="name${newIndex}" contenteditable="true" style="outline: 2px dashed #0d6efd;">Nama Pemberi Testimoni</div>
+                    <div class="text-muted small live-editable" data-field="role${newIndex}" contenteditable="true" style="outline: 2px dashed #0d6efd;">Donatur / Relawan</div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeTestimonialItem(btn) {
+        btn.closest('.testimonial-item-wrapper').remove();
+    }
+
+
+    // Modifikasi fungsi saveLiveEdit agar juga merekam item fitur dan gambar galeri baru
+    function saveLiveEdit() {
+        const btnSave = document.getElementById('btn-save');
+        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
+        btnSave.disabled = true;
+
+        let sectionsData = [];
+
+        document.querySelectorAll('[data-section-id]').forEach(container => {
+            let sectionId = container.getAttribute('data-section-id');
+            let contentUpdates = {};
+
+            // 1. Ambil semua teks biasa/judul yang aktif di layar
+            container.querySelectorAll('.live-editable').forEach(el => {
+                let fieldName = el.getAttribute('data-field');
+                if (fieldName) {
+                    contentUpdates[fieldName] = el.innerHTML.trim();
+                }
+            });
+
+            // 2. Ambil semua gambar galeri yang aktif di layar
+            container.querySelectorAll('.live-img').forEach(imgEl => {
+                let fieldName = imgEl.getAttribute('data-field');
+                if (fieldName) {
+                    contentUpdates[fieldName] = imgEl.getAttribute('src');
+                }
+            });
+
+            // 3. PEMBERSIHAN DATA KOSONG/DIHAPUS:
+            // Cek section tipe 'features': jika item_1 sampai item_8 tidak ada di layar, set nilainya jadi kosong ("")
+            // agar tertimpa di database JSON.
+            if (container.querySelector('.features-container')) {
+                for (let i = 1; i <= 10; i++) {
+                    if (!container.querySelector(`[data-field="item${i}_title"]`)) {
+                        contentUpdates[`item${i}_title`] = "";
+                        contentUpdates[`item${i}_desc`] = "";
+                    }
+                }
+            }
+
+            // Ambil latar belakang hero jika diubah
+            if (container.classList.contains('hero-section')) {
+                let bgUrl = container.getAttribute('data-bg-image');
+                if (bgUrl) {
+                    contentUpdates['bg_image'] = bgUrl;
+                }
+            }
+
+            // Ambil gambar about jika ada
+            let aboutImgEl = container.querySelector('.live-about-img');
+            if (aboutImgEl) {
+                contentUpdates['image'] = aboutImgEl.getAttribute('src');
+            }
+
+            // Cek section tipe 'gallery': kosongkan image1 s.d image12 jika elemennya dihapus
+            if (container.querySelector('.gallery-container')) {
+                for (let i = 1; i <= 12; i++) {
+                    if (!container.querySelector(`[data-field="image${i}"]`)) {
+                        contentUpdates[`image${i}`] = "";
+                    }
+                }
+            }
+
+            // Cek section tipe 'testimonial': kosongkan name/quote/role jika itemnya dihapus
+            if (container.querySelector('.testimonial-container')) {
+                for (let i = 1; i <= 10; i++) {
+                    if (!container.querySelector(`[data-field="name${i}"]`)) {
+                        contentUpdates[`name${i}`] = "";
+                        contentUpdates[`role${i}`] = "";
+                        contentUpdates[`quote${i}`] = "";
+                    }
+                }
+            }
+
+            if(Object.keys(contentUpdates).length > 0) {
+                sectionsData.push({ id: sectionId, content: contentUpdates });
+            }
+        });
+
+        // Kirim ke backend Flask
+        fetch("/admin/api/live-edit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sections: sectionsData })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "success") {
+                alert("Perubahan dan penghapusan berhasil disimpan!");
+                window.location.reload();
+            } else {
+                alert("Gagal: " + data.message);
+                btnSave.innerHTML = '<i class="bi bi-save"></i> Simpan Perubahan';
+                btnSave.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error("Error Detail:", error);
+            alert("Terjadi kesalahan jaringan.");
+            btnSave.innerHTML = '<i class="bi bi-save"></i> Simpan Perubahan';
+            btnSave.disabled = false;
         });
     }
 </script>

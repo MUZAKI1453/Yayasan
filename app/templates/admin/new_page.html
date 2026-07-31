@@ -11,11 +11,11 @@
     .text-green-main {
         color: #15803d !important;
     }
-    .form-control-custom {
+    .form-control-custom, .form-select-custom {
         border: 1.5px solid #e2e8f0;
         transition: all 0.2s ease-in-out;
     }
-    .form-control-custom:focus {
+    .form-control-custom:focus, .form-select-custom:focus {
         border-color: #10b981;
         box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.15);
     }
@@ -41,13 +41,14 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1 text-dark">Buat Campaign Baru</h5>
-                        <p class="text-muted small mb-0">Tentukan judul untuk mulai menyusun halaman campaign baru</p>
+                        <p class="text-muted small mb-0">Tentukan judul & mode pembuatan campaign</p>
                     </div>
                 </div>
 
                 <!-- Form Input -->
                 <form method="POST">
-                    <div class="mb-4">
+                    <!-- 1. Input Judul -->
+                    <div class="mb-3">
                         <label for="campaignTitle" class="form-label fw-semibold text-dark small mb-2">
                             Judul Campaign <span class="text-danger">*</span>
                         </label>
@@ -65,10 +66,10 @@
                         </div>
 
                         <!-- Live Slug Preview -->
-                        <div class="mt-3 p-2.5 rounded-3 bg-light border border-light-subtle">
+                        <div class="mt-2 p-2 rounded-3 bg-light border border-light-subtle">
                             <div class="d-flex align-items-center gap-1 text-muted fs-8 mb-1">
                                 <i class="bi bi-link-45deg fs-6 text-success"></i>
-                                <span>Preview URL / Slug Halaman:</span>
+                                <span>Preview URL / Slug:</span>
                             </div>
                             <span id="slugPreview" class="badge badge-slug-preview px-2 py-1 fs-7 d-inline-block text-truncate max-w-100">
                                 /nama-campaign-anda
@@ -76,16 +77,33 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons (Responsif Mobile & Desktop) -->
+                    <!-- 2. Dropdown Mode Pembuatan -->
+                    <div class="mb-4">
+                        <label for="creationMode" class="form-label fw-semibold text-dark small mb-2">
+                            Metode Pembuatan
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">
+                                <i class="bi bi-layout-text-window-reverse"></i>
+                            </span>
+                            <select id="creationMode" name="creation_mode" class="form-select form-select-lg form-select-custom border-start-0 ps-2 fs-6">
+                                <option value="template" selected>✨ Pakai Template Siap Pakai (Live Edit)</option>
+                                <option value="manual">🛠️ Buat Manual dari Nol (Manage Sections)</option>
+                            </select>
+                        </div>
+                        <div class="form-text text-muted small mt-1" id="modeDescription">
+                            Sistem akan membuat struktur landing page otomatis yang siap kamu edit langsung secara visual.
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
                     <div class="d-flex flex-column-reverse flex-sm-row align-items-stretch align-items-sm-center justify-content-sm-between gap-2 pt-2">
-                        <!-- Batal kembali ke daftar campaign -->
                         <a href="{{ url_for('admin.list_pages') }}" class="btn btn-light rounded-3 px-4 py-2.5 fw-semibold text-muted text-center border-0">
                             Batal
                         </a>
 
-                        <!-- Submit Button -->
                         <button type="submit" class="btn btn-success rounded-3 px-4 py-2.5 fw-semibold d-inline-flex align-items-center justify-content-center gap-2 shadow-sm">
-                            <span>Lanjut ke Section</span>
+                            <span id="btnSubmitText">Lanjut ke Live Edit</span>
                             <i class="bi bi-arrow-right"></i>
                         </button>
                     </div>
@@ -101,19 +119,33 @@
     document.addEventListener("DOMContentLoaded", function() {
         const titleInput = document.getElementById("campaignTitle");
         const slugPreview = document.getElementById("slugPreview");
+        const creationMode = document.getElementById("creationMode");
+        const modeDescription = document.getElementById("modeDescription");
+        const btnSubmitText = document.getElementById("btnSubmitText");
 
-        // Fungsi generate Slug otomatis dari judul
+        // Dynamic Slug Generator
         titleInput.addEventListener("input", function() {
             const titleValue = this.value.trim();
             if (titleValue.length > 0) {
                 const slug = titleValue
                     .toLowerCase()
-                    .replace(/[^a-z0-9 -]/g, '') // Hapus karakter spesial
-                    .replace(/\s+/g, '-')        // Ganti spasi dengan -
-                    .replace(/-+/g, '-');        // Cegah multiple strip
+                    .replace(/[^a-z0-9 -]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
                 slugPreview.textContent = '/' + slug;
             } else {
                 slugPreview.textContent = '/nama-campaign-anda';
+            }
+        });
+
+        // Dynamic UI Helper berdasarkan pilihan dropdown
+        creationMode.addEventListener("change", function() {
+            if (this.value === "template") {
+                modeDescription.textContent = "Sistem akan membuat struktur landing page otomatis yang siap kamu edit langsung secara visual.";
+                btnSubmitText.textContent = "Lanjut ke Live Edit";
+            } else {
+                modeDescription.textContent = "Kamu akan diarahkan ke halaman pengelolaan section untuk menambahkan komponen satu per satu.";
+                btnSubmitText.textContent = "Lanjut ke Manage Sections";
             }
         });
     });
