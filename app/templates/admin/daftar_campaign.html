@@ -1,0 +1,265 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Daftar Campaign - YPI Baitussalam{% endblock %}
+
+{% block content %}
+<style>
+    /* Custom Styling Tema Hijau YPI Baitussalam */
+    .bg-green-soft {
+        background-color: #f0fdf4 !important;
+    }
+    .text-green-main {
+        color: #15803d !important;
+    }
+
+    /* Table Styling Header */
+    .table-custom-green thead {
+        background-color: #f0fdf4 !important;
+        border-bottom: 2px solid #dcfce7 !important;
+    }
+    .table-custom-green thead th {
+        color: #166534 !important;
+        font-weight: 700;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        white-space: nowrap;
+    }
+
+    /* Badges */
+    .badge-published {
+        background-color: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .badge-draft {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+    }
+    .badge-slug {
+        background-color: #f8fafc;
+        color: #0f766e;
+        border: 1px solid #e2e8f0;
+        font-family: monospace;
+    }
+
+    /* Input Search Custom */
+    .search-input-group .form-control:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.15);
+    }
+
+    /* Scrollbar Cantik & Minimalis untuk Tabel */
+    .table-responsive-custom::-webkit-scrollbar {
+        height: 6px;
+    }
+    .table-responsive-custom::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    .table-responsive-custom::-webkit-scrollbar-thumb {
+        background: #10b981;
+        border-radius: 10px;
+    }
+    .table-responsive-custom::-webkit-scrollbar-thumb:hover {
+        background: #059669;
+    }
+</style>
+
+<!-- HEADER HALAMAN + FITUR SEARCH -->
+<div class="row align-items-center gy-3 mb-4">
+    <div class="col-12 col-md-7">
+        <h4 class="fw-bold mb-1 text-dark">Daftar Campaign / Halaman</h4>
+        <p class="text-muted small mb-0">Kelola seluruh halaman campaign dan informasi resmi yayasan</p>
+    </div>
+
+    <!-- FITUR SEARCH -->
+    <div class="col-12 col-md-5">
+        <div class="input-group search-input-group shadow-sm rounded-3 overflow-hidden">
+            <span class="input-group-text bg-white border-end-0 text-muted ps-3">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text"
+                   id="searchInput"
+                   class="form-control border-start-0 ps-2 py-2"
+                   placeholder="Cari campaign atau slug..."
+                   autocomplete="off">
+        </div>
+    </div>
+</div>
+
+{% if pages %}
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <!-- Container Scroll yang Rapi -->
+    <div class="table-responsive table-responsive-custom">
+        <table class="table table-hover table-custom-green align-middle mb-0" id="campaignTable" style="min-width: 850px;">
+            <thead>
+                <tr>
+                    <th class="ps-4 text-center" style="width: 60px;">NO</th>
+                    <th style="min-width: 220px;">JUDUL CAMPAIGN</th>
+                    <th style="min-width: 160px;">SLUG URL</th>
+                    <th class="text-center" style="width: 130px;">SECTION</th>
+                    <th class="text-center" style="width: 120px;">STATUS</th>
+                    <th style="width: 140px;">PEMBARUAN</th>
+                    <th class="text-end pe-4" style="width: 180px;">AKSI</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                {% for page in pages %}
+                <tr class="campaign-row">
+                    <!-- NO -->
+                    <td class="ps-4 text-center fw-medium text-muted small row-number">{{ loop.index }}</td>
+
+                    <!-- JUDUL -->
+                    <td>
+                        <span class="fw-semibold text-dark d-block text-nowrap campaign-title" style="max-width: 260px; overflow: hidden; text-overflow: ellipsis;" title="{{ page.title }}">
+                            {{ page.title }}
+                        </span>
+                    </td>
+
+                    <!-- SLUG -->
+                    <td>
+                        <span class="badge badge-slug px-2 py-1 fs-7 text-nowrap campaign-slug" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis;" title="/{{ page.slug }}">
+                            /{{ page.slug }}
+                        </span>
+                    </td>
+
+                    <!-- JUMLAH SECTION -->
+                    <td class="text-center text-nowrap">
+                        <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-normal fs-7">
+                            <i class="bi bi-layers text-success me-1"></i>{{ page.sections|length }} Section
+                        </span>
+                    </td>
+
+                    <!-- STATUS -->
+                    <td class="text-center text-nowrap">
+                        {% if page.is_published %}
+                            <span class="badge badge-published rounded-pill px-2.5 py-1.5 fw-semibold fs-7 d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-check-circle-fill fs-8"></i> Published
+                            </span>
+                        {% else %}
+                            <span class="badge badge-draft rounded-pill px-2.5 py-1.5 fw-semibold fs-7 d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-dash-circle-fill fs-8"></i> Draft
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- UPDATE TERAKHIR -->
+                    <td class="text-muted small fs-7 text-nowrap">
+                        <i class="bi bi-calendar3 me-1"></i>{{ page.updated_at.strftime('%d %b %Y') }}
+                    </td>
+
+                    <!-- AKSI -->
+                    <td class="text-end pe-4 text-nowrap">
+                        <div class="d-inline-flex align-items-center gap-1">
+                            <!-- Kelola Section -->
+                            <a href="{{ url_for('admin.manage_sections', page_id=page.id) }}"
+                               class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 px-2.5 py-1.5"
+                               data-bs-toggle="tooltip" title="Kelola Section">
+                                <i class="bi bi-gear-fill"></i>
+                                <span class="fs-7 fw-semibold">Kelola</span>
+                            </a>
+
+                            <!-- Preview Live -->
+                            <a href="/{{ page.slug }}" target="_blank"
+                               class="btn btn-sm btn-outline-success px-2 py-1.5"
+                               data-bs-toggle="tooltip" title="Lihat Website Live">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+
+                            <!-- Toggle Status -->
+                            <form action="{{ url_for('admin.toggle_publish', page_id=page.id) }}" method="POST" class="d-inline">
+                                {% if page.is_published %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning px-2 py-1.5"
+                                            data-bs-toggle="tooltip" title="Ubah ke Draft">
+                                        <i class="bi bi-pause-circle-fill"></i>
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success px-2 py-1.5"
+                                            data-bs-toggle="tooltip" title="Publikasikan">
+                                        <i class="bi bi-play-circle-fill"></i>
+                                    </button>
+                                {% endif %}
+                            </form>
+
+                            <!-- Delete Page -->
+                            <form action="{{ url_for('admin.delete_page', page_id=page.id) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus campaign \'{{ page.title }}\'? Semua section di dalamnya akan ikut terhapus.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1.5"
+                                        data-bs-toggle="tooltip" title="Hapus Campaign">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <!-- TAMPILAN JIKA HASIL SEARCH TIDAK DITEMUKAN -->
+                <tr id="noResultsRow" style="display: none;">
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="bi bi-search fs-4 d-block mb-1 text-muted"></i>
+                        <span>Campaign yang Anda cari tidak ditemukan.</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<!-- EMPTY STATE -->
+<div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+    <div class="mb-3">
+        <div class="bg-green-soft d-inline-flex p-3 rounded-circle text-success">
+            <i class="bi bi-folder-x fs-1"></i>
+        </div>
+    </div>
+    <h5 class="fw-bold text-dark">Belum Ada Campaign</h5>
+    <p class="text-muted small mb-4 ms-auto me-auto" style="max-width: 400px;">
+        Mulai buat campaign pertama Anda untuk dipublikasikan di website yayasan.
+    </p>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Inisialisasi Tooltip Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // 2. Logika Live Search Real-time
+        const searchInput = document.getElementById("searchInput");
+        const rows = document.querySelectorAll(".campaign-row");
+        const noResultsRow = document.getElementById("noResultsRow");
+
+        if (searchInput) {
+            searchInput.addEventListener("keyup", function() {
+                const query = this.value.toLowerCase().trim();
+                let hasMatch = false;
+
+                rows.forEach(row => {
+                    const title = row.querySelector(".campaign-title").textContent.toLowerCase();
+                    const slug = row.querySelector(".campaign-slug").textContent.toLowerCase();
+
+                    if (title.includes(query) || slug.includes(query)) {
+                        row.style.display = "";
+                        hasMatch = true;
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+
+                // Tampilkan info jika pencarian tidak ditemukan
+                if (noResultsRow) {
+                    noResultsRow.style.display = hasMatch ? "none" : "";
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

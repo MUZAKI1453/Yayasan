@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard Overview - YPI Baitussalam{% endblock %}
+
+{% block content %}
+<!-- HEADER DASHBOARD -->
+<div class="mb-4">
+    <h3 class="fw-bold mb-1">Ringkasan & Analitik</h3>
+    <p class="text-muted small mb-0">Overview performa visitor dan aktivitas campaign yayasan</p>
+</div>
+
+<!-- PLACEHOLDER STATISTIK (Siap diisi nanti) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary-subtle text-primary p-3 rounded-3">
+                    <i class="bi bi-people-fill fs-4"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block fw-semibold">Total Pengunjung</small>
+                    <h4 class="fw-bold mb-0">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-success-subtle text-success p-3 rounded-3">
+                    <i class="bi bi-journal-text fs-4"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block fw-semibold">Campaign Aktif</small>
+                    <h4 class="fw-bold mb-0">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning-subtle text-warning p-3 rounded-3">
+                    <i class="bi bi-eye-fill fs-4"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block fw-semibold">Pageviews Hari Ini</small>
+                    <h4 class="fw-bold mb-0">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PLACEHOLDER AREA GRAFIK -->
+<div class="card border-0 shadow-sm rounded-4 p-4 text-center text-muted py-5">
+    <i class="bi bi-bar-chart-line fs-1 mb-2"></i>
+    <h6>Area Grafik Pengunjung</h6>
+    <small>Siap dihubungkan dengan data analitik visitor.</small>
+</div>
+{% endblock %}

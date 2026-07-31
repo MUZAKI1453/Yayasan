@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }} | YPI Baitussalam</title>
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bs-primary: #16a34a;
+            --bs-primary-dark: #15803d;
+            --bs-accent: #f59e0b;
+            --bs-dark-bg: #0f172a;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #334155;
+            background-color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Navbar & Header */
+        .navbar-baitussalam {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        }
+        .brand-text {
+            font-weight: 800;
+            color: #15803d;
+            letter-spacing: -0.5px;
+        }
+
+        /* Section Global */
+        .section-padding {
+            padding: 80px 0;
+        }
+        @media (max-width: 768px) {
+            .section-padding { padding: 50px 0; }
+        }
+
+        .section-title {
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+
+        /* Hero Section */
+        .hero-wrapper {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(21, 128, 61, 0.85)),
+                        url('https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+            color: #ffffff;
+            padding: 120px 0 90px;
+            position: relative;
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px 24px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+            border-color: #86efac;
+        }
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: #f0fdf4;
+            color: #16a34a;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Testimonial Card */
+        .testimonial-card {
+            background: #f8fafc;
+            border-left: 4px solid #16a34a;
+            padding: 24px;
+            border-radius: 12px;
+            height: 100%;
+        }
+
+        /* Editable Highlight (When Admin Active) */
+        [contenteditable="true"] {
+            outline: 2px dashed #16a34a !important;
+            outline-offset: 4px;
+            border-radius: 4px;
+            background-color: rgba(22, 163, 74, 0.05);
+        }
+
+        /* Footer Stylings */
+        footer {
+            background-color: #0f172a;
+            color: #94a3b8;
+        }
+        footer a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        footer a:hover {
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ADMIN LIVE CONTROL BAR (HANYA MUNCUL JIKA USER LOGIN) -->
+{% if current_user.is_authenticated %}
+<div class="sticky-top bg-dark text-white py-2.5 px-3 shadow-lg" style="z-index: 1090;">
+    <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-warning text-dark"><i class="bi bi-shield-lock-fill"></i> Mode Administrator</span>
+            <small class="d-none d-md-inline text-light">Klik teks langsung di layar untuk mengedit isinya.</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button id="btn-edit" onclick="toggleLiveEdit()" class="btn btn-sm btn-primary fw-semibold rounded-3">
+                <i class="bi bi-pencil-square"></i> Edit Langsung di Layar
+            </button>
+            <button id="btn-save" onclick="saveLiveEdit()" class="btn btn-sm btn-success fw-semibold rounded-3 d-none">
+                <i class="bi bi-check-lg"></i> Simpan Perubahan
+            </button>
+            <a href="{{ url_for('admin.manage_sections', page_id=page.id) }}" class="btn btn-sm btn-outline-light rounded-3">
+                <i class="bi bi-sliders"></i> Pengaturan Form
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- NAVBAR / HEADER YAYASAN -->
+<nav class="navbar navbar-expand-lg navbar-baitussalam sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2.5" href="#">
+            <!-- Logo Yayasan -->
+            <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                <i class="bi bi-building-fill fs-5"></i>
+            </div>
+            <div>
+                <span class="brand-text d-block lh-1 fs-5">YPI BAITUSSALAM</span>
+                <small class="text-muted fs-8 fw-medium">Yayasan Pendidikan Islam</small>
+            </div>
+        </a>
+
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-row navbar-nav ms-auto align-items-lg-center gap-lg-3 my-3 my-lg-0">
+                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#about">Tentang Kami</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#program">Program</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold text-dark" href="#galeri">Galeri</a></li>
+                <li class="nav-item">
+                    <a href="https://wa.me/6281234567890" target="_blank" class="btn btn-outline-success fw-semibold rounded-pill px-3 py-2 btn-sm">
+                        <i class="bi bi-whatsapp me-1"></i> Kontak WA
+                    </a>
+                </li>
+                <li class="nav-item ms-lg-1">
+                    <a href="#donasi" class="btn btn-success fw-bold rounded-pill px-4 py-2 text-white shadow-sm btn-sm">
+                        <i class="bi bi-heart-fill me-1"></i> Donasi Sekarang
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- DYNAMIC SECTIONS LOOP -->
+<main id="main-content">
+{% for section in page.sections %}
+
+    {# ========== 1. HERO SECTION ========== #}
+    {% if section.type == 'hero' %}
+    <section class="hero-wrapper position-relative" data-section-id="{{ section.id }}"
+             style="{% if section.content.get('bg_image') %}background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(21,128,61,0.82)), url('{{ section.content.bg_image }}') center/cover no-repeat;{% endif %}">
+        <div class="container text-center py-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-9">
+                    {% if section.content.get('eyebrow') %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fs-7 fw-bold mb-3 live-editable" data-field="eyebrow">
+                            {{ section.content.eyebrow }}
+                        </span>
+                    {% endif %}
+                    <h1 class="display-4 fw-extrabold mb-3 text-white live-editable" data-field="title">
+                        {{ section.content.get('title', 'Judul Utama Campaign') }}
+                    </h1>
+                    <p class="lead opacity-90 mb-4 live-editable" data-field="subtitle">
+                        {{ section.content.get('subtitle', 'Deskripsi campaign singkat...') }}
+                    </p>
+                    <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                        <a href="{{ section.content.get('button_link', '#donasi') }}" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-lg">
+                            <span class="live-editable" data-field="button_text">{{ section.content.get('button_text', 'Donasi Sekarang') }}</span>
+                            <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== 2. PROGRESS SECTION ========== #}
+    {% if section.type == 'progress' %}
+    {% set target = section.content.get('target', 100000000)|int %}
+    {% set collected = section.content.get('collected', 0)|int %}
+    {% set percent = ((collected / target) * 100)|round|int if target > 0 else 0 %}
+    <section class="section-padding bg-light position-relative" id="donasi" data-section-id="{{ section.id }}">
+        <div class="container">
+            <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-dark live-editable" data-field="title">{{ section.content.get('title', 'Progress Donasi') }}</h3>
+                </div>
+                <div class="row align-items-center g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between text-muted mb-2 font-monospace">
+                            <span>Terkumpul: <strong class="text-success fs-5">Rp {{ "{:,.0f}".format(collected) }}</strong></span>
+                            <span>Target: <strong>Rp {{ "{:,.0f}".format(target) }}</strong></span>
+                        </div>
+                        <div class="progress rounded-pill style-bar" style="height: 22px;">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated fw-bold" role="progressbar" style="width: {{ percent if percent <= 100 else 100 }}%">
+                                {{ percent }}%
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2 d-block live-editable" data-field="extra_text">{{ section.content.get('extra_text', '') }}</small>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+                        <a href="https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20berdonasi" target="_blank" class="btn btn-warning btn-lg rounded-pill px-4 fw-bold text-dark shadow-sm">
+                            <i class="bi bi-whatsapp me-2"></i> Konfirmasi Transfer WA
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== 3. ABOUT SECTION ========== #}
+    {% if section.type == 'about' %}
+    <section class="section-padding position-relative" id="about" data-section-id="{{ section.id }}">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    {% if section.content.get('eyebrow') %}
+                        <span class="text-success fw-bold text-uppercase tracking-wider small live-editable" data-field="eyebrow">{{ section.content.eyebrow }}</span>
+                    {% endif %}
+                    <h2 class="section-title fs-1 mt-1 live-editable" data-field="title">{{ section.content.get('title', 'Tentang Program Ini') }}</h2>
+                    <div class="text-secondary lead fs-6 lh-lg live-editable" data-field="content" style="white-space: pre-line;">
+                        {{ section.content.get('content', '') }}
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="position-relative">
+                        {% if section.content.get('image') %}
+                            <img src="{{ section.content.image }}" alt="About" class="img-fluid rounded-4 shadow-lg w-100 object-fit-cover" style="max-height: 420px;">
+                        {% else %}
+                            <div class="bg-light border rounded-4 p-5 text-center text-muted">
+                                <i class="bi bi-image fs-1 d-block mb-2"></i>
+                                <span>Belum ada gambar diset</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== 4. FEATURES SECTION ========== #}
+    {% if section.type == 'features' %}
+    <section class="section-padding bg-light position-relative" id="program" data-section-id="{{ section.id }}">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Keunggulan Kami') }}</h2>
+                <p class="text-muted live-editable" data-field="subtitle">{{ section.content.get('subtitle', '') }}</p>
+            </div>
+            <div class="row g-4">
+                {% for i in range(1, 5) %}
+                {% if section.content.get('item' ~ i ~ '_title') %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="bi bi-star-fill"></i></div>
+                        <h5 class="fw-bold text-dark live-editable" data-field="item{{ i }}_title">{{ section.content.get('item' ~ i ~ '_title') }}</h5>
+                        <p class="text-muted small mb-0 live-editable" data-field="item{{ i }}_desc">{{ section.content.get('item' ~ i ~ '_desc') }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ========== 5. CTA SECTION ========== #}
+    {% if section.type == 'cta' %}
+    <section class="section-padding bg-success text-white text-center position-relative" data-section-id="{{ section.id }}">
+        <div class="container">
+            <h2 class="display-6 fw-bold mb-3 text-white live-editable" data-field="title">{{ section.content.get('title', 'Mari Bergandeng Tangan') }}</h2>
+            <p class="lead mb-4 opacity-90 live-editable" data-field="subtitle">{{ section.content.get('subtitle', '') }}</p>
+            <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg rounded-pill px-5 fw-bold text-success shadow">
+                <span class="live-editable" data-field="button_text">{{ section.content.get('button_text', 'Donasi Sekarang') }}</span>
+            </a>
+        </div>
+    </section>
+    {% endif %}
+
+{% endfor %}
+</main>
+
+<!-- FOOTER YAYASAN (INFORMASI LENGKAP) -->
+<footer class="pt-5 pb-4 border-top border-secondary">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-building-fill fs-6"></i>
+                    </div>
+                    <span class="fw-bold fs-5 text-white">YPI BAITUSSALAM</span>
+                </div>
+                <p class="small text-secondary lh-lg mb-3">
+                    Yayasan Pendidikan Islam Baitussalam berfokus pada pengelolaan lembaga pendidikan Rabbani, pembinaan tahfidz Al-Qur'an, dan penyaluran program sosial keagamaan.
+                </p>
+            </div>
+
+            <div class="col-md-4 col-lg-3 ms-lg-auto">
+                <h6 class="text-white fw-bold mb-3">Kontak & Alamat</h6>
+                <ul class="list-unstyled small text-secondary lh-lg">
+                    <li class="mb-2"><i class="bi bi-geo-alt-fill text-success me-2"></i> Jl. Masjid Baitussalam No. 123, Indonesia</li>
+                    <li class="mb-2"><i class="bi bi-telephone-fill text-success me-2"></i> (021) 1234-5678</li>
+                    <li class="mb-2"><i class="bi bi-whatsapp text-success me-2"></i> +62 812-3456-7890</li>
+                    <li><i class="bi bi-envelope-fill text-success me-2"></i> info@baitussalam.or.id</li>
+                </ul>
+            </div>
+
+            <div class="col-md-4 col-lg-3">
+                <h6 class="text-white fw-bold mb-3">Rekening Donasi</h6>
+                <div class="bg-dark p-3 rounded-3 border border-secondary mb-2">
+                    <small class="d-block text-muted">Bank Syariah Indonesia (BSI)</small>
+                    <strong class="text-white font-monospace fs-6">7123-4567-89</strong>
+                    <small class="d-block text-muted fs-8">a.n. YPI Baitussalam</small>
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-secondary opacity-25">
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap small text-secondary pt-2">
+            <p class="mb-0">&copy; 2026 YPI Baitussalam. All rights reserved.</p>
+            <p class="mb-0">Sistem Landing Page Terpadu</p>
+        </div>
+    </div>
+</footer>
+
+<!-- JS BOOTSTRAP -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- JAVASCRIPT LIVE EDIT (ADMIN) -->
+{% if current_user.is_authenticated %}
+<script>
+    let isEditing = false;
+
+    function toggleLiveEdit() {
+        isEditing = !isEditing;
+        const editables = document.querySelectorAll('.live-editable');
+        const btnEdit = document.getElementById('btn-edit');
+        const btnSave = document.getElementById('btn-save');
+
+        editables.forEach(el => {
+            el.contentEditable = isEditing;
+        });
+
+        if (isEditing) {
+            btnEdit.classList.replace('btn-primary', 'btn-outline-light');
+            btnEdit.innerHTML = '<i class="bi bi-x-circle"></i> Batal Edit';
+            btnSave.classList.remove('d-none');
+        } else {
+            btnEdit.classList.replace('btn-outline-light', 'btn-primary');
+            btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Edit Langsung di Layar';
+            btnSave.classList.add('d-none');
+        }
+    }
+
+    function saveLiveEdit() {
+        const payload = [];
+
+        document.querySelectorAll('section[data-section-id]').forEach(sec => {
+            const sectionId = sec.getAttribute('data-section-id');
+            const fields = {};
+
+            sec.querySelectorAll('.live-editable').forEach(el => {
+                const fieldName = el.getAttribute('data-field');
+                if (fieldName) {
+                    fields[fieldName] = el.innerText.trim();
+                }
+            });
+
+            payload.push({
+                section_id: sectionId,
+                content: fields
+            });
+        });
+
+        fetch("{{ url_for('admin.save_live_edit', page_id=page.id) }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sections: payload })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Semua perubahan berhasil disimpan!');
+                location.reload();
+            } else {
+                alert('Gagal menyimpan: ' + data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan koneksi.');
+        });
+    }
+</script>
+{% endif %}
+
+</body>
+</html>
