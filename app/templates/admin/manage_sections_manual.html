@@ -3,7 +3,6 @@
 {% block title %}Kelola Section - {{ page.title }}{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb Navigasi -->
 <nav aria-label="breadcrumb" class="mb-3">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
@@ -12,19 +11,14 @@
   </ol>
 </nav>
 
-<!-- Header & Preview Button -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="mb-1">{{ page.title }}</h3>
         <p class="text-muted mb-0">Slug: <code>/{{ page.slug }}</code></p>
     </div>
     <div>
-        <a href="{{ url_for('admin.list_pages') }}" class="btn btn-outline-secondary me-2">
-            ← Kembali ke Campaign
-        </a>
-        <a href="/{{ page.slug }}" target="_blank" class="btn btn-outline-primary">
-            Lihat Preview Halaman
-        </a>
+        <a href="{{ url_for('admin.list_pages') }}" class="btn btn-outline-secondary me-2">← Kembali ke Daftar</a>
+        <a href="/{{ page.slug }}" target="_blank" class="btn btn-outline-primary">Lihat Preview Halaman</a>
     </div>
 </div>
 
@@ -37,31 +31,27 @@
                 <select name="type" class="form-select" required>
                     <option value="">-- Pilih Jenis Section --</option>
 
-                    <optgroup label="Struktur Utama & Header">
-                        <option value="navbar">Navbar / Header Navigasi</option>
-                        <option value="hero">Hero (Banner Utama + CTA)</option>
-                        <option value="progress">Progress Donasi & Target</option>
+                    <optgroup label="Header & Navigasi">
+                        <option value="navbar">Navbar / Header Logo & Menu</option>
+                        <option value="hero">Hero Banner (Pendaftaran / Banner Utama)</option>
                     </optgroup>
 
-                    <optgroup label="Konten & Informasi Campaign">
-                        <option value="about">Tentang Campaign / Cerita</option>
-                        <option value="features">Keunggulan / Manfaat</option>
-                        <option value="updates">Kabar Terbaru / Timeline Update</option>
-                        <option value="budget_breakdown">Rincian Penggunaan Dana</option>
-                        <option value="location">Lokasi / Peta Penyaluran</option>
+                    <optgroup label="Informasi Sekolah & PPDB">
+                        <option value="about">Profil Sekolah & Yayasan</option>
+                        <option value="features">Keunggulan & Fasilitas</option>
+                        <option value="progress">Progress Kuota PPDB / Pendaftaran</option>
+                        <option value="gallery">Galeri Foto Kegiatan & Fasilitas</option>
                     </optgroup>
 
-                    <optgroup label="Dokumentasi & Social Proof">
-                        <option value="gallery">Galeri Foto / Video</option>
-                        <option value="testimonial">Testimoni Tokoh / Penerima</option>
-                        <option value="donor_list">Daftar Donatur Terbaru</option>
-                        <option value="team">Tim Pengelola / Relawan</option>
+                    <optgroup label="Penggalangan Donasi & Wakaf Yayasan">
+                        <option value="donation_campaign">Galang Donasi Pembangunan / Beasiswa</option>
                     </optgroup>
 
-                    <optgroup label="Aksi & Penutup">
-                        <option value="faq">FAQ (Pertanyaan Umum)</option>
-                        <option value="cta">Ajakan Donasi (CTA Banner)</option>
-                        <option value="footer">Footer (Informasi Hak Cipta & Kontak)</option>
+                    <optgroup label="Social Proof & Penutup">
+                        <option value="testimonial">Testimoni Orang Tua Siswa / Alumni</option>
+                        <option value="faq">FAQ (Pertanyaan Umum PPDB/Donasi)</option>
+                        <option value="cta">CTA (Ajakan Pendaftaran / Donasi)</option>
+                        <option value="footer">Footer (Kontak & Legalitas)</option>
                     </optgroup>
                 </select>
             </div>
@@ -97,9 +87,7 @@
             </div>
         </li>
         {% else %}
-        <li class="list-group-item text-muted text-center py-4">
-            Belum ada section. Silakan tambahkan section menggunakan form di atas.
-        </li>
+        <li class="list-group-item text-muted text-center py-4">Belum ada section. Silakan tambahkan section di atas.</li>
         {% endfor %}
     </ul>
 </div>

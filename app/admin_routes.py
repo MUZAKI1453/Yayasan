@@ -1,117 +1,254 @@
-import re, os, uuid
+import os
+import re
+import uuid
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.utils import secure_filename
-from flask import current_app
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.models import User, Page, Section
 from app.extensions import db
 
 admin_bp = Blueprint("admin", __name__)
 
-
 # ==============================================================================
-# DICTIONARY KONTEN DEFAULT UNTUK SETIAP SECTION
+# DEFAULT SECTION CONTENTS (UNUK ADD SECTION SINGLE MANUAL)
 # ==============================================================================
 DEFAULT_SECTION_CONTENTS = {
     "navbar": {
         "brand_name": "SDIP Baitussalam",
         "logo_url": "",
+        "nav_theme": "bg-white navbar-light shadow-sm",
+        "nav_position": "sticky-top",
         "nav_text_1": "Beranda", "nav_url_1": "#beranda",
-        "nav_text_2": "Tentang", "nav_url_2": "#tentang",
-        "nav_text_3": "Program", "nav_url_3": "#program",
-        "nav_text_4": "Kontak", "nav_url_4": "#kontak",
-        "button_text": "Donasi Sekarang",
-        "button_link": "#donasi"
+        "button_text_1": "Daftar PPDB", "button_link_1": "#ppdb"
     },
     "hero": {
-        "eyebrow": "Campaign Baru 2026",
-        "title": "Judul Utama Campaign",
-        "subtitle": "Tuliskan ringkasan atau kutipan singkat diawal halaman...",
-        "button_text": "Donasi Sekarang",
-        "button_link": "#donasi",
-        "background_image": ""
-    },
-    "progress": {
-        "title": "Progress Donasi",
-        "target": 100000000,
-        "collected": 0,
-        "extra_text": "Mari bersama-sama membantu sesama"
+        "eyebrow": "Penerimaan Peserta Didik Baru (PPDB)",
+        "title": "Membentuk Generasi Rabbani",
+        "subtitle": "Selamat datang di sekolah kami...",
+        "button_text": "Daftar Sekarang",
+        "button_link": "#ppdb"
     },
     "about": {
-        "eyebrow": "Tentang Campaign",
-        "title": "Cerita Campaign",
-        "content": "Tuliskan latar belakang dan cerita lengkap mengenai campaign ini...",
-        "image": "",
-        "image_caption": ""
+        "eyebrow": "Profil",
+        "title": "Tentang Kami",
+        "content": "Tuliskan deskripsi/profil di sini..."
     },
     "features": {
-        "title": "Keunggulan",
-        "subtitle": "Mengapa harus berdonasi di sini?",
-        "item1_title": "Transparan", "item1_desc": "Laporan keuangan diperbarui secara berkala.",
-        "item2_title": "Amanah", "item2_desc": "Penyaluran langsung ke penerima manfaat.",
-        "item3_title": "Cepat", "item3_desc": "Proses donasi yang praktis dan mudah.",
-        "item4_title": "Bermanfaat", "item4_desc": "Dampak jangka panjang bagi sesama."
+        "title": "Keunggulan Kami",
+        "item1_title": "Fasilitas Lengkap", "item1_desc": "Ruang belajar nyaman & AC."
+    },
+    "donation_campaign": {
+        "eyebrow": "Program Wakaf & Infaq",
+        "title": "Pembangunan Gedung Ruang Kelas Baru",
+        "subtitle": "Mari dukung sarana belajar siswa.",
+        "target": 500000000, "collected": 0,
+        "bank_account": "BSI: 7123-4567-89 a.n. YPI Baitussalam"
+    },
+    "progress": {
+        "title": "Progress Kuota",
+        "target": 60, "collected": 0
     },
     "gallery": {
-        "title": "Galeri Dokumentasi",
-        "subtitle": "Foto-foto kegiatan dan penyaluran donasi",
-        "image1": "", "image2": "", "image3": "", "image4": "", "image5": "", "image6": ""
+        "title": "Galeri Dokumentasi"
     },
     "testimonial": {
-        "title": "Apa Kata Mereka",
-        "name1": "Hamba Allah", "role1": "Donatur", "quote1": "Semoga amanah dan bermanfaat.",
-        "name2": "Ibu Dermawan", "role2": "Donatur", "quote2": "Senang bisa membantu sesama.",
-        "name3": "Anak Sholeh", "role3": "Donatur", "quote3": "Terima kasih atas kerja kerasnya."
+        "title": "Testimoni Orang Tua"
     },
     "faq": {
-        "title": "Pertanyaan Umum (FAQ)",
-        "faq_q1": "Bagaimana cara berdonasi?", "faq_a1": "Klik tombol Donasi Sekarang lalu ikuti petunjuk instruksi pembayaran.",
-        "faq_q2": "Apakah donasi saya tercatat?", "faq_a2": "Ya, setiap transaksi akan langsung masuk dalam riwayat donasi.",
-        "faq_q3": "Apakah ada batasan nominal?", "faq_a3": "Tidak ada, Anda bisa berdonasi dengan nominal berapa pun.",
-        "faq_q4": "Siapa yang mengelola dana ini?", "faq_a4": "Tim yayasan bekerja sama dengan relawan lapangan terverifikasi."
+        "title": "Pertanyaan Umum (FAQ)"
     },
     "cta": {
-        "title": "Mari Bersama Membantu",
-        "subtitle": "Ulurkan tangan Anda untuk kebaikan dan kemanusiaan",
-        "button_text": "Donasi Sekarang",
-        "button_link": "#donasi"
+        "title": "Segera Daftarkan Putra-Putri Anda",
+        "button_text": "Daftar Sekarang", "button_link": "#ppdb"
     },
     "footer": {
-        "copyright": "© 2026 Yayasan Kita. All rights reserved.",
-        "description": "Lembaga nirlaba yang berfokus pada pendidikan dan kemanusiaan.",
-        "facebook": "#",
-        "instagram": "#",
-        "whatsapp": "#"
-    },
-    "updates": {
-        "title": "Kabar Terbaru / Perkemabangan",
-        "content": "Penyaluran bantuan tahap 1 telah berhasil dilaksanakan..."
-    },
-    "budget_breakdown": {
-        "title": "Rincian Alokasi Dana",
-        "content": "70% Bantuan Langsung, 20% Operasional Lapangan, 10% Pengembangan."
-    },
-    "donor_list": {
-        "title": "Donatur Terbaru",
-        "content": "Terima kasih kepada para donatur yang telah menyalurkan bantuannya."
-    },
-    "team": {
-        "title": "Tim Pengelola Campaign",
-        "content": "Tim kami terdiri dari para relawan terverifikasi."
-    },
-    "location": {
-        "title": "Lokasi Penyaluran",
-        "content": "Penyaluran bantuan dipusatkan di lokasi target penerima."
+        "copyright": "© 2026 SDIP Baitussalam. All rights reserved."
     }
 }
 
+# ==============================================================================
+# PRESET TEMPLATE DEFINITIONS (FULL PAGE SECTIONS GENERATOR)
+# ==============================================================================
+PRESET_TEMPLATES = {
+    # 1. Template PPDB & Sekolah
+    "template_ppdb": [
+        ("navbar", {
+            "brand_name": "SDIP Baitussalam",
+            "logo_url": "",
+            "nav_theme": "bg-white navbar-light shadow-sm",
+            "nav_position": "sticky-top",
+            "nav_text_1": "Beranda", "nav_url_1": "#beranda",
+            "nav_text_2": "Profil", "nav_url_2": "#profil",
+            "nav_text_3": "Fasilitas", "nav_url_3": "#fasilitas",
+            "button_text_1": "Daftar PPDB", "button_link_1": "#ppdb"
+        }),
+        ("hero", {
+            "eyebrow": "Penerimaan Peserta Didik Baru (PPDB) 2026/2027",
+            "title": "Membentuk Generasi Rabbani Berakhlaq & Berprestasi",
+            "subtitle": "Selamat datang di SDIP Baitussalam. Sekolah Dasar Islam Terpadu dengan lingkungan belajar yang asri dan berkarakter.",
+            "button_text": "Daftar Sekarang",
+            "button_link": "#ppdb",
+            "background_image": ""
+        }),
+        ("about", {
+            "eyebrow": "Profil Sekolah",
+            "title": "Tentang SDIP Baitussalam",
+            "content": "Kami berkomitmen menyelenggarakan pendidikan Islam terpadu berkualitas, meletakkan dasar keimanan, adab, serta penguasaan sains dan ilmu pengetahuan umum.",
+            "image": "",
+            "image_caption": "Gedung Pembelajaran & Lingkungan Sekolah"
+        }),
+        ("features", {
+            "title": "Keunggulan Sekolah Kami",
+            "subtitle": "Mengapa memilih SDIP Baitussalam untuk putra-putri Anda?",
+            "item1_title": "Program Tahfidz", "item1_desc": "Target hafalan Juz 30 dan surah-surah pilihan.",
+            "item2_title": "Pengajar Berpengalaman", "item2_desc": "Guru-guru profesional, sabar, dan berdedikasi.",
+            "item3_title": "Fasilitas Lengkap", "item3_desc": "Ruang kelas AC, lab komputer, dan lapangan olahraga.",
+            "item4_title": "Pembiasaan Adab Islami", "item4_desc": "Pembiasaan sholat berjamaah & dzikir harian."
+        }),
+        ("progress", {
+            "title": "Kuota Pendaftaran Siswa Baru",
+            "target": 60,
+            "collected": 42,
+            "extra_text": "Sisa kuota pendaftaran terbatas untuk gelombang ini!"
+        }),
+        ("gallery", {
+            "title": "Galeri Kegiatan & Lingkungan Sekolah",
+            "subtitle": "Dokumentasi suasana belajar dan aktivitas siswa",
+            "image1": "", "image2": "", "image3": ""
+        }),
+        ("testimonial", {
+            "title": "Apa Kata Orang Tua Siswa",
+            "name1": "Bapak Ahmad", "role1": "Orang Tua Kelas 3",
+            "quote1": "Alhamdulillah hafalan Al-Qur'an anak berkembang pesat.",
+            "name2": "Ibu Siti", "role2": "Orang Tua Alumni",
+            "quote2": "Sekolah yang sangat memperhatikan perkembangan karakter anak."
+        }),
+        ("faq", {
+            "title": "Pertanyaan Umum (FAQ PPDB)",
+            "faq_q1": "Kapan pendaftaran PPDB dibuka?",
+            "faq_a1": "Pendaftaran dibuka setiap gelombang mulai bulan November.",
+            "faq_q2": "Apa saja syarat pendaftarannya?",
+            "faq_a2": "Fotokopi Akta Kelahiran, KK, Pas Foto, dan mengisi formulir online."
+        }),
+        ("cta", {
+            "title": "Segera Daftarkan Putra-Putri Anda!",
+            "subtitle": "Masa depan cerah berawal dari pendidikan dasar yang berkualitas dan berkarakter.",
+            "button_text": "Isi Formulir PPDB",
+            "button_link": "#ppdb"
+        }),
+        ("footer", {
+            "copyright": "© 2026 SDIP Baitussalam. All rights reserved.",
+            "description": "Lembaga Pendidikan Islam Terpadu & Pembentukan Karakter Rabbani.",
+            "facebook": "#", "instagram": "#", "whatsapp": "#"
+        })
+    ],
+
+    # 2. Template Profil Yayasan Utama
+    "template_yayasan": [
+        ("navbar", {
+            "brand_name": "YPI Baitussalam",
+            "logo_url": "",
+            "nav_theme": "bg-dark navbar-dark",
+            "nav_position": "sticky-top",
+            "nav_text_1": "Profil", "nav_url_1": "#profil",
+            "nav_text_2": "Unit Pendidikan", "nav_url_2": "#unit",
+            "button_text_1": "Hubungi Kami", "button_link_1": "#kontak"
+        }),
+        ("hero", {
+            "eyebrow": "Yayasan Pendidikan Islam",
+            "title": "Mewujudkan Lembaga Pendidikan Islam Unggul & Terpercaya",
+            "subtitle": "Mengelola unit pendidikan dari jenjang PAUD, SDIP, hingga SMPI untuk mencetak generasi Qur'ani.",
+            "button_text": "Pelajari Selengkapnya",
+            "button_link": "#profil"
+        }),
+        ("about", {
+            "eyebrow": "Visi & Misi Yayasan",
+            "title": "Pengabdian Untuk Pendidikan Umat",
+            "content": "YPI Baitussalam hadir sebagai wadah pembina generasi muda Islam yang berilmu, berakhlak mulia, dan siap berkontribusi bagi masyarakat.",
+            "image": ""
+        }),
+        ("features", {
+            "title": "Unit Pendidikan Yang Dinaungi",
+            "subtitle": "Layanan pendidikan berjenjang di bawah naungan yayasan",
+            "item1_title": "PAUD & TK Islam", "item1_desc": "Pendidikan anak usia dini berbasis adab.",
+            "item2_title": "SDIP Baitussalam", "item2_desc": "Sekolah dasar Islam terpadu kurikulum plus.",
+            "item3_title": "SMPI Baitussalam", "item3_desc": "Sekolah menengah dengan penguatan ilmu & tahfidz."
+        }),
+        ("cta", {
+            "title": "Bersama Membangun Masa Depan Pendidikan Islam",
+            "subtitle": "Silakan hubungi sekretariat yayasan untuk informasi lebih lanjut.",
+            "button_text": "Kontak Yayasan",
+            "button_link": "#kontak"
+        }),
+        ("footer", {
+            "copyright": "© 2026 Yayasan Pendidikan Islam Baitussalam.",
+            "description": "Pusat Pengelolaan Pendidikan Islam Terpadu.",
+            "facebook": "#", "instagram": "#", "whatsapp": "#"
+        })
+    ],
+
+    # 3. Template Donasi & Wakaf Pembangunan
+    "template_donasi": [
+        ("navbar", {
+            "brand_name": "Wakaf Baitussalam",
+            "logo_url": "",
+            "nav_theme": "bg-white navbar-light shadow-sm",
+            "nav_position": "sticky-top",
+            "nav_text_1": "Program", "nav_url_1": "#program",
+            "button_text_1": "Infaq Sekarang", "button_link_1": "#donasi"
+        }),
+        ("hero", {
+            "eyebrow": "Program Wakaf Pembangunan 2026",
+            "title": "Galang Donasi Pembangunan Ruang Kelas & Gedung Baru",
+            "subtitle": "Mari berinvestasi akhirat dengan mendukung sarana belajar para penghafal Al-Qur'an dan siswa dhuafa.",
+            "button_text": "Salurkan Wakaf / Donasi",
+            "button_link": "#donasi"
+        }),
+        ("donation_campaign", {
+            "eyebrow": "Target Pembangunan Gedung",
+            "title": "Pembangunan Gedung Laboratorium & Ruang Belajar Baru",
+            "subtitle": "Urgensi dana digunakan untuk pembebasan lahan & pengerjaan struktur lantai 2.",
+            "target": 500000000,
+            "collected": 125000000,
+            "bank_account": "BSI: 7123-4567-89 a.n. YPI Baitussalam Wakaf",
+            "button_text": "Konfirmasi Transfer Donasi",
+            "button_link": "#donasi"
+        }),
+        ("faq", {
+            "title": "Pertanyaan Donatur (FAQ)",
+            "faq_q1": "Bagaimana cara menyalurkan donasi?",
+            "faq_a1": "Transfer via rekening resmi yayasan lalu kirim bukti transfer.",
+            "faq_q2": "Apakah ada laporan penggunaan dana?",
+            "faq_a2": "Ya, laporan keuangan diperbarui berkala di website resmi."
+        }),
+        ("footer", {
+            "copyright": "© 2026 YPI Baitussalam Fundraising.",
+            "description": "Lembaga Resmi Pengelolaan Infaq & Wakaf Pendidikan.",
+            "facebook": "#", "instagram": "#", "whatsapp": "#"
+        })
+    ]
+}
+
+
+def save_uploaded_file(file):
+    if file and file.filename != '':
+        filename = secure_filename(file.filename)
+        ext = os.path.splitext(filename)[1].lower()
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        filepath = os.path.join(upload_folder, unique_filename)
+        file.save(filepath)
+        return f"/static/uploads/{unique_filename}"
+    return None
+
 
 # ==============================================================================
-# 1. AUTHENTICATION (Login / Logout)
+# 1. AUTHENTICATION
 # ==============================================================================
 
 @admin_bp.route("/login", methods=["GET", "POST"])
@@ -128,7 +265,6 @@ def login():
             return render_template("admin/login.html")
 
         user = User.query.filter_by(username=username).first()
-
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for("admin.dashboard"))
@@ -157,7 +293,7 @@ def dashboard():
 
 
 # ==============================================================================
-# 3. PAGES (CAMPAIGN) MANAGEMENT
+# 3. PAGES (CAMPAIGN / PROFILE) MANAGEMENT
 # ==============================================================================
 
 @admin_bp.route('/pages')
@@ -172,10 +308,10 @@ def list_pages():
 def new_page():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
-        creation_mode = request.form.get("creation_mode", "template")
+        template_id = request.form.get("template_id", "template_ppdb")
 
         if not title:
-            flash("Judul wajib diisi", "danger")
+            flash("Judul halaman wajib diisi!", "danger")
             return redirect(url_for("admin.new_page"))
 
         # Generate slug otomatis
@@ -191,32 +327,27 @@ def new_page():
         db.session.add(page)
         db.session.flush()
 
-        if creation_mode == "template":
-            default_sections = [
-                ("navbar", DEFAULT_SECTION_CONTENTS["navbar"]),
-                ("hero", {**DEFAULT_SECTION_CONTENTS["hero"], "title": title}),
-                ("progress", DEFAULT_SECTION_CONTENTS["progress"]),
-                ("about", DEFAULT_SECTION_CONTENTS["about"]),
-                ("cta", DEFAULT_SECTION_CONTENTS["cta"]),
-                ("footer", DEFAULT_SECTION_CONTENTS["footer"])
-            ]
+        # Ambil susunan section berdasarkan preset template yang dipilih
+        chosen_template = PRESET_TEMPLATES.get(template_id, PRESET_TEMPLATES["template_ppdb"])
 
-            for idx, (s_type, s_content) in enumerate(default_sections, start=1):
-                sec = Section(
-                    page_id=page.id,
-                    type=s_type,
-                    order=idx,
-                    content=s_content
-                )
-                db.session.add(sec)
+        for idx, (s_type, s_content) in enumerate(chosen_template, start=1):
+            content_copy = dict(s_content)
+            if s_type == "hero" and "title" in content_copy:
+                content_copy["title"] = title
 
-            db.session.commit()
-            flash("Campaign berhasil dibuat menggunakan template!", "success")
-            return redirect(f"/{page.slug}")
+            sec = Section(
+                page_id=page.id,
+                type=s_type,
+                order=idx,
+                content=content_copy
+            )
+            db.session.add(sec)
 
         db.session.commit()
-        flash("Campaign berhasil dibuat! Silakan tambahkan section secara manual.", "success")
-        return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
+        flash("Halaman berhasil dibuat! Silakan sesuaikan teks & foto langsung di bawah ini.", "success")
+
+        # Alihkan langsung ke halaman Live Editor Full-Page
+        return redirect(f"/{page.slug}")
 
     return render_template("admin/new_page.html")
 
@@ -237,17 +368,16 @@ def toggle_publish(page_id):
 @login_required
 def delete_page(page_id):
     page = Page.query.get_or_404(page_id)
-
     Section.query.filter_by(page_id=page.id).delete()
     db.session.delete(page)
     db.session.commit()
 
-    flash(f"Campaign '{page.title}' berhasil dihapus!", "success")
+    flash(f"Halaman '{page.title}' berhasil dihapus!", "success")
     return redirect(url_for("admin.list_pages"))
 
 
 # ==============================================================================
-# 4. SECTIONS MANAGEMENT (Form Based - Manual)
+# 4. SECTIONS MANAGEMENT (MANUAL)
 # ==============================================================================
 
 @admin_bp.route("/page/<int:page_id>/sections-manual")
@@ -268,8 +398,6 @@ def add_section(page_id):
         return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
 
     last_order = db.session.query(db.func.max(Section.order)).filter_by(page_id=page.id).scalar() or 0
-
-    # Ambil nilai default berdasarkan tipe section
     initial_content = DEFAULT_SECTION_CONTENTS.get(section_type, {"title": section_type.title()})
 
     section = Section(
@@ -285,27 +413,6 @@ def add_section(page_id):
     return redirect(url_for("admin.edit_section", section_id=section.id))
 
 
-def save_uploaded_file(file):
-    if file and file.filename != '':
-        # Ambil ekstensi berkas
-        filename = secure_filename(file.filename)
-        ext = os.path.splitext(filename)[1].lower()
-
-        # Buat nama unik agar tidak saling menimpa
-        unique_filename = f"{uuid.uuid4().hex}{ext}"
-
-        # Folder tujuan: app/static/uploads/
-        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
-        os.makedirs(upload_folder, exist_ok=True)
-
-        filepath = os.path.join(upload_folder, unique_filename)
-        file.save(filepath)
-
-        # Mengembalikan path publik untuk template
-        return f"/static/uploads/{unique_filename}"
-    return None
-
-
 @admin_bp.route("/section/<int:section_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_section(section_id):
@@ -315,29 +422,26 @@ def edit_section(section_id):
     if request.method == "POST":
         content = dict(section.content or {})
 
-        # 1. Simpan input text/textarea biasa
+        # Simpan input text
         for key, value in request.form.items():
             if key != "csrf_token":
                 content[key] = value
 
-        # 2. Proses upload file dari device (jika ada)
+        # Upload file dari device
         for key, file in request.files.items():
             if file and file.filename != '':
                 file_url = save_uploaded_file(file)
                 if file_url:
-                    # Menghilangkan akhiran '_file' untuk nama key di JSON content
-                    # Contoh: 'logo_url_file' -> 'logo_url'
                     field_key = key.replace('_file', '')
                     content[field_key] = file_url
 
         section.content = content
         flag_modified(section, "content")
-
         section.updated_at = datetime.utcnow()
         page.updated_at = datetime.utcnow()
         db.session.commit()
 
-        flash("Section berhasil disimpan", "success")
+        flash("Section berhasil disimpan!", "success")
         return redirect(url_for("admin.manage_sections_manual", page_id=page.id))
 
     return render_template("admin/edit_section.html", section=section, page=page)
@@ -375,7 +479,7 @@ def reorder_sections(page_id):
 
 
 # ==============================================================================
-# 5. LIVE EDIT & FRONTEND API MANAGEMENT
+# 5. LIVE EDIT & FRONTEND API
 # ==============================================================================
 
 @admin_bp.route("/page/<int:page_id>/add-section-live", methods=["POST"])
@@ -422,7 +526,7 @@ def live_edit_sections():
                     current_content[key] = value
 
                 section.content = current_content
-                flag_modified(section, "content")  # Menandai field JSON telah berubah
+                flag_modified(section, "content")
                 section.updated_at = datetime.utcnow()
 
         db.session.commit()
