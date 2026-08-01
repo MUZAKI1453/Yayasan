@@ -1,9 +1,11 @@
-import re
+import re, os, uuid
 from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.orm.attributes import flag_modified
+from werkzeug.utils import secure_filename
+from flask import current_app
 
 from app.models import User, Page, Section
 from app.extensions import db
@@ -283,6 +285,27 @@ def add_section(page_id):
     return redirect(url_for("admin.edit_section", section_id=section.id))
 
 
+def save_uploaded_file(file):
+    if file and file.filename != '':
+        # Ambil ekstensi berkas
+        filename = secure_filename(file.filename)
+        ext = os.path.splitext(filename)[1].lower()
+
+        # Buat nama unik agar tidak saling menimpa
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+
+        # Folder tujuan: app/static/uploads/
+        upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        filepath = os.path.join(upload_folder, unique_filename)
+        file.save(filepath)
+
+        # Mengembalikan path publik untuk template
+        return f"/static/uploads/{unique_filename}"
+    return None
+
+
 @admin_bp.route("/section/<int:section_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_section(section_id):
@@ -290,13 +313,25 @@ def edit_section(section_id):
     page = section.page
 
     if request.method == "POST":
-        content = {}
+        content = dict(section.content or {})
+
+        # 1. Simpan input text/textarea biasa
         for key, value in request.form.items():
             if key != "csrf_token":
                 content[key] = value
 
+        # 2. Proses upload file dari device (jika ada)
+        for key, file in request.files.items():
+            if file and file.filename != '':
+                file_url = save_uploaded_file(file)
+                if file_url:
+                    # Menghilangkan akhiran '_file' untuk nama key di JSON content
+                    # Contoh: 'logo_url_file' -> 'logo_url'
+                    field_key = key.replace('_file', '')
+                    content[field_key] = file_url
+
         section.content = content
-        flag_modified(section, "content")  # Memastikan SQLAlchemy mendeteksi perubahan JSON
+        flag_modified(section, "content")
 
         section.updated_at = datetime.utcnow()
         page.updated_at = datetime.utcnow()

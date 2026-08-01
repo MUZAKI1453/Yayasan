@@ -22,7 +22,8 @@
                     <p class="text-muted mb-0">Halaman: <strong>{{ page.title }}</strong></p>
                 </div>
 
-                <form method="POST">
+                <!-- DITAMBAHKAN enctype="multipart/form-data" -->
+                <form method="POST" enctype="multipart/form-data">
 
                     {# ====================== NAVBAR ====================== #}
                     {% if section.type == 'navbar' %}
@@ -35,10 +36,13 @@
                                        placeholder="Contoh: SDIP Baitussalam">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">URL Logo Gambar (Opsional)</label>
-                                <input type="url" name="logo_url" class="form-control"
-                                       value="{{ section.content.get('logo_url', '') }}"
-                                       placeholder="https://domain.com/logo.png">
+                                <label class="form-label">Logo Gambar (Upload File dari Device)</label>
+                                <input type="file" name="logo_url_file" class="form-control" accept="image/*">
+                                {% if section.content.get('logo_url') %}
+                                    <div class="mt-2 small text-muted">
+                                        Gambar saat ini: <a href="{{ section.content.get('logo_url') }}" target="_blank">Lihat Logo</a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -111,9 +115,11 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">URL Gambar Latar (Opsional)</label>
-                            <input type="url" name="background_image" class="form-control"
-                                   value="{{ section.content.get('background_image', '') }}">
+                            <label class="form-label">Gambar Latar (Upload dari Device)</label>
+                            <input type="file" name="background_image_file" class="form-control" accept="image/*">
+                            {% if section.content.get('background_image') %}
+                                <div class="mt-2 small text-muted">Gambar saat ini: <a href="{{ section.content.get('background_image') }}" target="_blank">Lihat Gambar</a></div>
+                            {% endif %}
                         </div>
 
                     {# ====================== PROGRESS ====================== #}
@@ -158,9 +164,11 @@
                             <textarea name="content" class="form-control" rows="6" required>{{ section.content.get('content', '') }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">URL Gambar</label>
-                            <input type="url" name="image" class="form-control"
-                                   value="{{ section.content.get('image', '') }}">
+                            <label class="form-label">Upload Gambar (dari Device)</label>
+                            <input type="file" name="image_file" class="form-control" accept="image/*">
+                            {% if section.content.get('image') %}
+                                <div class="mt-2 small text-muted">Gambar saat ini: <a href="{{ section.content.get('image') }}" target="_blank">Lihat Gambar</a></div>
+                            {% endif %}
                         </div>
 
                     {# ====================== FEATURES ====================== #}
@@ -201,9 +209,11 @@
                         <div class="row">
                             {% for i in range(1, 7) %}
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">URL Gambar {{ i }}</label>
-                                <input type="url" name="image{{ i }}" class="form-control"
-                                       value="{{ section.content.get('image' ~ i, '') }}">
+                                <label class="form-label">Upload Gambar {{ i }}</label>
+                                <input type="file" name="image{{ i }}_file" class="form-control" accept="image/*">
+                                {% if section.content.get('image' ~ i) %}
+                                    <div class="mt-1 small text-muted">Ada gambar: <a href="{{ section.content.get('image' ~ i) }}" target="_blank">Lihat</a></div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
