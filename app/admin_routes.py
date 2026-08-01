@@ -535,3 +535,75 @@ def live_edit_sections():
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
+# ==============================================================================
+# 6. LIVE EDIT ADVANCED API (UPLOAD GAMBAR, GANTI WARNA, TOMBOL)
+# ==============================================================================
+
+@admin_bp.route("/api/live-upload-image", methods=["POST"])
+@login_required
+def live_upload_image():
+    """API untuk upload gambar/logo secara instant dari halaman frontend"""
+    try:
+        section_id = request.form.get("section_id")
+        field_name = request.form.get("field_name")  # misal: 'logo_url', 'image', 'background_image'
+        file = request.files.get("image_file")
+
+        if not section_id or not field_name or not file:
+            return jsonify({"status": "error", "message": "Parameter tidak lengkap"}), 400
+
+        section = Section.query.get_or_404(section_id)
+        file_url = save_uploaded_file(file)
+
+        if not file_url:
+            return jsonify({"status": "error", "message": "Gagal menyimpan file"}), 400
+
+        # Update JSON content section
+        content = dict(section.content or {})
+        content[field_name] = file_url
+        section.content = content
+        flag_modified(section, "content")
+        section.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Gambar berhasil diunggah!",
+            "file_url": file_url
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@admin_bp.route("/api/live-update-style", methods=["POST"])
+@login_required
+def live_update_style():
+    """API untuk ganti warna background/tema, teks tombol, & link tombol"""
+    try:
+        data = request.get_json()
+        section_id = data.get("section_id")
+        updates = data.get("updates", {}) # misal: {"nav_theme": "bg-dark navbar-dark", "button_link": "#ppdb"}
+
+        if not section_id:
+            return jsonify({"status": "error", "message": "Section ID wajib diisi"}), 400
+
+        section = Section.query.get_or_404(section_id)
+        content = dict(section.content or {})
+
+        for key, val in updates.items():
+            content[key] = val
+
+        section.content = content
+        flag_modified(section, "content")
+        section.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({"status": "success", "message": "Pengaturan section berhasil diperbarui!"})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500

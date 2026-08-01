@@ -75,11 +75,14 @@
         .live-editable[contenteditable="true"]:hover {
             background-color: rgba(13, 110, 253, 0.08);
         }
+        .admin-section-bar {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR CONTROL ADMIN (MELAYANG DI ATAS LEBIH INTUITIF) -->
+<!-- NAVBAR CONTROL ADMIN (MELAYANG DI ATAS) -->
 {% if current_user.is_authenticated %}
 <div class="bg-dark text-white p-3 d-flex justify-content-between align-items-center sticky-top shadow-lg" style="z-index: 2000;">
     <div class="d-flex align-items-center gap-3">
@@ -89,10 +92,10 @@
     <div class="d-flex gap-2">
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-light">Dashboard</a>
         <button id="btn-edit" onclick="toggleLiveEdit()" class="btn btn-sm btn-warning fw-bold">
-            <i class="bi bi-pencil-square"></i> Aktifkan Edit Langsung
+            <i class="bi bi-pencil-square"></i> Aktifkan Edit Teks Langsung
         </button>
         <button id="btn-save" onclick="saveLiveEdit()" class="btn btn-sm btn-success fw-bold d-none">
-            <i class="bi bi-check-circle"></i> Simpan Perubahan
+            <i class="bi bi-check-circle"></i> Simpan Perubahan Teks
         </button>
     </div>
 </div>
@@ -106,11 +109,25 @@
     {% set theme = section.content.get('nav_theme', 'bg-white navbar-light shadow-sm') %}
     {% set position = section.content.get('nav_position', 'sticky-top') %}
     <nav class="navbar navbar-expand-lg {{ theme }} {{ position }} position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i>
-        </button>
 
-        <div class="container py-1">
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center w-100 position-absolute top-0 start-0 z-3 opacity-90">
+            <small class="fw-bold ms-2"><i class="bi bi-compass"></i> Section Navbar</small>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-warning me-1" onclick="openStyleModal({{ section.id }}, '{{ section.content.get('nav_theme', '') }}')">
+                    <i class="bi bi-palette"></i> Warna Navbar
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-info me-1" onclick="openUploadModal({{ section.id }}, 'logo_url')">
+                    <i class="bi bi-image"></i> Upload Logo
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="container py-1 {% if current_user.is_authenticated %}mt-4{% endif %}">
             <a class="navbar-brand d-flex align-items-center gap-2" href="#">
                 {% if section.content.get('logo_url') %}
                     <img src="{{ section.content.logo_url }}" alt="Logo" height="40">
@@ -136,7 +153,11 @@
                         {% set btn_text = section.content.get('button_text_' ~ i, section.content.get('button_text') if i == 1 else '') %}
                         {% set btn_link = section.content.get('button_link_' ~ i, section.content.get('button_link') if i == 1 else '') %}
                         {% if btn_text %}
-                            <a href="{{ btn_link or '#' }}" class="btn {% if loop.first %}btn-primary{% else %}btn-outline-primary{% endif %} fw-bold px-3 rounded-pill">
+                            <a href="{{ btn_link or '#' }}"
+                               class="btn {% if loop.first %}btn-primary{% else %}btn-outline-primary{% endif %} fw-bold px-3 rounded-pill"
+                               {% if current_user.is_authenticated %}
+                               onclick="editButtonLink(event, {{ section.id }}, '{{ btn_text }}', '{{ btn_link }}', 'button_text_{{ i }}', 'button_link_{{ i }}')"
+                               {% endif %}>
                                 <span class="live-editable" data-field="button_text_{{ i }}">{{ btn_text }}</span>
                             </a>
                         {% endif %}
@@ -152,10 +173,22 @@
     {% set bg_image = section.content.get('background_image', '') %}
     <section class="hero-section position-relative" data-section-id="{{ section.id }}"
              style="{% if bg_image %}background: linear-gradient(rgba(26,26,46,0.85), rgba(22,33,62,0.85)), url('{{ bg_image }}') no-repeat center center; background-size: cover;{% endif %}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
-        <div class="container text-center">
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75">
+            <small class="fw-bold ms-2"><i class="bi bi-layout-text-window-reverse"></i> Section Hero</small>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-info me-1" onclick="openUploadModal({{ section.id }}, 'background_image')">
+                    <i class="bi bi-image"></i> Upload Gambar Latar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="container text-center py-5">
             <div class="row align-items-center">
                 <div class="col-lg-8 mx-auto">
                     {% if section.content.get('eyebrow') %}
@@ -166,7 +199,11 @@
                         <p class="lead mt-3 mb-4 opacity-75 live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
                     {% endif %}
                     {% if section.content.get('button_text') %}
-                        <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg mt-2 fw-bold">
+                        <a href="{{ section.content.get('button_link', '#') }}"
+                           class="btn btn-light btn-lg mt-2 fw-bold"
+                           {% if current_user.is_authenticated %}
+                           onclick="editButtonLink(event, {{ section.id }}, '{{ section.content.get('button_text', '') }}', '{{ section.content.get('button_link', '') }}', 'button_text', 'button_link')"
+                           {% endif %}>
                             <span class="live-editable" data-field="button_text">{{ section.content.button_text }}</span>
                         </a>
                     {% endif %}
@@ -179,9 +216,21 @@
     {# ========== ABOUT ========== #}
     {% if section.type == 'about' %}
     <section class="section position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-info-circle"></i> Section Profil / About</small>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-info me-1" onclick="openUploadModal({{ section.id }}, 'image')">
+                    <i class="bi bi-image"></i> Upload Foto Profil
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
@@ -210,9 +259,16 @@
     {# ========== FEATURES ========== #}
     {% if section.type == 'features' %}
     <section class="section bg-light position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-star"></i> Section Keunggulan / Fitur</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Keunggulan Kami') }}</h2>
@@ -240,9 +296,16 @@
     {# ========== DONATION CAMPAIGN ========== #}
     {% if section.type == 'donation_campaign' %}
     <section class="section bg-white position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-heart"></i> Section Wakaf & Donasi</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
@@ -279,7 +342,11 @@
                                 </div>
                             {% endif %}
 
-                            <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-success btn-lg px-5 rounded-pill fw-bold">
+                            <a href="{{ section.content.get('button_link', '#') }}"
+                               class="btn btn-success btn-lg px-5 rounded-pill fw-bold"
+                               {% if current_user.is_authenticated %}
+                               onclick="editButtonLink(event, {{ section.id }}, '{{ section.content.get('button_text', 'Salurkan Infaq') }}', '{{ section.content.get('button_link', '#') }}', 'button_text', 'button_link')"
+                               {% endif %}>
                                 <span class="live-editable" data-field="button_text">{{ section.content.get('button_text', 'Salurkan Infaq') }}</span>
                             </a>
                         </div>
@@ -293,9 +360,16 @@
     {# ========== PROGRESS ========== #}
     {% if section.type == 'progress' %}
     <section class="section bg-light position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-bar-chart"></i> Section Progress / Kuota</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container text-center">
             <h2 class="section-title live-editable" data-field="title">{{ section.content.get('title', 'Progress Kuota') }}</h2>
 
@@ -318,9 +392,21 @@
     {# ========== GALLERY ========== #}
     {% if section.type == 'gallery' %}
     <section class="section position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-images"></i> Section Galeri Foto</small>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-info me-1" onclick="openUploadModal({{ section.id }}, 'image1')">
+                    <i class="bi bi-image"></i> Upload Foto Galeri 1
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="container text-center">
             <h2 class="section-title live-editable mb-4" data-field="title">{{ section.content.get('title', 'Galeri Kegiatan') }}</h2>
             <div class="row g-3">
@@ -340,9 +426,16 @@
     {# ========== FAQ ========== #}
     {% if section.type == 'faq' %}
     <section class="section bg-light position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-question-circle"></i> Section FAQ</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container">
             <h2 class="section-title text-center live-editable mb-5" data-field="title">{{ section.content.get('title', 'FAQ') }}</h2>
             <div class="row justify-content-center">
@@ -374,16 +467,27 @@
     {# ========== CTA ========== #}
     {% if section.type == 'cta' %}
     <section class="cta-section position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i> Hapus
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-dark text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-megaphone"></i> Section CTA Penutup</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container">
             <h2 class="mb-3 live-editable" data-field="title">{{ section.content.get('title', '') }}</h2>
             {% if section.content.get('subtitle') %}
                 <p class="lead mb-4 opacity-75 live-editable" data-field="subtitle">{{ section.content.subtitle }}</p>
             {% endif %}
             {% if section.content.get('button_text') %}
-                <a href="{{ section.content.get('button_link', '#') }}" class="btn btn-light btn-lg fw-bold">
+                <a href="{{ section.content.get('button_link', '#') }}"
+                   class="btn btn-light btn-lg fw-bold"
+                   {% if current_user.is_authenticated %}
+                   onclick="editButtonLink(event, {{ section.id }}, '{{ section.content.get('button_text', '') }}', '{{ section.content.get('button_link', '') }}', 'button_text', 'button_link')"
+                   {% endif %}>
                     <span class="live-editable" data-field="button_text">{{ section.content.button_text }}</span>
                 </a>
             {% endif %}
@@ -394,9 +498,16 @@
     {# ========== FOOTER ========== #}
     {% if section.type == 'footer' %}
     <footer class="bg-dark text-white py-5 position-relative" data-section-id="{{ section.id }}">
-        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-3 d-none btn-remove-section shadow" data-id="{{ section.id }}" onclick="deleteSection(this)">
-            <i class="bi bi-trash"></i>
-        </button>
+
+        {% if current_user.is_authenticated %}
+        <div class="admin-section-bar bg-secondary text-white p-2 d-flex justify-content-between align-items-center opacity-75 mb-4">
+            <small class="fw-bold ms-2"><i class="bi bi-layout-south"></i> Section Footer</small>
+            <button type="button" class="btn btn-sm btn-danger" onclick="deleteSectionByAdmin({{ section.id }})">
+                <i class="bi bi-trash"></i> Hapus
+            </button>
+        </div>
+        {% endif %}
+
         <div class="container text-center">
             {% if section.content.get('description') %}
                 <p class="text-white-50 mb-4 mx-auto live-editable" style="max-width: 600px;" data-field="description">{{ section.content.description }}</p>
@@ -412,15 +523,110 @@
 
 {% if current_user.is_authenticated %}
 <script>
+    // 1. AKTIFKAN/NONAKTIFKAN LIVE EDIT TEKS
     function toggleLiveEdit() {
         document.querySelectorAll('.live-editable').forEach(el => el.setAttribute('contenteditable', 'true'));
-        document.querySelectorAll('.btn-remove-section').forEach(el => el.classList.remove('d-none'));
         document.getElementById('btn-edit').classList.add('d-none');
         document.getElementById('btn-save').classList.remove('d-none');
     }
 
-    function deleteSection(button) {
-        const sectionId = button.getAttribute('data-id');
+    // 2. UPLOAD GAMBAR / LOGO INSTANT DARI HP / KOMPUTER
+    function openUploadModal(sectionId, fieldName) {
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+
+        fileInput.onchange = e => {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            let formData = new FormData();
+            formData.append('section_id', sectionId);
+            formData.append('field_name', fieldName);
+            formData.append('image_file', file);
+
+            fetch('/admin/api/live-upload-image', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert("Gambar berhasil diunggah!");
+                    location.reload();
+                } else {
+                    alert("Gagal mengunggah: " + data.message);
+                }
+            })
+            .catch(err => {
+                alert("Terjadi kesalahan koneksi saat mengunggah gambar.");
+            });
+        };
+        fileInput.click();
+    }
+
+    // 3. EDIT WARNA / THEMA NAVBAR ATU SECTION
+    function openStyleModal(sectionId, currentTheme) {
+        const newTheme = prompt("Masukkan class warna/theme CSS (contoh: 'bg-primary navbar-dark shadow', 'bg-dark navbar-dark', 'bg-white navbar-light shadow-sm'):", currentTheme);
+        if (newTheme !== null) {
+            fetch('/admin/api/live-update-style', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    section_id: sectionId,
+                    updates: { nav_theme: newTheme }
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert("Gagal mengubah warna: " + data.message);
+                }
+            });
+        }
+    }
+
+    // 4. EDIT TEKS & LINK TOMBOL VIA PROMPT
+    function editButtonLink(event, sectionId, currentText, currentLink, textField, linkField) {
+        event.preventDefault();
+
+        let newText = prompt("Ubah Teks Tombol:", currentText);
+        if (newText === null) return;
+
+        let newLink = prompt("Ubah Link Tujuan Tombol (misal: '#ppdb' atau 'https://wa.me/...'):", currentLink);
+        if (newLink === null) return;
+
+        let updatesObj = {};
+        updatesObj[textField] = newText;
+        updatesObj[linkField] = newLink;
+
+        fetch('/admin/api/live-update-style', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                section_id: sectionId,
+                updates: updatesObj
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                location.reload();
+            }
+        });
+    }
+
+    // 5. HAPUS SECTION VIA AJAX
+    function deleteSectionByAdmin(sectionId) {
         if (!confirm("Hapus section ini dari halaman?")) return;
 
         fetch(`/admin/section/${sectionId}/delete`, {
@@ -429,10 +635,13 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (data.status === "success") button.closest('section, nav, footer').remove();
+            if (data.status === "success") {
+                location.reload();
+            }
         });
     }
 
+    // 6. SIMPAN SEMUA PERUBAHAN TEKS LIVE
     function saveLiveEdit() {
         const btnSave = document.getElementById('btn-save');
         btnSave.disabled = true;
@@ -462,13 +671,13 @@
             btnSave.className = 'btn btn-sm btn-success fw-bold';
             btnSave.innerHTML = '<i class="bi bi-check-lg"></i> Perubahan Tersimpan!';
             setTimeout(() => {
-                btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan';
+                btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan Teks';
             }, 2500);
         })
         .catch(err => {
             alert("Gagal menyimpan perubahan.");
             btnSave.disabled = false;
-            btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan';
+            btnSave.innerHTML = '<i class="bi bi-check-circle"></i> Simpan Perubahan Teks';
         });
     }
 </script>
