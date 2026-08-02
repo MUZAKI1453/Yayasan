@@ -1,3 +1,4 @@
+# app/__init__.py
 from flask import Flask
 from config import Config
 from app.extensions import db, login_manager
@@ -10,10 +11,12 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "admin.login"
 
+    # 1. Register Public Routes
     from app.routes import public_bp
-    from app.admin_routes import admin_bp
-
     app.register_blueprint(public_bp)
+
+    # 2. Register Admin Blueprint dari package folder 'app/admin'
+    from app.admin import admin_bp
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     with app.app_context():

@@ -1,0 +1,31 @@
+<section id="beranda" class="relative bg-gradient-to-br from-blue-50 to-indigo-50 py-20 px-6 text-center overflow-hidden">
+    <div class="max-w-4xl mx-auto relative z-10">
+        
+        <!-- Eyebrow Badge -->
+        {% if section.content.get('eyebrow') %}
+            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-4">
+                {{ section.content.get('eyebrow') }}
+            </span>
+        {% endif %}
+
+        <!-- Main Title -->
+        <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+            {{ section.content.get('title', 'Judul Utama Yayasan') }}
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            {{ section.content.get('subtitle', 'Deskripsi singkat yayasan atau program unggulan...') }}
+        </p>
+
+        <!-- Call to Action Button -->
+        {% if section.content.get('button_text') %}
+            <div class="flex justify-center gap-4">
+                <a href="{{ section.content.get('button_link', '#') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
+                    {{ section.content.get('button_text') }}
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+</section>

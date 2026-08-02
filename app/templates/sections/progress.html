@@ -1,0 +1,31 @@
+<section id="section-progress" data-section-type="progress" style="padding: 3rem 0; background-color: #f8fafc;">
+    <div style="max-width: 1140px; margin: 0 auto; padding: 0 15px; text-align: center;">
+        
+        <!-- Judul -->
+        <h2 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 1.5rem;">
+            {{ section.content.get('title', 'Progress Kuota') }}
+        </h2>
+
+        {% set target = section.content.get('target', 60)|int %}
+        {% set collected = section.content.get('collected', 0)|int %}
+        {% set percent = (collected / target * 100) if target > 0 else 0 %}
+
+        <!-- Outer Progress Container (Menggunakan Inline CSS Murni) -->
+        <div style="width: 100%; max-width: 800px; margin: 0 auto 1rem auto; background-color: #e2e8f0; border-radius: 9999px; height: 26px; overflow: hidden; padding: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+            
+            <!-- Inner Fill Progress Bar -->
+            <div style="width: {{ percent }}%; background-color: #2563eb; height: 100%; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 0.875rem; font-weight: 700; transition: width 0.5s ease-in-out;">
+                {% if percent > 5 %}
+                    {{ "%.0f"|format(percent) }}%
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Teks Keterangan Siswa -->
+        <p style="font-size: 1.125rem; color: #475569; margin: 0;">
+            <strong style="color: #0f172a;">{{ collected }} Siswa Terdaftar</strong> dari Target Kuota <strong style="color: #0f172a;">{{ target }} Siswa</strong>
+        </p>
+
+    </div>
+</section>

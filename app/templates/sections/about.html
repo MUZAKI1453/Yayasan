@@ -1,0 +1,26 @@
+<section id="profil" class="py-16 px-6 bg-white">
+    <div class="max-w-4xl mx-auto">
+        {% if section.content.get('eyebrow') %}
+            <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
+                {{ section.content.get('eyebrow') }}
+            </span>
+        {% endif %}
+        
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            {{ section.content.get('title', 'Tentang Kami') }}
+        </h2>
+        
+        <div class="text-gray-700 leading-relaxed space-y-4 text-lg">
+            {{ section.content.get('content', 'Deskripsi profil yayasan...') }}
+        </div>
+
+        {% if section.content.get('image') %}
+            <div class="mt-8">
+                <img src="{{ section.content.get('image') }}" alt="Gambar Profil" class="w-full h-auto rounded-xl shadow-md">
+                {% if section.content.get('image_caption') %}
+                    <p class="text-sm text-gray-500 text-center mt-2">{{ section.content.get('image_caption') }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>

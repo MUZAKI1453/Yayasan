@@ -1,0 +1,25 @@
+<section class="py-16 px-6 bg-white">
+    <div class="max-w-3xl mx-auto">
+        <h2 class="text-3xl font-bold text-gray-900 text-center mb-10">
+            {{ section.content.get('title', 'Pertanyaan Umum (FAQ)') }}
+        </h2>
+
+        <div class="space-y-6">
+            <!-- FAQ 1 -->
+            {% if section.content.get('faq_q1') %}
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">Q: {{ section.content.get('faq_q1') }}</h3>
+                <p class="text-gray-600">A: {{ section.content.get('faq_a1') }}</p>
+            </div>
+            {% endif %}
+
+            <!-- FAQ 2 -->
+            {% if section.content.get('faq_q2') %}
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">Q: {{ section.content.get('faq_q2') }}</h3>
+                <p class="text-gray-600">A: {{ section.content.get('faq_a2') }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>

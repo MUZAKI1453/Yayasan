@@ -1,0 +1,47 @@
+<section id="fasilitas" class="py-16 px-6 bg-gray-50">
+    <div class="max-w-6xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+            {{ section.content.get('title', 'Keunggulan Kami') }}
+        </h2>
+        
+        {% if section.content.get('subtitle') %}
+            <p class="text-gray-600 max-w-2xl mx-auto mb-12">
+                {{ section.content.get('subtitle') }}
+            </p>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+            <!-- Item 1 -->
+            {% if section.content.get('item1_title') %}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item1_title') }}</h3>
+                <p class="text-gray-600 text-sm">{{ section.content.get('item1_desc') }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Item 2 -->
+            {% if section.content.get('item2_title') %}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item2_title') }}</h3>
+                <p class="text-gray-600 text-sm">{{ section.content.get('item2_desc') }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Item 3 -->
+            {% if section.content.get('item3_title') %}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item3_title') }}</h3>
+                <p class="text-gray-600 text-sm">{{ section.content.get('item3_desc') }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Item 4 -->
+            {% if section.content.get('item4_title') %}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item4_title') }}</h3>
+                <p class="text-gray-600 text-sm">{{ section.content.get('item4_desc') }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>

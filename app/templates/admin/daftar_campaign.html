@@ -149,28 +149,28 @@
 
                     <!-- UPDATE TERAKHIR -->
                     <td class="text-muted small fs-7 text-nowrap">
-                        <i class="bi bi-calendar3 me-1"></i>{{ page.updated_at.strftime('%d %b %Y') }}
+                        <i class="bi bi-calendar3 me-1"></i>{{ page.updated_at.strftime('%d %b %Y') if page.updated_at else '-' }}
                     </td>
 
                     <!-- AKSI -->
                     <td class="text-end pe-4 text-nowrap">
                         <div class="d-inline-flex align-items-center gap-1">
-                            <!-- Kelola Section -->
-                            <a href="{{ url_for('admin.manage_sections_manual', page_id=page.id) }}"
+                            <!-- Kelola Section & Live Edit (Mengarah ke route split-screen baru) -->
+                            <a href="{{ url_for('admin.manage_section', page_id=page.id) if 'admin.manage_section' in url_for.__globals__ else url_for('admin.manage_section', page_id=page.id) }}"
                                class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 px-2.5 py-1.5"
-                               data-bs-toggle="tooltip" title="Kelola Section">
+                               data-bs-toggle="tooltip" title="Kelola Section & Preview">
                                 <i class="bi bi-gear-fill"></i>
                                 <span class="fs-7 fw-semibold">Kelola</span>
                             </a>
 
-                            <!-- Preview Live -->
+                            <!-- Preview Live Halaman Publik -->
                             <a href="/{{ page.slug }}" target="_blank"
                                class="btn btn-sm btn-outline-success px-2 py-1.5"
-                               data-bs-toggle="tooltip" title="Lihat Website Live">
+                               data-bs-toggle="tooltip" title="Buka Website Live">
                                 <i class="bi bi-eye-fill"></i>
                             </a>
 
-                            <!-- Toggle Status -->
+                            <!-- Toggle Status Publish -->
                             <form action="{{ url_for('admin.toggle_publish', page_id=page.id) }}" method="POST" class="d-inline">
                                 {% if page.is_published %}
                                     <button type="submit" class="btn btn-sm btn-outline-warning px-2 py-1.5"
@@ -254,7 +254,6 @@
                     }
                 });
 
-                // Tampilkan info jika pencarian tidak ditemukan
                 if (noResultsRow) {
                     noResultsRow.style.display = hasMatch ? "none" : "";
                 }

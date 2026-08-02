@@ -1,0 +1,22 @@
+# Lingkungan Virtual & Dependensi
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Konfigurasi & Database Lokal
+instance/
+.env
+*.db
+
+# Uploads / Media Lokal
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+
+# Sistem Operasi
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

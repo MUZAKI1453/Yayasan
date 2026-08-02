@@ -1,0 +1,37 @@
+<section id="section-gallery" data-section-type="gallery" class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Judul Galeri -->
+        <div class="text-center mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">
+                {{ section.content.get('title', 'Galeri Dokumentasi') }}
+            </h2>
+        </div>
+
+        <!-- Grid Foto Galeri -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {% set ns_gal = namespace(has_images=false) %}
+            
+            {# Looping gambar 1 sampai 6 #}
+            {% for i in range(1, 7) %}
+                {% set img_url = section.content.get('image_' ~ i) or section.content.get('gallery_img_' ~ i) %}
+                {% if img_url %}
+                    {% set ns_gal.has_images = true %}
+                    <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video bg-slate-100">
+                        <img src="{{ img_url }}" alt="Dokumentasi {{ i }}" class="w-full h-full object-cover hover:scale-105 transition duration-300">
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {# Fallback jika belum ada foto diunggah di admin #}
+            {% if not ns_gal.has_images %}
+                {% for i in range(1, 4) %}
+                    <div class="overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video bg-slate-100">
+                        <img src="https://placehold.co/600x400/f1f5f9/94a3b8?text=Dokumentasi+{{ i }}" alt="Placeholder {{ i }}" class="w-full h-full object-cover">
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+</section>
