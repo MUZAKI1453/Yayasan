@@ -1,7 +1,9 @@
-# app/__init__.py
-from flask import Flask
+from flask import Flask, request
 from config import Config
 from app.extensions import db, login_manager
+from datetime import datetime
+from app.models import VisitorLog, db
+
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +27,7 @@ def create_app():
 
     return app
 
+
 def create_default_admin(app):
     from app.models import User
     from config import Config
@@ -43,3 +46,21 @@ def create_default_admin(app):
         print("=" * 50)
     else:
         print("ℹ️  Admin sudah ada, skip pembuatan.")
+
+
+def register_hooks(app):
+    @app.before_request
+    def log_visitor():
+        # Abaikan jika akses file statis atau masuk ke halaman admin/login
+        if request.path.startswith('/static') or request.path.startswith('/admin') or request.path.startswith('/auth'):
+            return
+
+        try:
+            log = VisitorLog(
+                ip_address=request.remote_addr,
+                path=request.path
+            )
+            db.session.add(log)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
