@@ -11,23 +11,39 @@
                 </span>
             </div>
 
-            <!-- Nav Links -->
+            <!-- Nav Links Dinamis -->
             <div class="hidden md:flex space-x-8 items-center">
-                {% if section.content.get('nav_text_1') %}
-                    <a href="{{ section.content.get('nav_url_1', '#') }}" class="text-gray-600 hover:text-blue-600 font-medium">
-                        {{ section.content.get('nav_text_1') }}
-                    </a>
+
+                {# 1. MENGAMBIL ARRAY NAV TEXT & URL #}
+                {% set nav_texts = section.content.get('nav_texts', []) %}
+                {% set nav_urls = section.content.get('nav_urls', []) %}
+
+                {# 2. FALLBACK/BACKWARD COMPATIBILITY UNTUK FORMAT LAMA (nav_text_1, nav_text_2, nav_text_3) #}
+                {% if not nav_texts %}
+                    {% set nav_texts = [] %}
+                    {% set nav_urls = [] %}
+                    {% if section.content.get('nav_text_1') %}
+                        {% set _ = nav_texts.append(section.content.get('nav_text_1')) %}
+                        {% set _ = nav_urls.append(section.content.get('nav_url_1', '#')) %}
+                    {% endif %}
+                    {% if section.content.get('nav_text_2') %}
+                        {% set _ = nav_texts.append(section.content.get('nav_text_2')) %}
+                        {% set _ = nav_urls.append(section.content.get('nav_url_2', '#')) %}
+                    {% endif %}
+                    {% if section.content.get('nav_text_3') %}
+                        {% set _ = nav_texts.append(section.content.get('nav_text_3')) %}
+                        {% set _ = nav_urls.append(section.content.get('nav_url_3', '#')) %}
+                    {% endif %}
                 {% endif %}
-                {% if section.content.get('nav_text_2') %}
-                    <a href="{{ section.content.get('nav_url_2', '#') }}" class="text-gray-600 hover:text-blue-600 font-medium">
-                        {{ section.content.get('nav_text_2') }}
-                    </a>
-                {% endif %}
-                {% if section.content.get('nav_text_3') %}
-                    <a href="{{ section.content.get('nav_url_3', '#') }}" class="text-gray-600 hover:text-blue-600 font-medium">
-                        {{ section.content.get('nav_text_3') }}
-                    </a>
-                {% endif %}
+
+                {# 3. LOOPING MENU NAVIGASI DINAMIS #}
+                {% for text in nav_texts %}
+                    {% if text %}
+                        <a href="{{ nav_urls[loop.index0] if loop.index0 < nav_urls|length else '#' }}" class="text-gray-600 hover:text-blue-600 font-medium">
+                            {{ text }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
 
                 <!-- Action Button -->
                 {% if section.content.get('button_text_1') %}

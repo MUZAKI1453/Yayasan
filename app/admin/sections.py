@@ -1,4 +1,3 @@
-# app/admin/sections.py
 from datetime import datetime
 from flask import render_template, redirect, url_for, request, jsonify, flash
 from flask_login import login_required
@@ -8,6 +7,7 @@ from app.admin.templates import DEFAULT_SECTION_CONTENTS, save_uploaded_file
 from app.models import Page, Section
 from app.extensions import db
 
+
 @admin_bp.route("/page/<int:page_id>/sections-manual")
 @admin_bp.route("/page/<int:page_id>/manage")
 @login_required
@@ -15,6 +15,7 @@ def manage_section(page_id):
     """Menampilkan Tampilan Builder Split Screen (Form Sidebar + Live Preview Iframe)"""
     page = Page.query.get_or_404(page_id)
     return render_template("admin/manage_sections.html", page=page, section=None)
+
 
 @admin_bp.route("/page/<int:page_id>/add-section", methods=["POST"])
 @login_required
@@ -40,9 +41,9 @@ def add_section(page_id):
     db.session.commit()
 
     flash(f"Section '{section_type}' berhasil ditambahkan!", "success")
-    
-    # REVISI: Langsung kembali ke daftar section tanpa berpindah ke form edit
+
     return redirect(url_for("admin.manage_section", page_id=page.id))
+
 
 @admin_bp.route("/section/<int:section_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -54,12 +55,17 @@ def edit_section(section_id):
     if request.method == "POST":
         content = dict(section.content or {})
 
-        # 1. Update data dari teks form input
+        # 1. Update data dari teks form input biasa
         for key, value in request.form.items():
-            if key != "csrf_token":
+            if key != "csrf_token" and not key.endswith("[]"):
                 content[key] = value
 
-        # 2. Update data dari file upload (Logo, Banner Hero, dll)
+        # 2. PENANGANAN KHUSUS DINAMIS ARRAY (seperti Menu Navbar)
+        if "nav_texts[]" in request.form:
+            content["nav_texts"] = request.form.getlist("nav_texts[]")
+            content["nav_urls"] = request.form.getlist("nav_urls[]")
+
+        # 3. Update data dari file upload (Logo, Banner Hero, dll)
         for key, file in request.files.items():
             if file and file.filename != '':
                 file_url = save_uploaded_file(file)
@@ -80,6 +86,7 @@ def edit_section(section_id):
     # Jika diakses via GET, tampilkan layout split screen dengan tab edit terbuka
     return render_template("admin/manage_sections.html", section=section, page=page)
 
+
 @admin_bp.route("/section/<int:section_id>/delete", methods=["POST"])
 @login_required
 def delete_section(section_id):
@@ -94,6 +101,7 @@ def delete_section(section_id):
 
     flash("Section berhasil dihapus!", "success")
     return redirect(url_for("admin.manage_section", page_id=page_id))
+
 
 @admin_bp.route("/page/<int:page_id>/reorder", methods=["POST"])
 @login_required
