@@ -130,19 +130,16 @@
 
 <div class="builder-container">
 
-    <!-- ================================================================= -->
-    <!-- SIDEBAR KIRI                                                      -->
-    <!-- ================================================================= -->
+    <!-- SIDEBAR KIRI -->
     <div class="builder-sidebar">
         
-        <!-- HEADER SIDEBAR (Slug Sudah Dihapus) -->
+        <!-- HEADER SIDEBAR -->
         <div class="builder-sidebar-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="text-truncate me-2">
                     <h6 class="fw-bold mb-0 text-dark text-truncate">{{ page.title }}</h6>
                 </div>
                 
-                <!-- Tombol Aksi Kanan -->
                 <div class="d-flex gap-1 flex-shrink-0">
                     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Kembali ke Dashboard">
                         <i class="bi bi-house-door"></i>
@@ -156,324 +153,21 @@
 
         <!-- BODY SIDEBAR -->
         <div class="builder-sidebar-body">
-
             <div class="tab-content" id="editorTabsContent">
                 
-                <!-- PANEL 1: DAFTAR SECTION & TAMBAH SECTION BARU -->
-                <div class="tab-pane fade {% if not section %}show active{% endif %}" id="list-panel">
-                    
-                    <!-- Form Tambah Section Baru -->
-                    <div class="card border shadow-sm rounded-3 mb-3">
-                        <div class="card-body p-3">
-                            <h6 class="fw-bold text-dark mb-2 fs-7">+ Tambah Section Baru</h6>
-                            <form action="{{ url_for('admin.add_section', page_id=page.id) }}" method="POST" class="row g-2">
-                                <div class="col-12">
-                                    <select name="type" class="form-select form-select-sm" required>
-                                        <option value="">-- Pilih Jenis Section --</option>
-                                        <optgroup label="Header & Navigasi">
-                                            <option value="navbar">Navbar / Header Logo & Menu</option>
-                                            <option value="hero">Hero Banner Utama</option>
-                                        </optgroup>
-                                        <optgroup label="Informasi Sekolah & PPDB">
-                                            <option value="about">Profil / Tentang Kami</option>
-                                            <option value="features">Keunggulan & Fasilitas</option>
-                                            <option value="progress">Progress Kuota Pendaftaran</option>
-                                            <option value="gallery">Galeri Dokumentasi</option>
-                                        </optgroup>
-                                        <optgroup label="Penggalangan Donasi & Wakaf">
-                                            <option value="donation_campaign">Program Donasi / Wakaf</option>
-                                        </optgroup>
-                                        <optgroup label="Social Proof & Penutup">
-                                            <option value="testimonial">Testimoni Orang Tua</option>
-                                            <option value="faq">FAQ (Pertanyaan Umum)</option>
-                                            <option value="cta">CTA (Ajakan Daftar)</option>
-                                            <option value="footer">Footer</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-sm btn-success w-100 fw-semibold">+ Tambahkan</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                <!-- COMPONENT 1: DAFTAR SECTION & FORM TAMBAH -->
+                {% include "admin/section_list.html" %}
 
-                    <!-- Daftar Section (Klik Blok Langsung Focus) -->
-                    <div class="card border shadow-sm rounded-3">
-                        <div class="card-header bg-light py-2 px-3 border-bottom-0">
-                            <small class="fw-bold text-muted">Urutan Section (Klik blok untuk preview)</small>
-                        </div>
-                        <ul class="list-group list-group-flush" id="section-list">
-                            {% for sec in page.sections %}
-                            <li class="list-group-item section-list-item d-flex justify-content-between align-items-center py-2 px-3 {% if section and section.id == sec.id %}bg-light border-start border-3 border-success{% endif %}" 
-                                data-id="{{ sec.id }}"
-                                data-type="{{ sec.type }}"
-                                onclick="scrollToSectionInPreview('{{ sec.type }}', '{{ sec.id }}')">
-                                <div class="d-flex align-items-center me-2 overflow-hidden">
-                                    <i class="bi bi-grip-vertical text-muted me-2 cursor-grab"></i>
-                                    <div class="text-truncate">
-                                        <strong class="d-block text-capitalize text-dark fs-7">{{ sec.type|replace('_', ' ') }}</strong>
-                                        {% if sec.content.get('title') %}
-                                            <small class="text-muted d-block text-truncate fs-8">{{ sec.content.get('title') }}</small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="btn-group btn-group-sm flex-shrink-0" onclick="event.stopPropagation();">
-                                    <a href="{{ url_for('admin.manage_section', page_id=page.id, section_id=sec.id) if 'admin.manage_section' in url_for.__globals__ else url_for('admin.edit_section', section_id=sec.id) }}" class="btn btn-outline-success btn-sm" title="Edit Konten">
-                                        <i class="bi bi-pencil-fill"></i> Edit
-                                    </a>
-                                    <form action="{{ url_for('admin.delete_section', section_id=sec.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus section ini?')">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                            {% else %}
-                            <li class="list-group-item text-muted text-center py-4 small">Belum ada section. Silakan tambahkan section di atas.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-
-                </div>
-
-                <!-- PANEL 2: FORM EDIT KONTEN SECTION -->
+                <!-- COMPONENT 2: FORM EDIT KONTEN SECTION (Termasuk Upload Gambar) -->
                 {% if section %}
-                <div class="tab-pane fade show active" id="form-panel">
-                    <div class="card border shadow-sm rounded-3">
-                        <div class="card-body p-3">
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                                <h6 class="mb-0 fw-bold text-success">Edit {{ section.type|replace('_', ' ')|title }}</h6>
-                                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn-close" style="font-size: 0.8rem;" title="Tutup Edit"></a>
-                            </div>
-
-                            <form method="POST" enctype="multipart/form-data">
-
-                                {# 1. NAVBAR #}
-                                {% if section.type == 'navbar' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Brand Name *</label>
-                                        <input type="text" name="brand_name" class="form-control form-control-sm" required value="{{ section.content.get('brand_name', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Logo Gambar</label>
-                                        <input type="file" name="logo_url_file" class="form-control form-control-sm" accept="image/*">
-                                        {% if section.content.get('logo_url') %}
-                                            <small><a href="{{ section.content.get('logo_url') }}" target="_blank" class="text-success">Lihat Logo Saat Ini</a></small>
-                                        {% endif %}
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Teks Nav 1</label>
-                                            <input type="text" name="nav_text_1" class="form-control form-control-sm" value="{{ section.content.get('nav_text_1', '') }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">URL Nav 1</label>
-                                            <input type="text" name="nav_url_1" class="form-control form-control-sm" value="{{ section.content.get('nav_url_1', '') }}">
-                                        </div>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Teks Button 1</label>
-                                            <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Link Button 1</label>
-                                            <input type="text" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '') }}">
-                                        </div>
-                                    </div>
-
-                                {# 2. HERO #}
-                                {% elif section.type == 'hero' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Eyebrow / Label Atas</label>
-                                        <input type="text" name="eyebrow" class="form-control form-control-sm" value="{{ section.content.get('eyebrow', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Utama *</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" required value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Sub Judul / Deskripsi</label>
-                                        <textarea name="subtitle" class="form-control form-control-sm" rows="3">{{ section.content.get('subtitle', '') }}</textarea>
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Teks Tombol</label>
-                                            <input type="text" name="button_text" class="form-control form-control-sm" value="{{ section.content.get('button_text', '') }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Link Tombol</label>
-                                            <input type="text" name="button_link" class="form-control form-control-sm" value="{{ section.content.get('button_link', '') }}">
-                                        </div>
-                                    </div>
-
-                                {# 3. ABOUT #}
-                                {% elif section.type == 'about' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Eyebrow</label>
-                                        <input type="text" name="eyebrow" class="form-control form-control-sm" value="{{ section.content.get('eyebrow', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Section</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Konten Profil</label>
-                                        <textarea name="content" class="form-control form-control-sm" rows="4">{{ section.content.get('content', '') }}</textarea>
-                                    </div>
-
-                                {# 4. FEATURES #}
-                                {% elif section.type == 'features' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Section</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Fitur 1 - Judul</label>
-                                        <input type="text" name="item1_title" class="form-control form-control-sm" value="{{ section.content.get('item1_title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Fitur 1 - Deskripsi</label>
-                                        <textarea name="item1_desc" class="form-control form-control-sm" rows="2">{{ section.content.get('item1_desc', '') }}</textarea>
-                                    </div>
-
-                                {# 5. DONATION CAMPAIGN #}
-                                {% elif section.type == 'donation_campaign' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Eyebrow Program</label>
-                                        <input type="text" name="eyebrow" class="form-control form-control-sm" value="{{ section.content.get('eyebrow', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Kampanye Donasi</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Subtitle</label>
-                                        <input type="text" name="subtitle" class="form-control form-control-sm" value="{{ section.content.get('subtitle', '') }}">
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Target (Rp)</label>
-                                            <input type="number" name="target" class="form-control form-control-sm" value="{{ section.content.get('target', 0) }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Terkumpul (Rp)</label>
-                                            <input type="number" name="collected" class="form-control form-control-sm" value="{{ section.content.get('collected', 0) }}">
-                                        </div>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Rekening Pembayaran / Transfer</label>
-                                        <input type="text" name="bank_account" class="form-control form-control-sm" value="{{ section.content.get('bank_account', '') }}">
-                                    </div>
-
-                                {# 6. PROGRESS KUOTA #}
-                                {% elif section.type == 'progress' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Progress</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Target Kuota</label>
-                                            <input type="number" name="target" class="form-control form-control-sm" value="{{ section.content.get('target', 0) }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Jumlah Terisi</label>
-                                            <input type="number" name="collected" class="form-control form-control-sm" value="{{ section.content.get('collected', 0) }}">
-                                        </div>
-                                    </div>
-
-                                {# 7. GALLERY & FAQ #}
-                                {% elif section.type in ['gallery', 'faq'] %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Section</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-
-                                {# 8. TESTIMONIAL #}
-                                {% elif section.type == 'testimonial' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Testimoni</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <hr class="my-2">
-                                    <h6 class="fs-8 fw-bold text-secondary mb-1">Testimoni 1</h6>
-                                    <div class="mb-1">
-                                        <textarea name="quote1" class="form-control form-control-sm" rows="2" placeholder="Kutipan">{{ section.content.get('quote1', '') }}</textarea>
-                                    </div>
-                                    <div class="row g-1 mb-2">
-                                        <div class="col-6"><input type="text" name="name1" class="form-control form-control-sm" placeholder="Nama" value="{{ section.content.get('name1', '') }}"></div>
-                                        <div class="col-6"><input type="text" name="role1" class="form-control form-control-sm" placeholder="Peran" value="{{ section.content.get('role1', '') }}"></div>
-                                    </div>
-                                    <hr class="my-2">
-                                    <h6 class="fs-8 fw-bold text-secondary mb-1">Testimoni 2</h6>
-                                    <div class="mb-1">
-                                        <textarea name="quote2" class="form-control form-control-sm" rows="2" placeholder="Kutipan">{{ section.content.get('quote2', '') }}</textarea>
-                                    </div>
-                                    <div class="row g-1 mb-2">
-                                        <div class="col-6"><input type="text" name="name2" class="form-control form-control-sm" placeholder="Nama" value="{{ section.content.get('name2', '') }}"></div>
-                                        <div class="col-6"><input type="text" name="role2" class="form-control form-control-sm" placeholder="Peran" value="{{ section.content.get('role2', '') }}"></div>
-                                    </div>
-
-                                {# 9. CTA #}
-                                {% elif section.type == 'cta' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Ajakan (CTA)</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="row g-2 mb-2">
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Teks Tombol</label>
-                                            <input type="text" name="button_text" class="form-control form-control-sm" value="{{ section.content.get('button_text', '') }}">
-                                        </div>
-                                        <div class="col-6">
-                                            <label class="form-label small mb-1">Link Tombol</label>
-                                            <input type="text" name="button_link" class="form-control form-control-sm" value="{{ section.content.get('button_link', '') }}">
-                                        </div>
-                                    </div>
-
-                                {# 10. FOOTER #}
-                                {% elif section.type == 'footer' %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Teks Hak Cipta (Copyright)</label>
-                                        <input type="text" name="copyright" class="form-control form-control-sm" value="{{ section.content.get('copyright', '') }}">
-                                    </div>
-
-                                {# FALLBACK #}
-                                {% else %}
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Judul Section</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label small mb-1">Konten Keterangan</label>
-                                        <textarea name="content" class="form-control form-control-sm" rows="3">{{ section.content.get('content', '') }}</textarea>
-                                    </div>
-                                {% endif %}
-
-                                <hr class="my-3">
-
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-sm btn-success w-100 fw-semibold">Simpan Perubahan</button>
-                                    <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-sm btn-outline-secondary">Batal</a>
-                                </div>
-                            </form>
-
-                        </div>
-                    </div>
-                </div>
+                    {% include "admin/section_form.html" %}
                 {% endif %}
 
             </div>
-
         </div>
     </div>
 
-    <!-- ================================================================= -->
-    <!-- PREVIEW CANVAS KANAN                                              -->
-    <!-- ================================================================= -->
+    <!-- PREVIEW CANVAS KANAN (LIVE PREVIEW IFRAME) -->
     <div class="builder-preview">
         <div class="preview-window">
             <div class="preview-browser-bar text-white">
@@ -508,7 +202,6 @@
         try {
             const frameDoc = frame.contentWindow.document;
             
-            // Cari elemen berdasarkan ID (misal: #section-hero, #hero) atau ID DB (#section-12) atau class/tag
             let targetEl = frameDoc.getElementById(`section-${sectionType}`) || 
                            frameDoc.getElementById(sectionType) || 
                            frameDoc.getElementById(`section-${sectionId}`) ||
@@ -550,7 +243,7 @@
             });
         }
 
-        // 3. Jika sedang membuka Form Edit Section, Otomatis Scroll Preview ke Section Tsb saat Halaman Selesai Load
+        // 3. Auto-scroll Preview jika Form Edit sedang terbuka
         const frame = document.getElementById('preview-frame');
         if (frame) {
             frame.addEventListener('load', function() {
