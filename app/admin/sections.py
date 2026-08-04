@@ -27,9 +27,7 @@ def manage_section(page_id):
 @admin_bp.route("/page/<int:page_id>/add-section", methods=["POST"])
 @login_required
 def add_section(page_id):
-    """
-    SINKRONISASI ARAH 1: TAMBAH SECTION -> OTOMATIS TAMBAH MENU DI NAVBAR
-    """
+    """SINKRONISASI TAMBAH SECTION"""
     page = Page.query.get_or_404(page_id)
     section_type = request.form.get("type")
 
@@ -41,18 +39,14 @@ def add_section(page_id):
     sec_id_key = f"sec_{uuid.uuid4().hex[:8]}"
 
     initial_content = DEFAULT_SECTION_CONTENTS.get(section_type, {}).copy()
-
-    # Ambil label default menu jika tersedia, jika tidak gunakan title-case biasa
     nav_text_default = SECTION_NAV_NAMES.get(section_type, section_type.replace('_', ' ').title())
     initial_content.setdefault("title", nav_text_default)
     initial_content["nav_id"] = sec_id_key
 
-    # 1. KONDISI KHUSUS: Jika menambahkan NAVBAR baru
+    # Jika section tipe navbar
     if section_type == 'navbar':
-        # Baca ulang semua section yang sudah ada di database untuk mengisi nav_items secara reaktif
         initial_content['nav_items'] = generate_nav_items_for_page(page.id)
 
-    # 2. Buat Section Baru di DB
     new_section = Section(
         page_id=page.id,
         type=section_type,
@@ -61,7 +55,7 @@ def add_section(page_id):
     )
     db.session.add(new_section)
 
-    # 3. Otomatis Tambah Menu ke Navbar yang ADA (Jika section baru BUKAN Navbar atau Footer)
+    # Otomatis tambah menu ke Navbar yang ada jika BUKAN navbar/footer
     if section_type not in ['navbar', 'footer']:
         navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
         if navbar:
@@ -87,7 +81,7 @@ def add_section(page_id):
 @login_required
 def edit_section(section_id):
     """
-    SINKRONISASI DUA ARAH: EDIT NAVBAR ATAU EDIT KONTEN SECTION
+    EDIT KONTEN SECTION (SAFE NAVBAR EDITING)
     """
     section = Section.query.get_or_404(section_id)
     page = section.page
@@ -96,70 +90,36 @@ def edit_section(section_id):
         content = dict(section.content or {})
 
         # ---------------------------------------------------------------------
-        # A. KHUSUS NAVBAR (Arah Navbar -> Sections)
+        # A. KHUSUS NAVBAR
         # ---------------------------------------------------------------------
         if section.type == 'navbar':
+            content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
+            content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
+            content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
+
             nav_texts = request.form.getlist("nav_texts[]")
-            nav_types = request.form.getlist("nav_types[]")
+            nav_urls = request.form.getlist("nav_urls[]")
             nav_ids = request.form.getlist("nav_ids[]")
 
-            existing_sections = {
-                s.content.get('nav_id'): s for s in page.sections
-                if s.type not in ['navbar', 'footer'] and s.content and s.content.get('nav_id')
-            }
+            # HANYA UPDATE NAV_ITEMS JIKA ADA INPUT TEKS MENU DARI FORM
+            if any(text.strip() for text in nav_texts):
+                updated_nav_items = []
+                for i, text in enumerate(nav_texts):
+                    if text.strip():
+                        sec_url = nav_urls[i] if i < len(nav_urls) else '#'
+                        sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#', '')
 
-            updated_nav_items = []
-            kept_nav_ids = set()
+                        updated_nav_items.append({
+                            'id': sec_id,
+                            'text': text.strip(),
+                            'url': sec_url if sec_url.startswith('#') else f"#{sec_url}"
+                        })
+                content['nav_items'] = updated_nav_items
 
-            for i, text in enumerate(nav_texts):
-                if not text.strip():
-                    continue
-
-                sec_type = nav_types[i] if i < len(nav_types) else 'about'
-                sec_id_key = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else f"sec_{uuid.uuid4().hex[:8]}"
-
-                kept_nav_ids.add(sec_id_key)
-
-                # Update/Buat Section
-                if sec_id_key in existing_sections:
-                    sec_obj = existing_sections[sec_id_key]
-                    sec_content = dict(sec_obj.content or {})
-                    sec_content['title'] = text
-                    sec_obj.content = sec_content
-                    flag_modified(sec_obj, "content")
-                else:
-                    last_order = db.session.query(db.func.max(Section.order)).filter_by(page_id=page.id).scalar() or 0
-                    init_content = DEFAULT_SECTION_CONTENTS.get(sec_type, {}).copy()
-                    init_content['title'] = text
-                    init_content['nav_id'] = sec_id_key
-
-                    new_sec = Section(
-                        page_id=page.id,
-                        type=sec_type,
-                        order=last_order + 1,
-                        content=init_content
-                    )
-                    db.session.add(new_sec)
-
-                updated_nav_items.append({
-                    'id': sec_id_key,
-                    'text': text,
-                    'url': f"#{sec_id_key}",
-                    'type': sec_type
-                })
-
-            # Hapus Section yang menunya dibuang dari Navbar
-            for sec_key, sec_obj in existing_sections.items():
-                if sec_key not in kept_nav_ids:
-                    db.session.delete(sec_obj)
-
-            content['nav_items'] = updated_nav_items
-            content['brand_name'] = request.form.get('brand_name', '')
-            content['button_text_1'] = request.form.get('button_text_1', '')
-            content['button_link_1'] = request.form.get('button_link_1', '')
+            # NOTE: Dihapus logika `db.session.delete(sec_obj)` agar section di halaman TIDAK TERHAPUS!
 
         # ---------------------------------------------------------------------
-        # B. SECTION BIASA (Arah Section -> Navbar)
+        # B. SECTION BIASA
         # ---------------------------------------------------------------------
         else:
             for key, value in request.form.items():
@@ -180,7 +140,7 @@ def edit_section(section_id):
                     navbar.content = nav_content
                     flag_modified(navbar, "content")
 
-        # Handling File Upload
+        # Handling Upload File (Logo / Gambar)
         for key, file in request.files.items():
             if file and file.filename != '':
                 file_url = save_uploaded_file(file)
@@ -194,8 +154,8 @@ def edit_section(section_id):
         page.updated_at = datetime.utcnow()
         db.session.commit()
 
-        flash("Perubahan berhasil disimpan & disinkronkan!", "success")
-        return redirect(url_for("admin.edit_section", section_id=section.id))
+        flash("Perubahan berhasil disimpan!", "success")
+        return redirect(url_for("admin.manage_section", page_id=page.id))
 
     return render_template("admin/manage_sections.html", section=section, page=page)
 
@@ -203,16 +163,13 @@ def edit_section(section_id):
 @admin_bp.route("/section/<int:section_id>/delete", methods=["POST"])
 @login_required
 def delete_section(section_id):
-    """
-    SINKRONISASI HAPUS: HAPUS SECTION -> OTOMATIS HAPUS MENU DI NAVBAR
-    """
+    """HAPUS SECTION DAN MENU TERHUBUNG"""
     section = Section.query.get_or_404(section_id)
     page_id = section.page_id
     nav_id = section.content.get('nav_id') if section.content else None
 
     db.session.delete(section)
 
-    # Hapus menu dari Navbar jika section memiliki nav_id
     if nav_id:
         navbar = Section.query.filter_by(page_id=page_id, type='navbar').first()
         if navbar:
@@ -237,7 +194,7 @@ def delete_section(section_id):
 @admin_bp.route("/page/<int:page_id>/reorder", methods=["POST"])
 @login_required
 def reorder_sections(page_id):
-    """AJAX Endpoint untuk menyimpan urutan Drag & Drop dari Sidebar"""
+    """AJAX Drag & Drop Order"""
     page = Page.query.get_or_404(page_id)
     order_data = request.json.get("order", [])
 

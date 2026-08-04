@@ -132,19 +132,21 @@
 
     <!-- SIDEBAR KIRI -->
     <div class="builder-sidebar">
-        
+
         <!-- HEADER SIDEBAR -->
         <div class="builder-sidebar-header">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="text-truncate me-2">
                     <h6 class="fw-bold mb-0 text-dark text-truncate">{{ page.title }}</h6>
                 </div>
-                
+
                 <div class="d-flex gap-1 flex-shrink-0">
-                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="tooltip" title="Kembali ke Dashboard">
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3"
+                       data-bs-toggle="tooltip" title="Kembali ke Dashboard">
                         <i class="bi bi-house-door"></i>
                     </a>
-                    <a href="/{{ page.slug }}" target="_blank" class="btn btn-sm btn-outline-success rounded-3" data-bs-toggle="tooltip" title="Buka Website Live">
+                    <a href="/{{ page.slug }}" target="_blank" class="btn btn-sm btn-outline-success rounded-3"
+                       data-bs-toggle="tooltip" title="Buka Website Live">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </a>
                 </div>
@@ -154,13 +156,13 @@
         <!-- BODY SIDEBAR -->
         <div class="builder-sidebar-body">
             <div class="tab-content" id="editorTabsContent">
-                
+
                 <!-- COMPONENT 1: DAFTAR SECTION & FORM TAMBAH -->
                 {% include "admin/section_list.html" %}
 
-                <!-- COMPONENT 2: FORM EDIT KONTEN SECTION (Termasuk Upload Gambar) -->
+                <!-- COMPONENT 2: FORM EDIT KONTEN SECTION -->
                 {% if section %}
-                    {% include "admin/section_form.html" %}
+                {% include "admin/section_form.html" %}
                 {% endif %}
 
             </div>
@@ -176,7 +178,8 @@
                     <span class="rounded-circle bg-warning d-inline-block" style="width: 8px; height: 8px;"></span>
                     <span class="rounded-circle bg-success d-inline-block" style="width: 8px; height: 8px;"></span>
                 </div>
-                <div class="text-slate-300 font-monospace bg-slate-800 border border-slate-700 px-3 py-0.5 rounded text-truncate" style="max-width: 400px; font-size: 0.72rem;">
+                <div class="text-slate-300 font-monospace bg-slate-800 border border-slate-700 px-3 py-0.5 rounded text-truncate"
+                     style="max-width: 400px; font-size: 0.72rem;">
                     <i class="bi bi-lock-fill text-success me-1"></i>https://ypibaitussalam.sch.id/{{ page.slug }}
                 </div>
                 <button class="btn btn-sm text-light p-0" onclick="refreshPreview()" title="Muat Ulang Frame">
@@ -195,18 +198,17 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
     // 1. Fungsi Scroll Otomatis Iframe Preview ke Section Spesifik
-    function scrollToSectionInPreview(sectionType, sectionId) {
+    function scrollToSectionInPreview(sectionType, sectionNavId) {
         const frame = document.getElementById('preview-frame');
         if (!frame || !frame.contentWindow) return;
 
         try {
             const frameDoc = frame.contentWindow.document;
-            
-            let targetEl = frameDoc.getElementById(`section-${sectionType}`) || 
-                           frameDoc.getElementById(sectionType) || 
-                           frameDoc.getElementById(`section-${sectionId}`) ||
-                           frameDoc.querySelector(`[data-section-type="${sectionType}"]`) ||
-                           frameDoc.querySelector(`.${sectionType}`);
+
+            let targetEl = frameDoc.getElementById(sectionNavId) ||
+                           frameDoc.getElementById(`section-${sectionType}`) ||
+                           frameDoc.getElementById(sectionType) ||
+                           frameDoc.querySelector(`[data-section-type="${sectionType}"]`);
 
             if (targetEl) {
                 targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -248,7 +250,7 @@
         if (frame) {
             frame.addEventListener('load', function() {
                 {% if section %}
-                    scrollToSectionInPreview("{{ section.type }}", "{{ section.id }}");
+                    scrollToSectionInPreview("{{ section.type }}", "{{ section.content.get('nav_id', '') }}");
                 {% endif %}
             });
         }
