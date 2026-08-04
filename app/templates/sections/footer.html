@@ -1,4 +1,4 @@
-<footer class="bg-gray-900 text-gray-400 py-12 px-6">
+<footer id="{{ section.content.get('nav_id', 'footer') }}" class="bg-gray-900 text-gray-400 py-12 px-6">
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-b border-gray-800 pb-8 mb-8">
         <div>
             <h3 class="text-white text-lg font-bold mb-2">{{ section.content.get('brand_name', 'Yayasan Kami') }}</h3>
@@ -6,13 +6,13 @@
         </div>
         <div class="flex md:justify-end space-x-4">
             {% if section.content.get('facebook') and section.content.get('facebook') != '#' %}
-                <a href="{{ section.content.get('facebook') }}" class="hover:text-white transition">Facebook</a>
+                <a href="{{ section.content.get('facebook') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Facebook</a>
             {% endif %}
             {% if section.content.get('instagram') and section.content.get('instagram') != '#' %}
-                <a href="{{ section.content.get('instagram') }}" class="hover:text-white transition">Instagram</a>
+                <a href="{{ section.content.get('instagram') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Instagram</a>
             {% endif %}
             {% if section.content.get('whatsapp') and section.content.get('whatsapp') != '#' %}
-                <a href="{{ section.content.get('whatsapp') }}" class="hover:text-white transition">WhatsApp</a>
+                <a href="{{ section.content.get('whatsapp') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">WhatsApp</a>
             {% endif %}
         </div>
     </div>

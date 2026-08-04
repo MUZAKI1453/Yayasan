@@ -1,6 +1,6 @@
-<section id="donasi" class="py-16 px-6 bg-white">
+<section id="{{ section.content.get('nav_id', 'donasi') }}" class="py-16 px-6 bg-white">
     <div class="max-w-4xl mx-auto bg-blue-50 border border-blue-100 rounded-2xl p-8 shadow-sm">
-        
+
         {% if section.content.get('eyebrow') %}
             <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-1">
                 {{ section.content.get('eyebrow') }}
@@ -10,20 +10,28 @@
         <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
             {{ section.content.get('title', 'Program Donasi & Wakaf') }}
         </h2>
-        
+
         <p class="text-gray-600 mb-6">
             {{ section.content.get('subtitle', '') }}
         </p>
 
         <!-- Progress Bar Info -->
+        {% set target = section.content.get('target', 0)|float %}
+        {% set collected = section.content.get('collected', 0)|float %}
+        {% set percent = (collected / target * 100) if target > 0 else 0 %}
+        {% set progress_width = 100 if percent > 100 else percent %}
+
         <div class="mb-6">
             <div class="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-                <span>Terkumpul: Rp {{ "{:,.0f}".format(section.content.get('collected', 0)) }}</span>
-                <span>Target: Rp {{ "{:,.0f}".format(section.content.get('target', 0)) }}</span>
+                <span>Terkumpul: Rp {{ "{:,.0f}".format(collected) }}</span>
+                <span>Target: Rp {{ "{:,.0f}".format(target) }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <!-- Kalkulasi sederhana persentase -->
-                <div class="bg-blue-600 h-3 rounded-full" style="width: 25%;"></div>
+                <!-- Kalkulasi Dinamis Persentase Progress -->
+                <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ progress_width }}%;"></div>
+            </div>
+            <div class="text-right text-xs text-gray-500 mt-1">
+                {{ "{:.1f}".format(percent) }}% Tercapai
             </div>
         </div>
 

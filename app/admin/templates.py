@@ -3,6 +3,19 @@ import os
 import uuid
 from flask import current_app
 from werkzeug.utils import secure_filename
+from app.models import Section
+
+SECTION_NAV_NAMES = {
+    "hero": "Beranda",
+    "about": "Profil",
+    "features": "Keunggulan",
+    "donation_campaign": "Donasi",
+    "progress": "Progress",
+    "gallery": "Galeri",
+    "testimonial": "Testimoni",
+    "faq": "FAQ",
+    "cta": "PPDB"
+}
 
 DEFAULT_SECTION_CONTENTS = {
     "navbar": {
@@ -10,8 +23,8 @@ DEFAULT_SECTION_CONTENTS = {
         "logo_url": "",
         "nav_theme": "bg-white navbar-light shadow-sm",
         "nav_position": "sticky-top",
-        "nav_text_1": "Beranda", "nav_url_1": "#beranda",
-        "button_text_1": "Daftar PPDB", "button_link_1": "#ppdb"
+        "button_text_1": "Daftar PPDB",
+        "button_link_1": "#ppdb"
     },
     "hero": {
         "eyebrow": "Penerimaan Peserta Didik Baru (PPDB)",
@@ -65,34 +78,77 @@ DEFAULT_SECTION_CONTENTS = {
 }
 
 PRESET_TEMPLATES = {
-    "template_ppdb": [
-        ("navbar", DEFAULT_SECTION_CONTENTS["navbar"]),
-        ("hero", DEFAULT_SECTION_CONTENTS["hero"]),
-        ("about", DEFAULT_SECTION_CONTENTS["about"]),
-        ("features", DEFAULT_SECTION_CONTENTS["features"]),
-        ("progress", DEFAULT_SECTION_CONTENTS["progress"]),
-        ("gallery", DEFAULT_SECTION_CONTENTS["gallery"]),
-        ("testimonial", DEFAULT_SECTION_CONTENTS["testimonial"]),
-        ("faq", DEFAULT_SECTION_CONTENTS["faq"]),
-        ("cta", DEFAULT_SECTION_CONTENTS["cta"]),
-        ("footer", DEFAULT_SECTION_CONTENTS["footer"])
-    ],
-    "template_yayasan": [
-        ("navbar", DEFAULT_SECTION_CONTENTS["navbar"]),
-        ("hero", DEFAULT_SECTION_CONTENTS["hero"]),
-        ("about", DEFAULT_SECTION_CONTENTS["about"]),
-        ("features", DEFAULT_SECTION_CONTENTS["features"]),
-        ("cta", DEFAULT_SECTION_CONTENTS["cta"]),
-        ("footer", DEFAULT_SECTION_CONTENTS["footer"])
-    ],
-    "template_donasi": [
-        ("navbar", DEFAULT_SECTION_CONTENTS["navbar"]),
-        ("hero", DEFAULT_SECTION_CONTENTS["hero"]),
-        ("donation_campaign", DEFAULT_SECTION_CONTENTS["donation_campaign"]),
-        ("faq", DEFAULT_SECTION_CONTENTS["faq"]),
-        ("footer", DEFAULT_SECTION_CONTENTS["footer"])
-    ]
+    "template_ppdb": ["navbar", "hero", "about", "features", "progress", "gallery", "testimonial", "faq", "cta",
+                      "footer"],
+    "template_yayasan": ["navbar", "hero", "about", "features", "cta", "footer"],
+    "template_donasi": ["navbar", "hero", "donation_campaign", "faq", "footer"]
 }
+
+
+def generate_nav_items_for_page(page_id):
+    """
+    Fungsi Reaktif: Membaca seluruh section yang ada di database untuk halaman tertentu,
+    lalu menghasilkan list nav_items (mengabaikan navbar & footer).
+    """
+    sections = Section.query.filter_by(page_id=page_id).order_by(Section.order.asc()).all()
+    nav_items = []
+
+    for sec in sections:
+        # PENGECUALIAN: Navbar & Footer tidak dibuatkan tombol menu di navbar
+        if sec.type in ["navbar", "footer"]:
+            continue
+
+        content = sec.content or {}
+        nav_id = content.get("nav_id")
+
+        # Jika section lama belum punya nav_id, buatkan secara otomatis
+        if not nav_id:
+            nav_id = f"sec_{uuid.uuid4().hex[:8]}"
+            content["nav_id"] = nav_id
+            sec.content = content
+
+        nav_text = SECTION_NAV_NAMES.get(sec.type, sec.type.capitalize())
+        nav_items.append({
+            "text": nav_text,
+            "url": f"#{nav_id}"
+        })
+
+    return nav_items
+
+
+def get_preset_sections(preset_key):
+    """
+    Menghasilkan list tuple (section_type, content_dict) saat awal pembuatan campaign baru.
+    """
+    section_types = PRESET_TEMPLATES.get(preset_key, PRESET_TEMPLATES["template_ppdb"])
+
+    generated_sections = []
+    nav_items = []
+    section_instances = []
+
+    for sec_type in section_types:
+        content = DEFAULT_SECTION_CONTENTS.get(sec_type, {}).copy()
+
+        # PENGECUALIAN: Footer & Navbar diabaikan dari daftar tombol menu
+        if sec_type not in ["navbar", "footer"]:
+            nav_id = f"sec_{uuid.uuid4().hex[:8]}"
+            content["nav_id"] = nav_id
+
+            nav_text = SECTION_NAV_NAMES.get(sec_type, sec_type.capitalize())
+            nav_items.append({
+                "text": nav_text,
+                "url": f"#{nav_id}"
+            })
+
+        section_instances.append((sec_type, content))
+
+    for sec_type, content in section_instances:
+        if sec_type == "navbar":
+            content["nav_items"] = nav_items
+        generated_sections.append((sec_type, content))
+
+    return generated_sections
+
 
 def save_uploaded_file(file):
     if file and file.filename != '':

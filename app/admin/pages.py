@@ -3,9 +3,10 @@ import re
 from flask import render_template, redirect, url_for, request, flash
 from flask_login import login_required
 from app.admin import admin_bp
-from app.admin.templates import PRESET_TEMPLATES
+from app.admin.templates import get_preset_sections  # <-- REVISI: Gunakan helper get_preset_sections
 from app.models import Page, Section
 from app.extensions import db
+
 
 @admin_bp.route('/pages')
 @login_required
@@ -38,11 +39,14 @@ def new_page():
         db.session.add(page)
         db.session.flush()
 
-        # Generasi section dari preset template
-        chosen_template = PRESET_TEMPLATES.get(template_id, PRESET_TEMPLATES["template_ppdb"])
+        # REVISI: Panggil get_preset_sections untuk mendapatkan tuple (s_type, s_content)
+        # yang sudah dilengkapi nav_id unik & nav_items otomatis di Navbar
+        chosen_template = get_preset_sections(template_id)
 
         for idx, (s_type, s_content) in enumerate(chosen_template, start=1):
             content_copy = dict(s_content)
+
+            # Tetap pertahankan kustomisasi judul pada section hero
             if s_type == "hero" and "title" in content_copy:
                 content_copy["title"] = title
 
@@ -55,13 +59,14 @@ def new_page():
             db.session.add(sec)
 
         db.session.commit()
-        
+
         flash("Campaign berhasil dibuat! Silakan atur isi konten & section di bawah ini.", "success")
-        
-        # REVISI REDIRECT: Langsung buka Visual Editor Split-Screen
+
+        # Redirect langsung ke Visual Editor Split-Screen
         return redirect(url_for("admin.manage_section", page_id=page.id))
 
     return render_template("admin/new_page.html")
+
 
 @admin_bp.route("/page/<int:page_id>/toggle-publish", methods=["POST"])
 @login_required
@@ -71,6 +76,7 @@ def toggle_publish(page_id):
     db.session.commit()
     flash(f"Status diubah menjadi {'Published' if page.is_published else 'Draft'}", "success")
     return redirect(url_for("admin.list_pages"))
+
 
 @admin_bp.route("/page/<int:page_id>/delete", methods=["POST"])
 @login_required

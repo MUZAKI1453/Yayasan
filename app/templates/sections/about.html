@@ -1,4 +1,4 @@
-<section id="profil" class="py-16 px-6 bg-white">
+<section id="{{ section.content.get('nav_id', 'profil') }}" class="py-16 px-6 bg-white">
     <div class="max-w-4xl mx-auto">
         {% if section.content.get('eyebrow') %}
             <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
