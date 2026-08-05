@@ -31,7 +31,8 @@ DEFAULT_SECTION_CONTENTS = {
         "title": "Membentuk Generasi Rabbani",
         "subtitle": "Selamat datang di sekolah kami...",
         "button_text": "Daftar Sekarang",
-        "button_link": "#ppdb"
+        "button_link": "#ppdb",
+        "bg_image": ""
     },
     "about": {
         "eyebrow": "Profil",
@@ -73,6 +74,14 @@ DEFAULT_SECTION_CONTENTS = {
         "button_text": "Daftar Sekarang", "button_link": "#ppdb"
     },
     "footer": {
+        "title": "SDIP Baitussalam",
+        "description": "Lembaga pendidikan Islam terpadu unggulan.",
+        "address": "Jl. Pendidikan No. 123, Bandung",
+        "phone": "+62 812-3456-7890",
+        "facebook_url": "https://facebook.com",
+        "instagram_url": "https://instagram.com",
+        "whatsapp_number": "6281234567890",
+        "maps_embed_url": "",
         "copyright": "© 2026 SDIP Baitussalam. All rights reserved."
     }
 }

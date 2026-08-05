@@ -31,7 +31,7 @@
                 {% endif %}
             </div>
 
-            <!-- MENU NAVIGASI (Preservation Inputs) -->
+            <!-- MENU NAVIGASI -->
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <label class="form-label fw-bold mb-0">Menu Navigasi</label>
@@ -106,40 +106,158 @@
             }
         </script>
 
-        {% else %}
-        <!-- ==================== B. FORM UNTUK SECTION LAINNYA ==================== -->
+        {% elif section.type == 'gallery' %}
+        <!-- ==================== B. FORM KHUSUS GALERI / DOKUMENTASI ==================== -->
         <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-            {% for key, val in section.content.items() %}
-                {% if key not in ['nav_id', 'nav_items'] %}
+            <div class="mb-3">
+                <label class="form-label fw-bold">Judul Galeri</label>
+                <input type="text" name="title" class="form-control" value="{{ section.content.get('title', 'Galeri & Dokumentasi') }}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Sub Judul / Deskripsi</label>
+                <textarea name="subtitle" class="form-control" rows="2">{{ section.content.get('subtitle', '') }}</textarea>
+            </div>
+
+            <!-- LIST FOTO DOKUMENTASI DYNAMICAL -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-bold mb-0">Daftar Foto Dokumentasi</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPhotoRow()">
+                        <i class="bi bi-plus-lg me-1"></i>Tambah Foto
+                    </button>
+                </div>
+
+                <div id="gallery-items-container">
+                    {% set photos = section.content.get('photos', []) %}
+                    {% for photo in photos %}
+                        {% set photo_url = photo.url if photo is mapping else photo %}
+                        {% set photo_caption = photo.caption if photo is mapping else '' %}
+
+                        <div class="card p-3 mb-2 bg-light border-0 photo-row">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-3 text-center">
+                                    {% if photo_url %}
+                                        <img src="{{ photo_url }}" class="img-fluid rounded mb-1 border" style="max-height: 70px; object-fit: cover;">
+                                        <input type="hidden" name="existing_photo_urls[]" value="{{ photo_url }}">
+                                    {% else %}
+                                        <span class="badge bg-secondary">Foto Baru</span>
+                                        <input type="hidden" name="existing_photo_urls[]" value="">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-1 fw-semibold">Upload Gambar</label>
+                                    <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-1 fw-semibold">Keterangan / Caption</label>
+                                    <input type="text" name="photo_captions[]" value="{{ photo_caption }}" class="form-control form-control-sm" placeholder="Contoh: Upacara Bendera">
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.photo-row').remove()">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Galeri</button>
+                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-outline-secondary">Batal</a>
+            </div>
+        </form>
+
+        <script>
+            function addPhotoRow() {
+                const container = document.getElementById('gallery-items-container');
+                const html = `
+                    <div class="card p-3 mb-2 bg-light border-0 photo-row">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-info text-dark">Foto Baru</span>
+                                <input type="hidden" name="existing_photo_urls[]" value="">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-1 fw-semibold">Upload Gambar *</label>
+                                <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small mb-1 fw-semibold">Keterangan / Caption</label>
+                                <input type="text" name="photo_captions[]" class="form-control form-control-sm" placeholder="Contoh: Kegiatan Ekskul">
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.photo-row').remove()">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+        </script>
+
+        {% else %}
+        <!-- ==================== C. FORM UNTUK SECTION LAINNYA (FOOTER, HERO, DLL) ==================== -->
+        <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+            <!-- Gabungkan data lama dengan key default jika tipe section adalah footer -->
+            {% set content_data = section.content %}
+            {% if section.type == 'footer' %}
+                {% set footer_defaults = {
+                    'title': section.content.get('title', ''),
+                    'description': section.content.get('description', ''),
+                    'address': section.content.get('address', ''),
+                    'phone': section.content.get('phone', ''),
+                    'facebook_url': section.content.get('facebook_url', ''),
+                    'instagram_url': section.content.get('instagram_url', ''),
+                    'whatsapp_number': section.content.get('whatsapp_number', ''),
+                    'maps_embed_url': section.content.get('maps_embed_url', ''),
+                    'copyright': section.content.get('copyright', '')
+                } %}
+                {% set content_data = footer_defaults %}
+            {% endif %}
+
+            {% for key, val in content_data.items() %}
+                {% if key not in ['nav_id', 'nav_items', 'photos'] %}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-capitalize">{{ key.replace('_', ' ') }}</label>
 
-                        {# Checkbox / Boolean #}
+                        {# 1. Checkbox / Boolean #}
                         {% if val is boolean %}
                             <select name="{{ key }}" class="form-select form-select-sm">
                                 <option value="true" {% if val %}selected{% endif %}>Ya / Aktif</option>
                                 <option value="false" {% if not val %}selected{% endif %}>Tidak / Nonaktif</option>
                             </select>
 
-                        {# File / Gambar #}
-                        {% elif key.endswith('_url') or key.startswith('image') or key == 'logo' %}
+                        {# 2. File / Gambar Upload (Mengecualikan Link Sosmed & Maps) #}
+                        {% elif ('image' in key or 'photo' in key or 'logo' in key or 'bg' in key or key.endswith('_url')) and 'maps' not in key and 'facebook' not in key and 'instagram' not in key %}
                             <input type="file" name="{{ key }}_file" class="form-control form-control-sm" accept="image/*">
                             {% if val %}
                                 <div class="mt-2 p-1 border rounded bg-light text-center">
-                                    <img src="{{ val }}" class="img-fluid rounded" style="max-height: 80px;">
+                                    <img src="{{ val }}" class="img-fluid rounded mb-1" style="max-height: 80px;">
+                                    <div class="text-muted small">Gambar saat ini</div>
                                     <input type="hidden" name="{{ key }}" value="{{ val }}">
                                 </div>
                             {% endif %}
 
-                        {# Textarea untuk konten panjang #}
-                        {% elif key in ['content', 'description', 'subtitle', 'quote', 'quote1', 'quote2'] or val|length > 60 %}
-                            <textarea name="{{ key }}" class="form-control form-control-sm" rows="3">{{ val }}</textarea>
+                        {# 3. Textarea untuk Konten Panjang / Maps Embed / Alamat #}
+                        {% elif key in ['content', 'description', 'subtitle', 'quote', 'quote1', 'quote2', 'maps_embed_url', 'address'] or (val is string and val|length > 60) %}
+                            <textarea name="{{ key }}" class="form-control form-control-sm" rows="3" placeholder="{% if key == 'maps_embed_url' %}Paste URL src atau tag iframe Google Maps di sini{% endif %}">{{ val }}</textarea>
+                            {% if key == 'maps_embed_url' %}
+                                <div class="form-text text-muted" style="font-size: 0.72rem;">
+                                    * Cara ambil: Google Maps -> Bagikan -> Sematkan Peta -> Salin isi <code>src="..."</code>
+                                </div>
+                            {% endif %}
 
-                        {# Input Teks Biasa / Angka #}
+                        {# 4. Input Teks Biasa / Angka / Link Sosmed #}
                         {% else %}
-                            <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ val }}">
+                            <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ val }}" placeholder="{% if key == 'whatsapp_number' %}Contoh: 6281234567890{% endif %}">
                         {% endif %}
                     </div>
                 {% endif %}

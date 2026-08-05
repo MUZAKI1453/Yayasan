@@ -1,22 +1,104 @@
-<footer id="{{ section.content.get('nav_id', 'footer') }}" class="bg-gray-900 text-gray-400 py-12 px-6">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-b border-gray-800 pb-8 mb-8">
-        <div>
-            <h3 class="text-white text-lg font-bold mb-2">{{ section.content.get('brand_name', 'Yayasan Kami') }}</h3>
-            <p class="text-sm max-w-md">{{ section.content.get('description', 'Pusat layanan informasi dan pendidikan terpadu.') }}</p>
+<footer id="{{ section.content.get('nav_id', 'kontak') }}" class="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800 font-sans">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- GRID UTAMA (RESPONSIF SANGAT RAPI) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-10 border-b border-slate-800">
+
+            <!-- KOLOM 1: BRAND INFO & SOSMED (5/12 DI DESKTOP) -->
+            <div class="lg:col-span-5 space-y-4">
+                <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                    {{ section.content.get('title', 'SDIP Baitussalam') }}
+                </h3>
+
+                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md">
+                    {{ section.content.get('description', 'Lembaga pendidikan Islam terpadu yang mencetak generasi bertakwa, cerdas, dan berakhlaqul karimah.') }}
+                </p>
+
+                <!-- Ikon Sosmed Kotak Minimalis (Rapi di HP & Desktop) -->
+                <div class="pt-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-2.5">Media Sosial</span>
+                    <div class="flex items-center gap-2.5">
+                        {% if section.content.get('facebook_url') %}
+                            <a href="{{ section.content.get('facebook_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="Facebook">
+                                <i class="bi bi-facebook text-base"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if section.content.get('instagram_url') %}
+                            <a href="{{ section.content.get('instagram_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="Instagram">
+                                <i class="bi bi-instagram text-base"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if section.content.get('whatsapp_number') %}
+                            <a href="https://wa.me/{{ section.content.get('whatsapp_number') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="WhatsApp">
+                                <i class="bi bi-whatsapp text-base"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM 2: INFORMASI KONTAK (3/12 DI DESKTOP) -->
+            <div class="lg:col-span-3 space-y-3">
+                <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                    Kontak Resmi
+                </h4>
+
+                <ul class="space-y-3 text-xs sm:text-sm text-slate-400">
+                    {% if section.content.get('address') %}
+                        <li class="flex items-start gap-3">
+                            <i class="bi bi-geo-alt-fill text-emerald-400 text-base flex-shrink-0 mt-0.5"></i>
+                            <span class="leading-relaxed text-slate-300">{{ section.content.get('address') }}</span>
+                        </li>
+                    {% endif %}
+
+                    {% if section.content.get('phone') %}
+                        <li class="flex items-center gap-3">
+                            <i class="bi bi-telephone-fill text-emerald-400 text-base flex-shrink-0"></i>
+                            <span class="text-slate-300 font-medium">{{ section.content.get('phone') }}</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- KOLOM 3: PETA LOKASI (4/12 DI DESKTOP, FULL WIDTH DI TABLET/MOBILE) -->
+            <div class="md:col-span-2 lg:col-span-4 space-y-3">
+                <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                    Lokasi Sekolah
+                </h4>
+
+                {% set raw_maps = section.content.get('maps_embed_url', '') %}
+
+                {% if 'src="' in raw_maps %}
+                    {% set maps_url = raw_maps.split('src="')[1].split('"')[0] %}
+                {% else %}
+                    {% set maps_url = raw_maps %}
+                {% endif %}
+
+                {% if maps_url %}
+                    <div class="w-full h-40 rounded-xl overflow-hidden border border-slate-800 shadow-sm">
+                        <iframe
+                            src="{{ maps_url }}"
+                            class="w-full h-full border-0"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                {% else %}
+                    <p class="text-xs text-slate-500 italic">Peta lokasi belum diisi.</p>
+                {% endif %}
+            </div>
+
         </div>
-        <div class="flex md:justify-end space-x-4">
-            {% if section.content.get('facebook') and section.content.get('facebook') != '#' %}
-                <a href="{{ section.content.get('facebook') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Facebook</a>
-            {% endif %}
-            {% if section.content.get('instagram') and section.content.get('instagram') != '#' %}
-                <a href="{{ section.content.get('instagram') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Instagram</a>
-            {% endif %}
-            {% if section.content.get('whatsapp') and section.content.get('whatsapp') != '#' %}
-                <a href="{{ section.content.get('whatsapp') }}" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">WhatsApp</a>
-            {% endif %}
+
+        <!-- COPYRIGHT (PRESISI EXACT CENTER DENGAN MARGIN/PADDING KECIL) -->
+        <div class="pt-6 text-center">
+            <p class="text-xs text-slate-500 font-medium m-0 block">
+                {{ section.content.get('copyright', '© 2026 SDIP Baitussalam. All rights reserved.') }}
+            </p>
         </div>
-    </div>
-    <div class="max-w-6xl mx-auto text-center text-xs text-gray-500">
-        {{ section.content.get('copyright', '© 2026 All rights reserved.') }}
+
     </div>
 </footer>

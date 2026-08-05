@@ -81,7 +81,7 @@ def add_section(page_id):
 @login_required
 def edit_section(section_id):
     """
-    EDIT KONTEN SECTION (SAFE NAVBAR EDITING)
+    EDIT KONTEN SECTION (NAVBAR, GALLERY, FOOTER, BIASA)
     """
     section = Section.query.get_or_404(section_id)
     page = section.page
@@ -101,7 +101,6 @@ def edit_section(section_id):
             nav_urls = request.form.getlist("nav_urls[]")
             nav_ids = request.form.getlist("nav_ids[]")
 
-            # HANYA UPDATE NAV_ITEMS JIKA ADA INPUT TEKS MENU DARI FORM
             if any(text.strip() for text in nav_texts):
                 updated_nav_items = []
                 for i, text in enumerate(nav_texts):
@@ -116,10 +115,39 @@ def edit_section(section_id):
                         })
                 content['nav_items'] = updated_nav_items
 
-            # NOTE: Dihapus logika `db.session.delete(sec_obj)` agar section di halaman TIDAK TERHAPUS!
+        # ---------------------------------------------------------------------
+        # B. KHUSUS GALLERY / DOKUMENTASI (MULTIPLE UPLOAD)
+        # ---------------------------------------------------------------------
+        elif section.type == 'gallery':
+            content['title'] = request.form.get('title', 'Galeri & Dokumentasi')
+            content['subtitle'] = request.form.get('subtitle', '')
+
+            existing_urls = request.form.getlist('existing_photo_urls[]')
+            captions = request.form.getlist('photo_captions[]')
+            files = request.files.getlist('gallery_files[]')
+
+            photos_list = []
+
+            for i in range(len(existing_urls)):
+                photo_url = existing_urls[i]
+                caption = captions[i] if i < len(captions) else ''
+
+                # Cek jika ada file gambar baru yang di-upload untuk baris ini
+                if i < len(files) and files[i] and files[i].filename != '':
+                    uploaded_url = save_uploaded_file(files[i])
+                    if uploaded_url:
+                        photo_url = uploaded_url
+
+                if photo_url:
+                    photos_list.append({
+                        'url': photo_url,
+                        'caption': caption
+                    })
+
+            content['photos'] = photos_list
 
         # ---------------------------------------------------------------------
-        # B. SECTION BIASA
+        # C. SECTION BIASA (HERO, FOOTER, ABOUT, DLL)
         # ---------------------------------------------------------------------
         else:
             for key, value in request.form.items():
@@ -140,9 +168,9 @@ def edit_section(section_id):
                     navbar.content = nav_content
                     flag_modified(navbar, "content")
 
-        # Handling Upload File (Logo / Gambar)
+        # Handling Upload File Tunggal Umum (Logo / Gambar latar / Photo tunggal)
         for key, file in request.files.items():
-            if file and file.filename != '':
+            if key != 'gallery_files[]' and file and file.filename != '':
                 file_url = save_uploaded_file(file)
                 if file_url:
                     field_key = key.replace('_file', '')
