@@ -1,274 +1,389 @@
-<div class="card border-0 shadow-sm rounded-3">
-    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-        <h6 class="fw-bold mb-0 text-primary">
-            <i class="bi bi-pencil-square me-2"></i>Edit {{ section.type.replace('_', ' ').title() }}
-        </h6>
-        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn-close" aria-label="Close"></a>
+<!-- KONTROL UTAMA: TOMBOL HIDE / UNHIDE SELURUH SECTION EDIT -->
+<div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white border rounded-3 shadow-sm">
+    <div class="d-flex align-items-center gap-2 ps-2">
+        <i class="bi bi-sliders text-primary"></i>
+        <span class="fw-semibold text-dark small">Panel Editor Section</span>
     </div>
+    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 py-1 rounded-2"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#sectionEditCard"
+            aria-expanded="true"
+            aria-controls="sectionEditCard"
+            id="btnToggleSection">
+        <i class="bi bi-eye-slash toggle-icon"></i>
+        <span class="toggle-text small fw-medium">Sembunyikan Editor</span>
+    </button>
+</div>
 
-    <div class="card-body">
+<!-- SELURUH CARD SECTION EDIT (AKAN HIDDEN SAAT DI-TOGGLE) -->
+<div class="collapse show" id="sectionEditCard">
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
 
-        {% if section.type == 'navbar' %}
-        <!-- ==================== A. FORM KHUSUS NAVBAR ==================== -->
-        <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-
-            <!-- Brand Name -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Brand Name *</label>
-                <input type="text" name="brand_name" class="form-control" value="{{ section.content.get('brand_name', '') }}" required>
-            </div>
-
-            <!-- Upload Logo Gambar -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Upload Logo Gambar</label>
-                <input type="file" name="logo_url_file" class="form-control" accept="image/*">
-                {% if section.content.get('logo_url') %}
-                    <div class="mt-2 text-center p-2 border rounded bg-light">
-                        <img src="{{ section.content.get('logo_url') }}" class="img-fluid mb-1" style="max-height: 50px;">
-                        <div class="text-muted small">Logo saat ini</div>
+        <!-- HEADER EDITOR -->
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-primary-subtle text-primary p-2 rounded-2">
+                    <i class="bi bi-pencil-square fs-6"></i>
+                </span>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="fw-bold mb-0 text-dark">
+                            Edit {{ section.type.replace('_', ' ').title() }}
+                        </h6>
+                        <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.7rem;">Section</span>
                     </div>
-                {% endif %}
+                    <p class="text-muted small mb-0" style="font-size: 0.78rem;">Pengaturan komponen dan kustomisasi visual</p>
+                </div>
             </div>
+            <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn-close" aria-label="Close"></a>
+        </div>
 
-            <!-- MENU NAVIGASI -->
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-bold mb-0">Menu Navigasi</label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addNavRow()">
-                        <i class="bi bi-plus-lg me-1"></i>Tambah Nav
-                    </button>
+        <div class="card-body p-4">
+
+            {% if section.type == 'navbar' %}
+            <!-- ==================== A. FORM KHUSUS NAVBAR ==================== -->
+            <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                <!-- BRAND NAME & LOGO (DITATA SUSUN KE BAWAH AGAR RAPI DI SEMUA LAYAR) -->
+                <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+                    <div class="row g-3">
+                        <!-- BRAND NAME (BARIS 1) -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-slate-700 mb-1">
+                                Brand Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="brand_name" class="form-control form-control-sm" value="{{ section.content.get('brand_name', '') }}" required placeholder="Masukkan Nama Brand / Lembaga">
+                        </div>
+
+                        <!-- LOGO BRAND (BARIS 2 / DIBAWAH BRAND NAME) -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-slate-700 mb-1">Logo Brand</label>
+                            <input type="file" name="logo_url_file" class="form-control form-control-sm mb-2" accept="image/*">
+
+                            {% if section.content.get('logo_url') %}
+                                <div class="d-flex align-items-center gap-3 p-2 bg-white border rounded-2">
+                                    <div class="p-1 border rounded bg-light d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                        <img src="{{ section.content.get('logo_url') }}" class="mw-100 mh-100 object-fit-contain">
+                                    </div>
+                                    <div class="lh-1">
+                                        <span class="d-block text-dark fw-medium small mb-1">Logo Aktif Saat Ini</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Ditampilkan pada bagian header navbar</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
-                <div id="nav-items-container">
-                    {% set nav_items = section.content.get('nav_items', []) %}
-                    {% for item in nav_items %}
-                        <div class="card p-2 mb-2 bg-light border-0 nav-row">
-                            <input type="hidden" name="nav_ids[]" value="{{ item.id or item.get('nav_id', item.url.replace('#', '')) }}">
+                <!-- PENGATURAN FONT & WARNA -->
+                <div class="border rounded-3 p-3 bg-white mb-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-palette text-primary"></i>
+                        <span class="fw-bold text-dark small">TEMA & TAMPILAN NAVBAR</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-muted mb-1">Jenis Font Navbar</label>
+                            <select name="nav_font_family" class="form-select form-select-sm">
+                                <option value="Plus Jakarta Sans" {% if section.content.get('nav_font_family') == 'Plus Jakarta Sans' or not section.content.get('nav_font_family') %}selected{% endif %}>Plus Jakarta Sans (Clean & Modern)</option>
+                                <option value="Poppins" {% if section.content.get('nav_font_family') == 'Poppins' %}selected{% endif %}>Poppins (Geometric)</option>
+                                <option value="Inter" {% if section.content.get('nav_font_family') == 'Inter' %}selected{% endif %}>Inter (Minimalist UI)</option>
+                                <option value="Outfit" {% if section.content.get('nav_font_family') == 'Outfit' %}selected{% endif %}>Outfit (Tech / Modern)</option>
+                                <option value="Roboto" {% if section.content.get('nav_font_family') == 'Roboto' %}selected{% endif %}>Roboto (Professional)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Background Navbar</label>
+                            <div class="input-group input-group-sm">
+                                <input type="color" id="bg_picker" class="form-control form-control-color p-1" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_hex').value = this.value">
+                                <input type="text" id="bg_hex" name="nav_bg_color" class="form-control" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_picker').value = this.value">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Warna Teks Menu</label>
+                            <select name="nav_text_color" class="form-select form-select-sm">
+                                <option value="dark" {% if section.content.get('nav_text_color') == 'dark' or not section.content.get('nav_text_color') %}selected{% endif %}>Teks Gelap (#1e293b)</option>
+                                <option value="light" {% if section.content.get('nav_text_color') == 'light' %}selected{% endif %}>Teks Terang/Putih (#ffffff)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Background Tombol CTA</label>
+                            <div class="input-group input-group-sm">
+                                <input type="color" id="btn_bg_picker" class="form-control form-control-color p-1" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_hex').value = this.value">
+                                <input type="text" id="btn_bg_hex" name="button_bg_color" class="form-control" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_picker').value = this.value">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Warna Teks Tombol CTA</label>
+                            <div class="input-group input-group-sm">
+                                <input type="color" id="btn_txt_picker" class="form-control form-control-color p-1" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_hex').value = this.value">
+                                <input type="text" id="btn_txt_hex" name="button_text_color" class="form-control" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_picker').value = this.value">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MENU NAVIGASI DYNAMIC -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark small">Daftar Link Navigasi</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addNavRow()">
+                            <i class="bi bi-plus-lg me-1"></i>Tambah Item Menu
+                        </button>
+                    </div>
+
+                    <div id="nav-items-container" class="d-flex flex-column gap-2">
+                        {% set nav_items = section.content.get('nav_items', []) %}
+                        {% for item in nav_items %}
+                            <div class="p-2 border rounded-2 bg-white nav-row">
+                                <input type="hidden" name="nav_ids[]" value="{{ item.id or item.get('nav_id', item.url.replace('#', '')) }}">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-5">
+                                        <input type="text" name="nav_texts[]" value="{{ item.text }}" class="form-control form-control-sm" placeholder="Teks Menu (Misal: Beranda)">
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" name="nav_urls[]" value="{{ item.url }}" class="form-control form-control-sm" placeholder="URL Target (#section)">
+                                    </div>
+                                    <div class="col-2 text-end">
+                                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.nav-row').remove()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTON -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium small text-slate-700">Teks Tombol Aksi</label>
+                        <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}" placeholder="Contoh: Hubungi Kami">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium small text-slate-700">Link Tombol Aksi</label>
+                        <input type="text" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '') }}" placeholder="#kontak">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Perubahan</button>
+                    <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+                </div>
+            </form>
+
+            <script>
+                function addNavRow() {
+                    const container = document.getElementById('nav-items-container');
+                    const rowId = 'sec_' + Math.random().toString(36).substr(2, 8);
+                    const html = `
+                        <div class="p-2 border rounded-2 bg-white nav-row">
+                            <input type="hidden" name="nav_ids[]" value="${rowId}">
                             <div class="row g-2 align-items-center">
                                 <div class="col-5">
-                                    <input type="text" name="nav_texts[]" value="{{ item.text }}" class="form-control form-control-sm" placeholder="Teks Menu">
+                                    <input type="text" name="nav_texts[]" class="form-control form-control-sm" placeholder="Teks Menu">
                                 </div>
                                 <div class="col-5">
-                                    <input type="text" name="nav_urls[]" value="{{ item.url }}" class="form-control form-control-sm" placeholder="URL (#link)">
+                                    <input type="text" name="nav_urls[]" value="#${rowId}" class="form-control form-control-sm" placeholder="URL Target (#link)">
                                 </div>
                                 <div class="col-2 text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.nav-row').remove()">
+                                    <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.nav-row').remove()">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                }
+            </script>
 
-            <!-- Action Button -->
-            <div class="row g-2 mb-4">
-                <div class="col-6">
-                    <label class="form-label fw-bold small">Teks Button</label>
-                    <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}">
-                </div>
-                <div class="col-6">
-                    <label class="form-label fw-bold small">Link Button</label>
-                    <input type="text" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '') }}">
-                </div>
-            </div>
+            {% elif section.type == 'gallery' %}
+            <!-- ==================== B. FORM KHUSUS GALERI ==================== -->
+            <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Perubahan</button>
-                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-outline-secondary">Batal</a>
-            </div>
-        </form>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <label class="form-label fw-medium small text-slate-700">Judul Galeri</label>
+                        <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Galeri & Dokumentasi') }}">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-medium small text-slate-700">Sub Judul / Deskripsi Singkat</label>
+                        <textarea name="subtitle" class="form-control form-control-sm" rows="2">{{ section.content.get('subtitle', '') }}</textarea>
+                    </div>
+                </div>
 
-        <script>
-            function addNavRow() {
-                const container = document.getElementById('nav-items-container');
-                const rowId = 'sec_' + Math.random().toString(36).substr(2, 8);
-                const html = `
-                    <div class="card p-2 mb-2 bg-light border-0 nav-row">
-                        <input type="hidden" name="nav_ids[]" value="${rowId}">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-5">
-                                <input type="text" name="nav_texts[]" class="form-control form-control-sm" placeholder="Teks Menu">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark small">Koleksi Foto Dokumentasi</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPhotoRow()">
+                            <i class="bi bi-plus-lg me-1"></i>Tambah Foto
+                        </button>
+                    </div>
+
+                    <div id="gallery-items-container" class="d-flex flex-column gap-2">
+                        {% set photos = section.content.get('photos', []) %}
+                        {% for photo in photos %}
+                            {% set photo_url = photo.url if photo is mapping else photo %}
+                            {% set photo_caption = photo.caption if photo is mapping else '' %}
+
+                            <div class="p-2 border rounded-2 bg-white photo-row">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        {% if photo_url %}
+                                            <img src="{{ photo_url }}" class="rounded border" style="height: 48px; width: 48px; object-fit: cover;">
+                                            <input type="hidden" name="existing_photo_urls[]" value="{{ photo_url }}">
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary">Baru</span>
+                                            <input type="hidden" name="existing_photo_urls[]" value="">
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" name="photo_captions[]" value="{{ photo_caption }}" class="form-control form-control-sm" placeholder="Keterangan / Caption">
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.photo-row').remove()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-5">
-                                <input type="text" name="nav_urls[]" value="#${rowId}" class="form-control form-control-sm" placeholder="URL (#link)">
-                            </div>
-                            <div class="col-2 text-end">
-                                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.nav-row').remove()">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
-                container.insertAdjacentHTML('beforeend', html);
-            }
-        </script>
-
-        {% elif section.type == 'gallery' %}
-        <!-- ==================== B. FORM KHUSUS GALERI / DOKUMENTASI ==================== -->
-        <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Judul Galeri</label>
-                <input type="text" name="title" class="form-control" value="{{ section.content.get('title', 'Galeri & Dokumentasi') }}">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Sub Judul / Deskripsi</label>
-                <textarea name="subtitle" class="form-control" rows="2">{{ section.content.get('subtitle', '') }}</textarea>
-            </div>
-
-            <!-- LIST FOTO DOKUMENTASI DYNAMICAL -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-bold mb-0">Daftar Foto Dokumentasi</label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPhotoRow()">
-                        <i class="bi bi-plus-lg me-1"></i>Tambah Foto
-                    </button>
+                        {% endfor %}
+                    </div>
                 </div>
 
-                <div id="gallery-items-container">
-                    {% set photos = section.content.get('photos', []) %}
-                    {% for photo in photos %}
-                        {% set photo_url = photo.url if photo is mapping else photo %}
-                        {% set photo_caption = photo.caption if photo is mapping else '' %}
+                <div class="d-flex gap-2 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Galeri</button>
+                    <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+                </div>
+            </form>
 
-                        <div class="card p-3 mb-2 bg-light border-0 photo-row">
+            <script>
+                function addPhotoRow() {
+                    const container = document.getElementById('gallery-items-container');
+                    const html = `
+                        <div class="p-2 border rounded-2 bg-white photo-row">
                             <div class="row g-2 align-items-center">
-                                <div class="col-md-3 text-center">
-                                    {% if photo_url %}
-                                        <img src="{{ photo_url }}" class="img-fluid rounded mb-1 border" style="max-height: 70px; object-fit: cover;">
-                                        <input type="hidden" name="existing_photo_urls[]" value="{{ photo_url }}">
-                                    {% else %}
-                                        <span class="badge bg-secondary">Foto Baru</span>
-                                        <input type="hidden" name="existing_photo_urls[]" value="">
-                                    {% endif %}
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-info-subtle text-info">Baru</span>
+                                    <input type="hidden" name="existing_photo_urls[]" value="">
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small mb-1 fw-semibold">Upload Gambar</label>
-                                    <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small mb-1 fw-semibold">Keterangan / Caption</label>
-                                    <input type="text" name="photo_captions[]" value="{{ photo_caption }}" class="form-control form-control-sm" placeholder="Contoh: Upacara Bendera">
+                                    <input type="text" name="photo_captions[]" class="form-control form-control-sm" placeholder="Keterangan / Caption">
                                 </div>
                                 <div class="col-md-1 text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.photo-row').remove()">
+                                    <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.photo-row').remove()">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                }
+            </script>
+
+            {% else %}
+            <!-- ==================== C. FORM SECTION UMUM ==================== -->
+            <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                {% set content_data = section.content %}
+                {% if section.type == 'footer' %}
+                    {% set footer_defaults = {
+                        'title': section.content.get('title', ''),
+                        'description': section.content.get('description', ''),
+                        'address': section.content.get('address', ''),
+                        'phone': section.content.get('phone', ''),
+                        'facebook_url': section.content.get('facebook_url', ''),
+                        'instagram_url': section.content.get('instagram_url', ''),
+                        'whatsapp_number': section.content.get('whatsapp_number', ''),
+                        'maps_embed_url': section.content.get('maps_embed_url', ''),
+                        'copyright': section.content.get('copyright', '')
+                    } %}
+                    {% set content_data = footer_defaults %}
+                {% endif %}
+
+                <div class="row g-3">
+                {% for key, val in content_data.items() %}
+                    {% if key not in ['nav_id', 'nav_items', 'photos', 'nav_bg_color', 'nav_text_color', 'nav_font_family', 'button_bg_color', 'button_text_color'] %}
+
+                        {% set is_textarea = key in ['content', 'description', 'subtitle', 'quote', 'quote1', 'quote2', 'maps_embed_url', 'address'] or (val is string and val|length > 60) %}
+                        {% set col_class = 'col-12' if is_textarea else 'col-md-6' %}
+
+                        <div class="{{ col_class }}">
+                            <label class="form-label fw-medium small text-slate-700 text-capitalize">
+                                {{ key.replace('_', ' ') }}
+                            </label>
+
+                            {% if val is boolean %}
+                                <select name="{{ key }}" class="form-select form-select-sm">
+                                    <option value="true" {% if val %}selected{% endif %}>Ya / Aktif</option>
+                                    <option value="false" {% if not val %}selected{% endif %}>Tidak / Nonaktif</option>
+                                </select>
+
+                            {% elif ('image' in key or 'photo' in key or 'logo' in key or 'bg' in key or key.endswith('_url')) and 'maps' not in key and 'facebook' not in key and 'instagram' not in key %}
+                                <input type="file" name="{{ key }}_file" class="form-control form-control-sm" accept="image/*">
+                                {% if val %}
+                                    <div class="mt-2 p-2 border rounded bg-light d-flex align-items-center gap-2">
+                                        <img src="{{ val }}" class="rounded bg-white border p-1" style="height: 40px;">
+                                        <span class="text-muted small">Gambar saat ini</span>
+                                        <input type="hidden" name="{{ key }}" value="{{ val }}">
+                                    </div>
+                                {% endif %}
+
+                            {% elif is_textarea %}
+                                <textarea name="{{ key }}" class="form-control form-control-sm" rows="3" placeholder="{% if key == 'maps_embed_url' %}Paste URL src iframe Google Maps di sini{% endif %}">{{ val }}</textarea>
+
+                            {% else %}
+                                <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ val }}" placeholder="{% if key == 'whatsapp_number' %}Contoh: 6281234567890{% endif %}">
+                            {% endif %}
                         </div>
-                    {% endfor %}
+                    {% endif %}
+                {% endfor %}
                 </div>
-            </div>
 
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Galeri</button>
-                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-outline-secondary">Batal</a>
-            </div>
-        </form>
-
-        <script>
-            function addPhotoRow() {
-                const container = document.getElementById('gallery-items-container');
-                const html = `
-                    <div class="card p-3 mb-2 bg-light border-0 photo-row">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-md-3 text-center">
-                                <span class="badge bg-info text-dark">Foto Baru</span>
-                                <input type="hidden" name="existing_photo_urls[]" value="">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1 fw-semibold">Upload Gambar *</label>
-                                <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1 fw-semibold">Keterangan / Caption</label>
-                                <input type="text" name="photo_captions[]" class="form-control form-control-sm" placeholder="Contoh: Kegiatan Ekskul">
-                            </div>
-                            <div class="col-md-1 text-end">
-                                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.photo-row').remove()">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
-                container.insertAdjacentHTML('beforeend', html);
-            }
-        </script>
-
-        {% else %}
-        <!-- ==================== C. FORM UNTUK SECTION LAINNYA (FOOTER, HERO, DLL) ==================== -->
-        <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-
-            <!-- Gabungkan data lama dengan key default jika tipe section adalah footer -->
-            {% set content_data = section.content %}
-            {% if section.type == 'footer' %}
-                {% set footer_defaults = {
-                    'title': section.content.get('title', ''),
-                    'description': section.content.get('description', ''),
-                    'address': section.content.get('address', ''),
-                    'phone': section.content.get('phone', ''),
-                    'facebook_url': section.content.get('facebook_url', ''),
-                    'instagram_url': section.content.get('instagram_url', ''),
-                    'whatsapp_number': section.content.get('whatsapp_number', ''),
-                    'maps_embed_url': section.content.get('maps_embed_url', ''),
-                    'copyright': section.content.get('copyright', '')
-                } %}
-                {% set content_data = footer_defaults %}
+                <div class="d-flex gap-2 pt-3 border-top mt-4">
+                    <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Perubahan</button>
+                    <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+                </div>
+            </form>
             {% endif %}
 
-            {% for key, val in content_data.items() %}
-                {% if key not in ['nav_id', 'nav_items', 'photos'] %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-capitalize">{{ key.replace('_', ' ') }}</label>
-
-                        {# 1. Checkbox / Boolean #}
-                        {% if val is boolean %}
-                            <select name="{{ key }}" class="form-select form-select-sm">
-                                <option value="true" {% if val %}selected{% endif %}>Ya / Aktif</option>
-                                <option value="false" {% if not val %}selected{% endif %}>Tidak / Nonaktif</option>
-                            </select>
-
-                        {# 2. File / Gambar Upload (Mengecualikan Link Sosmed & Maps) #}
-                        {% elif ('image' in key or 'photo' in key or 'logo' in key or 'bg' in key or key.endswith('_url')) and 'maps' not in key and 'facebook' not in key and 'instagram' not in key %}
-                            <input type="file" name="{{ key }}_file" class="form-control form-control-sm" accept="image/*">
-                            {% if val %}
-                                <div class="mt-2 p-1 border rounded bg-light text-center">
-                                    <img src="{{ val }}" class="img-fluid rounded mb-1" style="max-height: 80px;">
-                                    <div class="text-muted small">Gambar saat ini</div>
-                                    <input type="hidden" name="{{ key }}" value="{{ val }}">
-                                </div>
-                            {% endif %}
-
-                        {# 3. Textarea untuk Konten Panjang / Maps Embed / Alamat #}
-                        {% elif key in ['content', 'description', 'subtitle', 'quote', 'quote1', 'quote2', 'maps_embed_url', 'address'] or (val is string and val|length > 60) %}
-                            <textarea name="{{ key }}" class="form-control form-control-sm" rows="3" placeholder="{% if key == 'maps_embed_url' %}Paste URL src atau tag iframe Google Maps di sini{% endif %}">{{ val }}</textarea>
-                            {% if key == 'maps_embed_url' %}
-                                <div class="form-text text-muted" style="font-size: 0.72rem;">
-                                    * Cara ambil: Google Maps -> Bagikan -> Sematkan Peta -> Salin isi <code>src="..."</code>
-                                </div>
-                            {% endif %}
-
-                        {# 4. Input Teks Biasa / Angka / Link Sosmed #}
-                        {% else %}
-                            <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ val }}" placeholder="{% if key == 'whatsapp_number' %}Contoh: 6281234567890{% endif %}">
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endfor %}
-
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-success w-100 fw-bold">Simpan Perubahan</button>
-                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-outline-secondary">Batal</a>
-            </div>
-        </form>
-        {% endif %}
-
+        </div>
     </div>
 </div>
+
+<!-- SCRIPT UPDATE TEKS DAN IKON DARI TOMBOL TOGGLE MAIN SECTION -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sectionCard = document.getElementById('sectionEditCard');
+        const toggleBtn = document.getElementById('btnToggleSection');
+
+        if (sectionCard && toggleBtn) {
+            sectionCard.addEventListener('hide.bs.collapse', function () {
+                toggleBtn.querySelector('.toggle-icon').className = 'bi bi-eye toggle-icon';
+                toggleBtn.querySelector('.toggle-text').textContent = 'Tampilkan Editor';
+                toggleBtn.classList.replace('btn-outline-secondary', 'btn-primary');
+            });
+            sectionCard.addEventListener('show.bs.collapse', function () {
+                toggleBtn.querySelector('.toggle-icon').className = 'bi bi-eye-slash toggle-icon';
+                toggleBtn.querySelector('.toggle-text').textContent = 'Sembunyikan Editor';
+                toggleBtn.classList.replace('btn-primary', 'btn-outline-secondary');
+            });
+        }
+    });
+</script>

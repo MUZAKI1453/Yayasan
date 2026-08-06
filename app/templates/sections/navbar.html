@@ -1,72 +1,124 @@
-<nav class="{{ section.content.get('nav_theme', 'bg-white navbar-light shadow-sm') }} {{ section.content.get('nav_position', 'sticky-top') }} w-full z-50">
+{# 1. MENGAMBIL DATA TEMA, FONT, & WARNA DINAMIS #}
+{% set nav_bg = section.content.get('nav_bg_color', '#ffffff') %}
+{% set is_light_text = section.content.get('nav_text_color') == 'light' %}
+{% set nav_font = section.content.get('nav_font_family', 'Plus Jakarta Sans') %}
+{% set btn_bg = section.content.get('button_bg_color', '#2563eb') %}
+{% set btn_txt = section.content.get('button_text_color', '#ffffff') %}
+
+{# Variable Style Teks & Border Adaptif #}
+{% set text_class = 'text-slate-100 hover:text-white' if is_light_text else 'text-gray-700 hover:text-blue-600' %}
+{% set brand_text_class = 'text-white' if is_light_text else 'text-gray-800' %}
+{% set mobile_border_class = 'border-white/10' if is_light_text else 'border-gray-200' %}
+
+{# IMPORT GOOGLE FONTS OTOMATIS BERDASARKAN PILIHAN USER #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family={{ nav_font.replace(' ', '+') }}:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+{# 2. MENGAMBIL STRUKTUR DATA BARU (nav_items) #}
+{% set nav_items = section.content.get('nav_items', []) %}
+
+{# 3. FALLBACK/BACKWARD COMPATIBILITY UNTUK FORMAT LAMA #}
+{% if not nav_items %}
+    {% set nav_texts = section.content.get('nav_texts', []) %}
+    {% set nav_urls = section.content.get('nav_urls', []) %}
+
+    {% if not nav_texts %}
+        {% set nav_texts = [] %}
+        {% set nav_urls = [] %}
+        {% if section.content.get('nav_text_1') %}
+            {% set _ = nav_texts.append(section.content.get('nav_text_1')) %}
+            {% set _ = nav_urls.append(section.content.get('nav_url_1', '#')) %}
+        {% endif %}
+        {% if section.content.get('nav_text_2') %}
+            {% set _ = nav_texts.append(section.content.get('nav_text_2')) %}
+            {% set _ = nav_urls.append(section.content.get('nav_url_2', '#')) %}
+        {% endif %}
+        {% if section.content.get('nav_text_3') %}
+            {% set _ = nav_texts.append(section.content.get('nav_text_3')) %}
+            {% set _ = nav_urls.append(section.content.get('nav_url_3', '#')) %}
+        {% endif %}
+    {% endif %}
+
+    {# Konversi sementara data lama menjadi objek nav_items #}
+    {% set nav_items = [] %}
+    {% for text in nav_texts %}
+        {% if text %}
+            {% set _ = nav_items.append({
+                'text': text,
+                'url': nav_urls[loop.index0] if loop.index0 < nav_urls|length else '#'
+            }) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<!-- TOP NAVBAR (DESKTOP & HEADER MOBILE) -->
+<nav class="w-full z-40 top-0 sticky shadow-sm transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
+
             <!-- Brand / Logo -->
-            <div class="flex-shrink-0 flex items-center">
+            <div class="flex-shrink-0 flex items-center gap-2">
                 {% if section.content.get('logo_url') %}
-                    <img class="h-8 w-auto mr-2" src="{{ section.content.get('logo_url') }}" alt="Logo">
+                    <img class="h-8 w-auto" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
-                <span class="font-bold text-xl text-gray-800">
+                <span class="font-bold text-xl {{ brand_text_class }}">
                     {{ section.content.get('brand_name', 'Yayasan') }}
                 </span>
             </div>
 
-            <!-- Nav Links Dinamis -->
+            <!-- Nav Links Desktop (Samping Kanan) -->
             <div class="hidden md:flex space-x-8 items-center">
-
-                {# 1. MENGAMBIL STRUKTUR DATA BARU (nav_items) #}
-                {% set nav_items = section.content.get('nav_items', []) %}
-
-                {# 2. FALLBACK/BACKWARD COMPATIBILITY UNTUK FORMAT LAMA #}
-                {% if not nav_items %}
-                    {% set nav_texts = section.content.get('nav_texts', []) %}
-                    {% set nav_urls = section.content.get('nav_urls', []) %}
-
-                    {% if not nav_texts %}
-                        {% set nav_texts = [] %}
-                        {% set nav_urls = [] %}
-                        {% if section.content.get('nav_text_1') %}
-                            {% set _ = nav_texts.append(section.content.get('nav_text_1')) %}
-                            {% set _ = nav_urls.append(section.content.get('nav_url_1', '#')) %}
-                        {% endif %}
-                        {% if section.content.get('nav_text_2') %}
-                            {% set _ = nav_texts.append(section.content.get('nav_text_2')) %}
-                            {% set _ = nav_urls.append(section.content.get('nav_url_2', '#')) %}
-                        {% endif %}
-                        {% if section.content.get('nav_text_3') %}
-                            {% set _ = nav_texts.append(section.content.get('nav_text_3')) %}
-                            {% set _ = nav_urls.append(section.content.get('nav_url_3', '#')) %}
-                        {% endif %}
-                    {% endif %}
-
-                    {# Konversi sementara data lama menjadi objek nav_items #}
-                    {% set nav_items = [] %}
-                    {% for text in nav_texts %}
-                        {% if text %}
-                            {% set _ = nav_items.append({
-                                'text': text,
-                                'url': nav_urls[loop.index0] if loop.index0 < nav_urls|length else '#'
-                            }) %}
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
-
-                {# 3. LOOPING MENU NAVIGASI REAKTIF #}
                 {% for item in nav_items %}
                     {% if item.text %}
-                        <a href="{{ item.url }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+                        <a href="{{ item.url }}" class="{{ text_class }} font-medium transition-colors">
                             {{ item.text }}
                         </a>
                     {% endif %}
                 {% endfor %}
 
-                <!-- Action Button -->
+                <!-- Action Button Desktop -->
                 {% if section.content.get('button_text_1') %}
-                    <a href="{{ section.content.get('button_link_1', '#') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition">
+                    <a href="{{ section.content.get('button_link_1', '#') }}" class="px-4 py-2 rounded-lg font-medium text-sm shadow-sm hover:opacity-90 transition" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
                         {{ section.content.get('button_text_1') }}
                     </a>
                 {% endif %}
             </div>
+
         </div>
     </div>
 </nav>
+
+<!-- MOBILE FIXED BOTTOM NAVIGATION (KHUSUS TAMPILAN HP SEPERTI BAITULWAKAF) -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t {{ mobile_border_class }} shadow-lg px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
+    <div class="flex items-center justify-around">
+        {% for item in nav_items %}
+            {% if item.text %}
+                <a href="{{ item.url }}" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors">
+                    <!-- Icon Dinamis Berdasarkan Teks Navigasi -->
+                    {% set lower_text = item.text|lower %}
+                    {% if 'beranda' in lower_text or 'home' in lower_text %}
+                        <i class="bi bi-house-door text-lg leading-none mb-0.5"></i>
+                    {% elif 'berita' in lower_text or 'news' in lower_text or 'artikel' in lower_text %}
+                        <i class="bi bi-newspaper text-lg leading-none mb-0.5"></i>
+                    {% elif 'program' in lower_text or 'donasi' in lower_text or 'wakaf' in lower_text %}
+                        <i class="bi bi-heart text-lg leading-none mb-0.5"></i>
+                    {% elif 'profil' in lower_text or 'tentang' in lower_text or 'official' in lower_text %}
+                        <i class="bi bi-person-badge text-lg leading-none mb-0.5"></i>
+                    {% else %}
+                        <i class="bi bi-grid text-lg leading-none mb-0.5"></i>
+                    {% endif %}
+                    <span class="truncate max-w-[65px]">{{ item.text }}</span>
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Action Button Mobile Bottom Tab -->
+        {% if section.content.get('button_text_1') %}
+            <a href="{{ section.content.get('button_link_1', '#') }}" class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px]" style="color: {{ btn_bg }};">
+                <i class="bi bi-box-arrow-in-right text-lg leading-none mb-0.5"></i>
+                <span class="truncate max-w-[65px]">{{ section.content.get('button_text_1') }}</span>
+            </a>
+        {% endif %}
+    </div>
+</div>

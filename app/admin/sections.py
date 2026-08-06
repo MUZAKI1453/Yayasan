@@ -97,6 +97,13 @@ def edit_section(section_id):
             content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
             content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
 
+            # SIMPAN TEMA, FONT, & WARNA DINAMIS NAVBAR
+            content['nav_font_family'] = request.form.get('nav_font_family', 'Plus Jakarta Sans')
+            content['nav_bg_color'] = request.form.get('nav_bg_color', '#ffffff')
+            content['nav_text_color'] = request.form.get('nav_text_color', 'dark')
+            content['button_bg_color'] = request.form.get('button_bg_color', '#2563eb')
+            content['button_text_color'] = request.form.get('button_text_color', '#ffffff')
+
             nav_texts = request.form.getlist("nav_texts[]")
             nav_urls = request.form.getlist("nav_urls[]")
             nav_ids = request.form.getlist("nav_ids[]")

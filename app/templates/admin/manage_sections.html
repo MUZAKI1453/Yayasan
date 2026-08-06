@@ -45,7 +45,7 @@
         z-index: 9999;
     }
 
-    /* 4. SIDEBAR KIRI FIX NEMPEL UJUNG ATAS KE BAWAH */
+    /* 4. SIDEBAR KIRI (TRANSISI SMOOTH SAAT HIDDEN) */
     .builder-sidebar {
         width: 420px;
         min-width: 420px;
@@ -57,6 +57,13 @@
         flex-direction: column;
         flex-shrink: 0;
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 20;
+    }
+
+    .builder-sidebar.collapsed {
+        margin-left: -420px; /* Sembunyikan sidebar ke kiri */
     }
 
     .builder-sidebar-header {
@@ -72,7 +79,7 @@
         padding: 1.25rem;
     }
 
-    /* 5. PREVIEW CANVAS KANAN FULL LANDSCAPE */
+    /* 5. PREVIEW CANVAS KANAN */
     .builder-preview {
         flex: 1;
         height: 100vh;
@@ -80,6 +87,8 @@
         flex-direction: column;
         background-color: #0f172a;
         padding: 0;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .preview-window {
@@ -103,6 +112,32 @@
         flex-shrink: 0;
     }
 
+    /* TOMBOL FLOATING SAAT SIDEBAR HIDDEN */
+    .floating-toggle-btn {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background-color: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+    .floating-toggle-btn:hover {
+        background-color: #1d4ed8;
+        color: #ffffff;
+    }
+
+    /* TAMPILKAN FLOATING BTN HANYA KETIKA COLLAPSED */
+    .builder-sidebar.collapsed ~ .builder-preview .floating-toggle-btn {
+        display: flex;
+    }
+
     /* Scrollbar Minimalis */
     .builder-sidebar-body::-webkit-scrollbar {
         width: 5px;
@@ -118,7 +153,6 @@
         border: 2px dashed #166534 !important;
     }
 
-    /* Interactive Section List Item */
     .section-list-item {
         cursor: pointer;
         transition: background-color 0.15s ease-in-out;
@@ -131,7 +165,7 @@
 <div class="builder-container">
 
     <!-- SIDEBAR KIRI -->
-    <div class="builder-sidebar">
+    <div class="builder-sidebar" id="builderSidebar">
 
         <!-- HEADER SIDEBAR -->
         <div class="builder-sidebar-header">
@@ -140,7 +174,8 @@
                     <h6 class="fw-bold mb-0 text-dark text-truncate">{{ page.title }}</h6>
                 </div>
 
-                <div class="d-flex gap-1 flex-shrink-0">
+                <!-- TOMBOL ACTION & TOGGLE PALING KANAN -->
+                <div class="d-flex gap-1 flex-shrink-0 align-items-center">
                     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3"
                        data-bs-toggle="tooltip" title="Kembali ke Dashboard">
                         <i class="bi bi-house-door"></i>
@@ -149,6 +184,12 @@
                        data-bs-toggle="tooltip" title="Buka Website Live">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </a>
+
+                    <!-- POSISI PALING KANAN: TOMBOL HIDE SIDEBAR (HANYA ICON) -->
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 ms-1"
+                            onclick="toggleSidebar()" data-bs-toggle="tooltip" title="Sembunyikan Panel Editor">
+                        <i class="bi bi-layout-sidebar text-dark"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -172,16 +213,28 @@
     <!-- PREVIEW CANVAS KANAN (LIVE PREVIEW IFRAME) -->
     <div class="builder-preview">
         <div class="preview-window">
-            <div class="preview-browser-bar text-white">
-                <div class="d-flex align-items-center gap-1.5">
-                    <span class="rounded-circle bg-danger d-inline-block" style="width: 8px; height: 8px;"></span>
-                    <span class="rounded-circle bg-warning d-inline-block" style="width: 8px; height: 8px;"></span>
-                    <span class="rounded-circle bg-success d-inline-block" style="width: 8px; height: 8px;"></span>
+            <div class="preview-browser-bar text-white position-relative">
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- TOMBOL UNHIDE FLOATING (HANYA MUNCUL SAAT PANEL DI-HIDE) -->
+                    <button class="floating-toggle-btn" onclick="toggleSidebar()">
+                        <i class="bi bi-layout-sidebar-reverse"></i>
+                        <span>Tampilkan Panel</span>
+                    </button>
+
+                    <!-- DOT BROWSER DEKORATIF -->
+                    <div class="d-flex align-items-center gap-1.5">
+                        <span class="rounded-circle bg-danger d-inline-block" style="width: 8px; height: 8px;"></span>
+                        <span class="rounded-circle bg-warning d-inline-block" style="width: 8px; height: 8px;"></span>
+                        <span class="rounded-circle bg-success d-inline-block" style="width: 8px; height: 8px;"></span>
+                    </div>
                 </div>
+
                 <div class="text-slate-300 font-monospace bg-slate-800 border border-slate-700 px-3 py-0.5 rounded text-truncate"
                      style="max-width: 400px; font-size: 0.72rem;">
                     <i class="bi bi-lock-fill text-success me-1"></i>https://ypibaitussalam.sch.id/{{ page.slug }}
                 </div>
+
                 <button class="btn btn-sm text-light p-0" onclick="refreshPreview()" title="Muat Ulang Frame">
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
@@ -197,6 +250,14 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+    // 0. FUNGSI TOGGLE HIDE / UNHIDE SIDEBAR
+    function toggleSidebar() {
+        const sidebar = document.getElementById('builderSidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+        }
+    }
+
     // 1. Fungsi Scroll Otomatis Iframe Preview ke Section Spesifik
     function scrollToSectionInPreview(sectionType, sectionNavId) {
         const frame = document.getElementById('preview-frame');
