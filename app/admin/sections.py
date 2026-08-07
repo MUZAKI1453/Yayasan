@@ -1,4 +1,4 @@
-# app/admin/sections.py
+import re
 import uuid
 from datetime import datetime
 from flask import render_template, redirect, url_for, request, jsonify, flash
@@ -66,6 +66,7 @@ def add_section(page_id):
                 'id': sec_id_key,
                 'text': initial_content.get("title", nav_text_default),
                 'url': f"#{sec_id_key}",
+                'children': [],
                 'type': section_type
             })
             nav_content['nav_items'] = nav_items
@@ -90,7 +91,7 @@ def edit_section(section_id):
         content = dict(section.content or {})
 
         # ---------------------------------------------------------------------
-        # A. KHUSUS NAVBAR
+        # A. KHUSUS NAVBAR (MENDUKUNG PARENT MENU & SUB-MENU DROPDOWN)
         # ---------------------------------------------------------------------
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
@@ -104,23 +105,99 @@ def edit_section(section_id):
             content['button_bg_color'] = request.form.get('button_bg_color', '#2563eb')
             content['button_text_color'] = request.form.get('button_text_color', '#ffffff')
 
-            nav_texts = request.form.getlist("nav_texts[]")
-            nav_urls = request.form.getlist("nav_urls[]")
-            nav_ids = request.form.getlist("nav_ids[]")
+            updated_nav_items = []
 
-            if any(text.strip() for text in nav_texts):
-                updated_nav_items = []
-                for i, text in enumerate(nav_texts):
-                    if text.strip():
-                        sec_url = nav_urls[i] if i < len(nav_urls) else '#'
-                        sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#', '')
+            # Parse Index Parent dari form request
+            parent_indices = sorted(list(set(
+                re.findall(r'nav_parents\[(\d+)\]', key)[0]
+                for key in request.form.keys()
+                if key.startswith('nav_parents[')
+            )), key=int)
 
-                        updated_nav_items.append({
-                            'id': sec_id,
-                            'text': text.strip(),
-                            'url': sec_url if sec_url.startswith('#') else f"#{sec_url}"
-                        })
+            if parent_indices:
+                for idx in parent_indices:
+                    p_text = request.form.get(f'nav_parents[{idx}][text]', '').strip()
+                    p_url = request.form.get(f'nav_parents[{idx}][url]', '').strip()
+
+                    # Konversi nama teknis ke nama publik jika ada
+                    p_text = SECTION_NAV_NAMES.get(p_text, p_text)
+
+                    if p_text:
+                        # Normalisasi URL Parent
+                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith(
+                                'https://') or p_url.startswith('/')):
+                            p_url = f"#{p_url}"
+                        elif not p_url:
+                            p_url = "#"
+
+                        # Parse sub-menu / children
+                        children = []
+                        child_texts = request.form.getlist(f'nav_parents[{idx}][children][][text]')
+                        child_urls = request.form.getlist(f'nav_parents[{idx}][children][][url]')
+
+                        if not child_texts:
+                            child_keys = sorted(list(set(
+                                re.findall(rf'nav_parents\[{idx}\]\[children\]\[(\d+)\]', k)[0]
+                                for k in request.form.keys()
+                                if k.startswith(f'nav_parents[{idx}][children][')
+                            )), key=int)
+                            for c_idx in child_keys:
+                                c_t = request.form.get(f'nav_parents[{idx}][children][{c_idx}][text]', '').strip()
+                                c_u = request.form.get(f'nav_parents[{idx}][children][{c_idx}][url]', '').strip()
+                                if c_t:
+                                    child_texts.append(c_t)
+                                    child_urls.append(c_u)
+
+                        # Olah data children
+                        for c_text, c_url in zip(child_texts, child_urls):
+                            c_text = c_text.strip()
+                            c_url = c_url.strip()
+                            if c_text:
+                                # Konversi nama teknis (misal 'hero') menjadi nama publik (misal 'Beranda')
+                                pretty_c_text = SECTION_NAV_NAMES.get(c_text, c_text.replace('_', ' ').title())
+
+                                if c_url and not (
+                                        c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith(
+                                        'https://') or c_url.startswith('/')):
+                                    c_url = f"#{c_url}"
+                                elif not c_url:
+                                    c_url = "#"
+                                children.append({
+                                    'text': pretty_c_text,
+                                    'url': c_url
+                                })
+
+                        parent_item = {
+                            'id': f"sec_{p_url.replace('#', '')}",
+                            'text': p_text,
+                            'url': p_url,
+                            'children': children
+                        }
+                        updated_nav_items.append(parent_item)
+
                 content['nav_items'] = updated_nav_items
+            else:
+                # Fallback untuk struktur form flat legacy (nav_texts[])
+                nav_texts = request.form.getlist("nav_texts[]")
+                nav_urls = request.form.getlist("nav_urls[]")
+                nav_ids = request.form.getlist("nav_ids[]")
+
+                if any(text.strip() for text in nav_texts):
+                    for i, text in enumerate(nav_texts):
+                        t_clean = text.strip()
+                        if t_clean:
+                            sec_url = nav_urls[i] if i < len(nav_urls) else '#'
+                            sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#',
+                                                                                                                  '')
+
+                            updated_nav_items.append({
+                                'id': sec_id,
+                                'text': SECTION_NAV_NAMES.get(t_clean, t_clean),
+                                'url': sec_url if (
+                                            sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
+                                'children': []
+                            })
+                    content['nav_items'] = updated_nav_items
 
         # ---------------------------------------------------------------------
         # B. KHUSUS GALLERY / DOKUMENTASI (MULTIPLE UPLOAD)
@@ -139,7 +216,6 @@ def edit_section(section_id):
                 photo_url = existing_urls[i]
                 caption = captions[i] if i < len(captions) else ''
 
-                # Cek jika ada file gambar baru yang di-upload untuk baris ini
                 if i < len(files) and files[i] and files[i].filename != '':
                     uploaded_url = save_uploaded_file(files[i])
                     if uploaded_url:

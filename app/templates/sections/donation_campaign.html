@@ -1,51 +1,71 @@
-<section id="{{ section.content.get('nav_id', 'donasi') }}" class="py-16 px-6 bg-white">
-    <div class="max-w-4xl mx-auto bg-blue-50 border border-blue-100 rounded-2xl p-8 shadow-sm">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
+    <div class="max-w-4xl mx-auto bg-blue-50/60 border border-blue-100/80 rounded-2xl p-6 md:p-8 shadow-sm">
+
+        {# Eyebrow / Tag Sub-Judul #}
         {% if section.content.get('eyebrow') %}
             <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-1">
                 {{ section.content.get('eyebrow') }}
             </span>
         {% endif %}
 
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+        {# Judul Program Donasi #}
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
             {{ section.content.get('title', 'Program Donasi & Wakaf') }}
         </h2>
 
-        <p class="text-gray-600 mb-6">
-            {{ section.content.get('subtitle', '') }}
-        </p>
+        {# Deskripsi Program #}
+        {% if section.content.get('subtitle') %}
+            <p class="text-gray-600 mb-6 leading-relaxed">
+                {{ section.content.get('subtitle') }}
+            </p>
+        {% endif %}
 
-        <!-- Progress Bar Info -->
+        {# Kalkulasi Progress Bar #}
         {% set target = section.content.get('target', 0)|float %}
         {% set collected = section.content.get('collected', 0)|float %}
         {% set percent = (collected / target * 100) if target > 0 else 0 %}
         {% set progress_width = 100 if percent > 100 else percent %}
 
-        <div class="mb-6">
-            <div class="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-                <span>Terkumpul: Rp {{ "{:,.0f}".format(collected) }}</span>
-                <span>Target: Rp {{ "{:,.0f}".format(target) }}</span>
+        <div class="mb-6 bg-white p-4 rounded-xl border border-blue-100/50 shadow-2xs">
+            <div class="flex justify-between text-xs md:text-sm font-semibold text-gray-700 mb-2">
+                <span>Terkumpul: <strong class="text-blue-600">Rp {{ "{:,.0f}".format(collected).replace(',', '.') }}</strong></span>
+                <span>Target: <strong class="text-gray-900">Rp {{ "{:,.0f}".format(target).replace(',', '.') }}</strong></span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <!-- Kalkulasi Dinamis Persentase Progress -->
-                <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ progress_width }}%;"></div>
+
+            <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden p-0.5">
+                <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500 shadow-xs" style="width: {{ progress_width }}%;"></div>
             </div>
-            <div class="text-right text-xs text-gray-500 mt-1">
-                {{ "{:.1f}".format(percent) }}% Tercapai
+
+            <div class="flex justify-between items-center text-xs text-gray-500 mt-2">
+                <span>Pencapaian Program</span>
+                <span class="font-bold text-blue-600">{{ "{:.1f}".format(percent) }}% Tercapai</span>
             </div>
         </div>
 
-        <!-- Rekening Info -->
+        {# Informasi Rekening Donasi #}
         {% if section.content.get('bank_account') %}
-            <div class="bg-white p-4 rounded-lg border border-gray-200 mb-6 text-sm text-gray-700 font-medium">
-                💳 Rekening Donasi: <span class="text-blue-600 font-bold">{{ section.content.get('bank_account') }}</span>
+            <div class="bg-white p-4 rounded-xl border border-gray-200/80 mb-6 text-sm text-gray-700 font-medium flex items-center gap-2 shadow-2xs">
+                <span class="text-lg">💳</span>
+                <div>
+                    <span class="text-gray-500 text-xs block">Rekening Transfer Donasi:</span>
+                    <span class="text-blue-600 font-bold tracking-wide">{{ section.content.get('bank_account') }}</span>
+                </div>
             </div>
         {% endif %}
 
-        <!-- Action Button -->
+        {# Tombol Aksi (Konfirmasi / Salur Donasi) #}
         {% if section.content.get('button_text') %}
-            <a href="{{ section.content.get('button_link', '#') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl shadow transition">
-                {{ section.content.get('button_text') }}
+            {% set btn_link = section.content.get('button_link', '#') %}
+            <a href="{{ btn_link }}"
+               onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ btn_link }}')"
+               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 text-decoration-none">
+                <span>{{ section.content.get('button_text') }}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
             </a>
         {% endif %}
 

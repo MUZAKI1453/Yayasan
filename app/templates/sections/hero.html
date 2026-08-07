@@ -1,31 +1,42 @@
-<section id="{{ section.content.get('nav_id', 'beranda') }}"
-         class="relative py-20 px-6 text-center overflow-hidden bg-cover bg-center"
-         style="{% if section.content.get('bg_image') %}background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('{{ section.content.get('bg_image') }}');{% else %}background: linear-gradient(to bottom right, #eff6ff, #eef2ff);{% endif %}">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+{% set bg_img = section.content.get('bg_image') %}
 
-    <div class="max-w-4xl mx-auto relative z-10">
+<section id="{{ section_anchor_id }}"
+         data-nav-id="{{ section_anchor_id }}"
+         class="relative py-20 md:py-28 px-6 text-center overflow-hidden bg-cover bg-center transition-all duration-300 flex items-center min-h-[500px]"
+         style="{% if bg_img %}background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('{{ bg_img }}');{% else %}background: linear-gradient(to bottom right, #eff6ff, #eef2ff);{% endif %}">
 
-        <!-- Eyebrow Badge -->
+    <div class="max-w-4xl mx-auto relative z-10 w-full">
+
+        <!-- Eyebrow Badge (Adaptif Terhadap Latar Belakang) -->
         {% if section.content.get('eyebrow') %}
-            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-4">
+            <span class="inline-block {% if bg_img %}bg-white/20 text-white backdrop-blur-md border border-white/20{% else %}bg-blue-100 text-blue-800{% endif %} text-xs font-semibold px-3.5 py-1.5 rounded-full uppercase tracking-wider mb-5 shadow-2xs">
                 {{ section.content.get('eyebrow') }}
             </span>
         {% endif %}
 
         <!-- Main Title -->
-        <h1 class="text-4xl md:text-6xl font-extrabold {% if section.content.get('bg_image') %}text-white{% else %}text-gray-900{% endif %} tracking-tight mb-6">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold {% if bg_img %}text-white{% else %}text-slate-900{% endif %} tracking-tight mb-6 leading-tight">
             {{ section.content.get('title', 'Judul Utama Yayasan') }}
         </h1>
 
         <!-- Subtitle -->
-        <p class="text-lg md:text-xl {% if section.content.get('bg_image') %}text-gray-200{% else %}text-gray-600{% endif %} max-w-2xl mx-auto mb-8">
+        <p class="text-lg md:text-xl {% if bg_img %}text-slate-200{% else %}text-slate-600{% endif %} max-w-2xl mx-auto mb-8 leading-relaxed">
             {{ section.content.get('subtitle', 'Deskripsi singkat yayasan atau program unggulan...') }}
         </p>
 
-        <!-- Call to Action Button -->
+        <!-- Call to Action Button dengan Smooth Scroll -->
         {% if section.content.get('button_text') %}
+            {% set btn_link = section.content.get('button_link', '#') %}
             <div class="flex justify-center gap-4">
-                <a href="{{ section.content.get('button_link', '#') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
-                    {{ section.content.get('button_text') }}
+                <a href="{{ btn_link }}"
+                   onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ btn_link }}')"
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-decoration-none inline-flex items-center gap-2">
+                    <span>{{ section.content.get('button_text') }}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
                 </a>
             </div>
         {% endif %}

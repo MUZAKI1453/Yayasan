@@ -1,30 +1,60 @@
-<section id="{{ section.content.get('nav_id', 'section-progress') }}" data-section-type="progress" style="padding: 3rem 0; background-color: #f8fafc;">
-    <div style="max-width: 1140px; margin: 0 auto; padding: 0 15px; text-align: center;">
-        
-        <!-- Judul -->
-        <h2 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 1.5rem;">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}"
+         data-nav-id="{{ section_anchor_id }}"
+         data-section-type="progress"
+         class="py-16 px-6 bg-slate-50/80 transition-all duration-300">
+    <div class="max-w-4xl mx-auto text-center">
+
+        {# Eyebrow / Sub-judul Kecil (Opsional) #}
+        {% if section.content.get('eyebrow') %}
+            <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-2">
+                {{ section.content.get('eyebrow') }}
+            </span>
+        {% endif %}
+
+        {# Judul Utama Section #}
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
             {{ section.content.get('title', 'Progress Kuota') }}
         </h2>
 
-        {% set target = section.content.get('target', 60)|int %}
-        {% set collected = section.content.get('collected', 0)|int %}
-        {% set percent = (collected / target * 100) if target > 0 else 0 %}
+        {# Subtitle / Deskripsi Singkat (Opsional) #}
+        {% if section.content.get('subtitle') %}
+            <p class="text-gray-600 max-w-xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
+                {{ section.content.get('subtitle') }}
+            </p>
+        {% endif %}
 
-        <!-- Outer Progress Container (Menggunakan Inline CSS Murni) -->
-        <div style="width: 100%; max-width: 800px; margin: 0 auto 1rem auto; background-color: #e2e8f0; border-radius: 9999px; height: 26px; overflow: hidden; padding: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
-            
+        {# Kalkulasi Progress Kuota #}
+        {% set target = section.content.get('target', 60)|float %}
+        {% set collected = section.content.get('collected', 0)|float %}
+        {% set percent = (collected / target * 100) if target > 0 else 0 %}
+        {% set progress_width = 100 if percent > 100 else percent %}
+
+        {# Progress Bar Container #}
+        <div class="w-full max-w-2xl mx-auto bg-gray-200/90 rounded-full h-7 p-1 overflow-hidden shadow-inner mb-4 relative">
             <!-- Inner Fill Progress Bar -->
-            <div style="width: {{ percent }}%; background-color: #2563eb; height: 100%; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 0.875rem; font-weight: 700; transition: width 0.5s ease-in-out;">
-                {% if percent > 5 %}
-                    {{ "%.0f"|format(percent) }}%
+            <div class="bg-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-center text-xs font-bold text-white shadow-xs"
+                 style="width: {{ progress_width }}%;">
+                {% if percent >= 10 %}
+                    <span>{{ "{:.0f}".format(percent) }}%</span>
                 {% endif %}
             </div>
 
+            {# Penanganan Teks jika Persentase < 10% (Agar Teks Tetap Terbaca di Luar Fill Bar) #}
+            {% if percent < 10 %}
+                <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-600 pointer-events-none">
+                    {{ "{:.0f}".format(percent) }}%
+                </span>
+            {% endif %}
         </div>
 
-        <!-- Teks Keterangan Siswa -->
-        <p style="font-size: 1.125rem; color: #475569; margin: 0;">
-            <strong style="color: #0f172a;">{{ collected }} Siswa Terdaftar</strong> dari Target Kuota <strong style="color: #0f172a;">{{ target }} Siswa</strong>
+        {# Teks Keterangan Pendaftaran Siswa #}
+        <p class="text-base md:text-lg text-slate-600 font-medium leading-relaxed">
+            <strong class="text-blue-600 font-bold text-lg md:text-xl">{{ collected|int }} Siswa Terdaftar</strong>
+            <span class="text-gray-400 mx-1">/</span>
+            Target Kuota <strong class="text-gray-900 font-bold">{{ target|int }} Siswa</strong>
         </p>
 
     </div>

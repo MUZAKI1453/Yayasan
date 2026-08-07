@@ -5,48 +5,30 @@
 {% set btn_bg = section.content.get('button_bg_color', '#2563eb') %}
 {% set btn_txt = section.content.get('button_text_color', '#ffffff') %}
 
-{# Variable Style Teks & Border Adaptif #}
-{% set text_class = 'text-slate-100 hover:text-white' if is_light_text else 'text-gray-700 hover:text-blue-600' %}
-{% set brand_text_class = 'text-white' if is_light_text else 'text-gray-800' %}
-{% set mobile_border_class = 'border-white/10' if is_light_text else 'border-gray-200' %}
+{# Variable Style Teks Adaptif #}
+{% set text_class = 'text-slate-100 hover:text-white hover:bg-white/10' if is_light_text else 'text-slate-700 hover:text-blue-600 hover:bg-slate-100/80' %}
+{% set brand_text_class = 'text-white' if is_light_text else 'text-slate-800' %}
+{% set mobile_border_class = 'border-white/10' if is_light_text else 'border-slate-200' %}
 
-{# IMPORT GOOGLE FONTS OTOMATIS BERDASARKAN PILIHAN USER #}
+{# IMPORT GOOGLE FONTS OTOMATIS #}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family={{ nav_font.replace(' ', '+') }}:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-{# 2. MENGAMBIL STRUKTUR DATA BARU (nav_items) #}
+{# 2. MENGAMBIL STRUKTUR DATA NAV_ITEMS #}
 {% set nav_items = section.content.get('nav_items', []) %}
 
-{# 3. FALLBACK/BACKWARD COMPATIBILITY UNTUK FORMAT LAMA #}
+{# FALLBACK COMPATIBILITY UNTUK DATA LAMA #}
 {% if not nav_items %}
     {% set nav_texts = section.content.get('nav_texts', []) %}
     {% set nav_urls = section.content.get('nav_urls', []) %}
-
-    {% if not nav_texts %}
-        {% set nav_texts = [] %}
-        {% set nav_urls = [] %}
-        {% if section.content.get('nav_text_1') %}
-            {% set _ = nav_texts.append(section.content.get('nav_text_1')) %}
-            {% set _ = nav_urls.append(section.content.get('nav_url_1', '#')) %}
-        {% endif %}
-        {% if section.content.get('nav_text_2') %}
-            {% set _ = nav_texts.append(section.content.get('nav_text_2')) %}
-            {% set _ = nav_urls.append(section.content.get('nav_url_2', '#')) %}
-        {% endif %}
-        {% if section.content.get('nav_text_3') %}
-            {% set _ = nav_texts.append(section.content.get('nav_text_3')) %}
-            {% set _ = nav_urls.append(section.content.get('nav_url_3', '#')) %}
-        {% endif %}
-    {% endif %}
-
-    {# Konversi sementara data lama menjadi objek nav_items #}
     {% set nav_items = [] %}
     {% for text in nav_texts %}
         {% if text %}
             {% set _ = nav_items.append({
                 'text': text,
-                'url': nav_urls[loop.index0] if loop.index0 < nav_urls|length else '#'
+                'url': nav_urls[loop.index0] if loop.index0 < nav_urls|length else '#',
+                'children': []
             }) %}
         {% endif %}
     {% endfor %}
@@ -58,28 +40,67 @@
         <div class="flex justify-between h-16 items-center">
 
             <!-- Brand / Logo -->
-            <div class="flex-shrink-0 flex items-center gap-2">
+            <a href="/" class="flex-shrink-0 flex items-center gap-2.5 text-decoration-none group">
                 {% if section.content.get('logo_url') %}
-                    <img class="h-8 w-auto" src="{{ section.content.get('logo_url') }}" alt="Logo">
+                    <img class="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
-                <span class="font-bold text-xl {{ brand_text_class }}">
+                <span class="font-bold text-xl tracking-tight {{ brand_text_class }}">
                     {{ section.content.get('brand_name', 'Yayasan') }}
                 </span>
-            </div>
+            </a>
 
-            <!-- Nav Links Desktop (Samping Kanan) -->
-            <div class="hidden md:flex space-x-8 items-center">
+            <!-- Nav Links Desktop -->
+            <div class="hidden md:flex space-x-1 lg:space-x-2 items-center">
                 {% for item in nav_items %}
                     {% if item.text %}
-                        <a href="{{ item.url }}" class="{{ text_class }} font-medium transition-colors">
-                            {{ item.text }}
-                        </a>
+                        {% set children = item.get('children') or item.get('sub_items') or [] %}
+
+                        {% if children|length > 0 %}
+                            <!-- DROPDOWN PARENT -->
+                            <div class="nav-dropdown-item relative py-4" data-dropdown-id="{{ loop.index }}">
+                                <div class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer {{ text_class }}">
+                                    <!-- Link Parent -->
+                                    <a href="{{ item.url or '#' }}" onclick="handleNavClick(event, '{{ item.url or '#' }}')" class="text-inherit text-decoration-none">
+                                        {{ item.text }}
+                                    </a>
+                                    <!-- Icon Panah -->
+                                    <button type="button" onclick="toggleDesktopDropdown(event, {{ loop.index }})" class="p-0.5 text-inherit focus:outline-none">
+                                        <svg class="w-4 h-4 transition-transform duration-200 arrow-icon opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Card Sub-Menu Pop-up -->
+                                <div id="desktop-dropdown-{{ loop.index }}" class="nav-dropdown-card absolute left-0 top-full pt-1 w-56 z-[999]">
+                                    <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-slate-100 p-1.5">
+                                        <div class="flex flex-col gap-0.5">
+                                            {% for child in children %}
+                                                {% if child.text %}
+                                                    <a href="{{ child.url or '#' }}" onclick="handleNavClick(event, '{{ child.url or '#' }}')" class="group/child flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-150 text-decoration-none">
+                                                        <span class="truncate">{{ child.text }}</span>
+                                                        <svg class="w-3.5 h-3.5 text-blue-500 opacity-0 -translate-x-1 group-hover/child:opacity-100 group-hover/child:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                    </a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- MENU TUNGGAL (BIASA) -->
+                            <a href="{{ item.url or '#' }}" onclick="handleNavClick(event, '{{ item.url or '#' }}')" class="{{ text_class }} font-semibold text-sm transition-colors text-decoration-none px-3 py-2 rounded-lg">
+                                {{ item.text }}
+                            </a>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
 
-                <!-- Action Button Desktop -->
+                <!-- CTA Button Desktop -->
                 {% if section.content.get('button_text_1') %}
-                    <a href="{{ section.content.get('button_link_1', '#') }}" class="px-4 py-2 rounded-lg font-medium text-sm shadow-sm hover:opacity-90 transition" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
+                    <a href="{{ section.content.get('button_link_1', '#') }}" onclick="handleNavClick(event, '{{ section.content.get('button_link_1', '#') }}')" class="px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-decoration-none ms-3" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
                         {{ section.content.get('button_text_1') }}
                     </a>
                 {% endif %}
@@ -89,36 +110,176 @@
     </div>
 </nav>
 
-<!-- MOBILE FIXED BOTTOM NAVIGATION (KHUSUS TAMPILAN HP SEPERTI BAITULWAKAF) -->
-<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t {{ mobile_border_class }} shadow-lg px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
-    <div class="flex items-center justify-around">
+<!-- OVERLAY BACKDROP MOBILE -->
+<div id="mobile-dropdown-backdrop" onclick="closeAllMobileSubmenus()" class="hidden md:hidden fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-40 transition-opacity"></div>
+
+<!-- MOBILE FIXED BOTTOM NAVIGATION -->
+<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t {{ mobile_border_class }} shadow-2xl px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
+    <div class="flex items-center justify-around relative">
         {% for item in nav_items %}
             {% if item.text %}
-                <a href="{{ item.url }}" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors">
-                    <!-- Icon Dinamis Berdasarkan Teks Navigasi -->
-                    {% set lower_text = item.text|lower %}
-                    {% if 'beranda' in lower_text or 'home' in lower_text %}
-                        <i class="bi bi-house-door text-lg leading-none mb-0.5"></i>
-                    {% elif 'berita' in lower_text or 'news' in lower_text or 'artikel' in lower_text %}
-                        <i class="bi bi-newspaper text-lg leading-none mb-0.5"></i>
-                    {% elif 'program' in lower_text or 'donasi' in lower_text or 'wakaf' in lower_text %}
-                        <i class="bi bi-heart text-lg leading-none mb-0.5"></i>
-                    {% elif 'profil' in lower_text or 'tentang' in lower_text or 'official' in lower_text %}
-                        <i class="bi bi-person-badge text-lg leading-none mb-0.5"></i>
-                    {% else %}
-                        <i class="bi bi-grid text-lg leading-none mb-0.5"></i>
-                    {% endif %}
-                    <span class="truncate max-w-[65px]">{{ item.text }}</span>
-                </a>
+                {% set children = item.get('children') or item.get('sub_items') or [] %}
+                {% set item_index = loop.index %}
+
+                {% if children|length > 0 %}
+                    <div class="relative dropup-mobile-container">
+                        <button type="button" onclick="toggleMobileSubmenu({{ item_index }})" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors focus:outline-none">
+                            <i class="bi bi-grid text-lg leading-none mb-0.5"></i>
+                            <span class="truncate max-w-[70px] flex items-center gap-0.5">
+                                {{ item.text }}
+                                <i class="bi bi-chevron-up text-[9px]"></i>
+                            </span>
+                        </button>
+
+                        {% set pos_class = 'left-1' if loop.first else ('right-1' if loop.last else 'left-1/2 -translate-x-1/2') %}
+
+                        <div id="mobile-submenu-{{ item_index }}" class="hidden absolute bottom-full mb-3 {{ pos_class }} min-w-[210px] max-w-[calc(100vw-1.5rem)] bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.18)] border border-slate-100 p-2 z-50 overflow-hidden">
+                            <div class="flex flex-col gap-1">
+                                <div class="w-8 h-1 bg-slate-200 rounded-full mx-auto mb-1"></div>
+                                {% for child in children %}
+                                    {% if child.text %}
+                                        <a href="{{ child.url or '#' }}" onclick="handleNavClick(event, '{{ child.url or '#' }}')" class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-blue-50/80 hover:text-blue-600 rounded-xl transition-colors text-decoration-none">
+                                            <span class="truncate">{{ child.text }}</span>
+                                            <i class="bi bi-chevron-right text-[10px] text-slate-400"></i>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ item.url or '#' }}" onclick="handleNavClick(event, '{{ item.url or '#' }}')" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors text-decoration-none">
+                        {% set lower_text = item.text|lower %}
+                        {% if 'beranda' in lower_text or 'home' in lower_text %}
+                            <i class="bi bi-house-door text-lg leading-none mb-0.5"></i>
+                        {% elif 'berita' in lower_text or 'news' in lower_text or 'artikel' in lower_text %}
+                            <i class="bi bi-newspaper text-lg leading-none mb-0.5"></i>
+                        {% elif 'program' in lower_text or 'donasi' in lower_text or 'wakaf' in lower_text %}
+                            <i class="bi bi-heart text-lg leading-none mb-0.5"></i>
+                        {% elif 'profil' in lower_text or 'tentang' in lower_text or 'official' in lower_text %}
+                            <i class="bi bi-person-badge text-lg leading-none mb-0.5"></i>
+                        {% else %}
+                            <i class="bi bi-layers text-lg leading-none mb-0.5"></i>
+                        {% endif %}
+                        <span class="truncate max-w-[70px]">{{ item.text }}</span>
+                    </a>
+                {% endif %}
             {% endif %}
         {% endfor %}
 
-        <!-- Action Button Mobile Bottom Tab -->
         {% if section.content.get('button_text_1') %}
-            <a href="{{ section.content.get('button_link_1', '#') }}" class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px]" style="color: {{ btn_bg }};">
+            <a href="{{ section.content.get('button_link_1', '#') }}" onclick="handleNavClick(event, '{{ section.content.get('button_link_1', '#') }}')" class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px] text-decoration-none" style="color: {{ btn_bg }};">
                 <i class="bi bi-box-arrow-in-right text-lg leading-none mb-0.5"></i>
-                <span class="truncate max-w-[65px]">{{ section.content.get('button_text_1') }}</span>
+                <span class="truncate max-w-[70px]">{{ section.content.get('button_text_1') }}</span>
             </a>
         {% endif %}
     </div>
 </div>
+
+<style>
+    .nav-dropdown-card {
+        display: none;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-dropdown-item:hover .nav-dropdown-card,
+    .nav-dropdown-card.show-click {
+        display: block !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+
+    .nav-dropdown-card::before {
+        content: '';
+        position: absolute;
+        top: -16px;
+        left: 0;
+        right: 0;
+        height: 16px;
+        background: transparent;
+    }
+
+    .nav-dropdown-item:hover .arrow-icon {
+        transform: rotate(180deg);
+    }
+</style>
+
+<script>
+    /**
+     * Handler Pintar Klik Navigasi (Auto Smooth Scroll ke Section Target)
+     */
+    function handleNavClick(event, targetUrl) {
+        if (!targetUrl || targetUrl === '#') return;
+
+        // Cek jika URL berupa Anchor ID (misal: '#sec_123', 'sec_123', atau '/#sec_123')
+        if (targetUrl.includes('#')) {
+            const rawId = targetUrl.split('#')[1].trim();
+            if (!rawId) return;
+
+            // Cari elemen berdasarkan ID murni atau dengan prefix sec_
+            let targetElement = document.getElementById(rawId);
+            if (!targetElement && !rawId.startsWith('sec_')) {
+                targetElement = document.getElementById(`sec_${rawId}`);
+            }
+
+            if (targetElement) {
+                event.preventDefault();
+
+                // Tutup menu terbuka
+                closeAllDesktopDropdowns();
+                closeAllMobileSubmenus();
+
+                // Smooth Scroll dengan offset header agar tidak tertutup navbar sticky
+                const navbarOffset = 70;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }
+
+    // Toggle Dropdown Desktop
+    function toggleDesktopDropdown(event, index) {
+        event.stopPropagation();
+        const card = document.getElementById(`desktop-dropdown-${index}`);
+        const isShown = card ? card.classList.contains('show-click') : false;
+
+        closeAllDesktopDropdowns();
+        if (card && !isShown) card.classList.add('show-click');
+    }
+
+    function closeAllDesktopDropdowns() {
+        document.querySelectorAll('.nav-dropdown-card').forEach(card => card.classList.remove('show-click'));
+    }
+
+    // Toggle Submenu Mobile
+    function toggleMobileSubmenu(index) {
+        const target = document.getElementById(`mobile-submenu-${index}`);
+        const backdrop = document.getElementById('mobile-dropdown-backdrop');
+        const isHidden = target ? target.classList.contains('hidden') : false;
+
+        closeAllMobileSubmenus();
+
+        if (target && isHidden) {
+            target.classList.remove('hidden');
+            if (backdrop) backdrop.classList.remove('hidden');
+        }
+    }
+
+    function closeAllMobileSubmenus() {
+        document.querySelectorAll('[id^="mobile-submenu-"]').forEach(el => el.classList.add('hidden'));
+        const backdrop = document.getElementById('mobile-dropdown-backdrop');
+        if (backdrop) backdrop.classList.add('hidden');
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.nav-dropdown-item')) closeAllDesktopDropdowns();
+        if (!e.target.closest('.dropup-mobile-container')) closeAllMobileSubmenus();
+    });
+</script>

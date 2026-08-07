@@ -1,4 +1,7 @@
-<section id="{{ section.content.get('nav_id', 'galeri') }}" class="py-16 bg-white font-sans">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 bg-white font-sans transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Judul & Deskripsi Section -->
@@ -6,9 +9,11 @@
             <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
                 {{ section.content.get('title', 'Galeri & Dokumentasi') }}
             </h2>
-            <p class="mt-3 text-base text-slate-600 sm:mt-4">
-                {{ section.content.get('subtitle', 'Dokumentasi kegiatan dan fasilitas di lingkungan sekolah kami.') }}
-            </p>
+            {% if section.content.get('subtitle') %}
+                <p class="mt-3 text-base text-slate-600 sm:mt-4 leading-relaxed">
+                    {{ section.content.get('subtitle', 'Dokumentasi kegiatan dan fasilitas di lingkungan sekolah kami.') }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Grid Foto Dokumentasi -->
@@ -16,16 +21,19 @@
         {% if photos %}
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {% for photo in photos %}
-                    <div class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 aspect-square bg-slate-100 border border-slate-200">
+                    {% set photo_url = photo.url if photo is mapping else photo %}
+                    {% set photo_caption = photo.caption if photo is mapping else 'Dokumentasi' %}
+
+                    <div class="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 aspect-square bg-slate-100 border border-slate-200/80">
                         <img
-                            src="{{ photo.url if photo is mapping else photo }}"
-                            alt="{{ photo.caption if photo is mapping else 'Dokumentasi' }}"
+                            src="{{ photo_url }}"
+                            alt="{{ photo_caption }}"
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             loading="lazy"
                         >
                         {% if photo is mapping and photo.caption %}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                                <p class="text-xs font-medium text-white line-clamp-2">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                                <p class="text-xs font-medium text-white line-clamp-2 leading-snug">
                                     {{ photo.caption }}
                                 </p>
                             </div>
@@ -35,9 +43,9 @@
             </div>
         {% else %}
             <!-- Placeholder jika belum ada foto -->
-            <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+            <div class="text-center py-12 px-4 bg-slate-50/80 rounded-2xl border border-dashed border-slate-300 max-w-md mx-auto">
                 <i class="bi bi-images text-4xl text-slate-400 mb-2 block"></i>
-                <p class="text-sm text-slate-500">Belum ada foto dokumentasi yang diunggah.</p>
+                <p class="text-sm font-medium text-slate-500">Belum ada foto dokumentasi yang diunggah.</p>
             </div>
         {% endif %}
 

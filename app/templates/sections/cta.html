@@ -1,17 +1,26 @@
-<section id="{{ section.content.get('nav_id', 'ppdb') }}" class="py-20 px-6 bg-blue-600 text-white text-center">
-    <div class="max-w-4xl mx-auto">
-        <h2 class="text-3xl md:text-4xl font-extrabold mb-4">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-20 px-6 bg-blue-600 text-white text-center transition-all duration-300 relative overflow-hidden">
+    <div class="max-w-4xl mx-auto relative z-10">
+        {# Judul Utama CTA #}
+        <h2 class="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">
             {{ section.content.get('title', 'Segera Bergabung Bersama Kami') }}
         </h2>
-        
+
+        {# Sub-judul / Deskripsi Singkat #}
         {% if section.content.get('subtitle') %}
-            <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+            <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
                 {{ section.content.get('subtitle') }}
             </p>
         {% endif %}
 
+        {# Tombol Aksi (CTA Button) dengan Handler Auto Smooth Scroll #}
         {% if section.content.get('button_text') %}
-            <a href="{{ section.content.get('button_link', '#') }}" class="inline-block bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-4 rounded-xl shadow-lg transition">
+            {% set btn_link = section.content.get('button_link', '#') %}
+            <a href="{{ btn_link }}"
+               onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ btn_link }}')"
+               class="inline-block bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-decoration-none">
                 {{ section.content.get('button_text') }}
             </a>
         {% endif %}

@@ -1,47 +1,61 @@
-<section id="{{ section.content.get('nav_id', 'fasilitas') }}" class="py-16 px-6 bg-gray-50">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-gray-50/80 transition-all duration-300">
     <div class="max-w-6xl mx-auto text-center">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+        {# Judul Utama Section #}
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
             {{ section.content.get('title', 'Keunggulan Kami') }}
         </h2>
-        
+
+        {# Sub-Judul / Deskripsi #}
         {% if section.content.get('subtitle') %}
-            <p class="text-gray-600 max-w-2xl mx-auto mb-12">
+            <p class="text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed text-base md:text-lg">
                 {{ section.content.get('subtitle') }}
             </p>
         {% endif %}
 
+        {# Parsing Data: Mendukung Array 'items' Maupun Key Legacy 'item1_title' #}
+        {% set feature_items = section.content.get('items', []) %}
+
+        {% if not feature_items %}
+            {% set feature_items = [] %}
+            {% for i in range(1, 5) %}
+                {% set title_key = 'item' ~ i ~ '_title' %}
+                {% set desc_key = 'item' ~ i ~ '_desc' %}
+                {% set icon_key = 'item' ~ i ~ '_icon' %}
+                {% if section.content.get(title_key) %}
+                    {% set _ = feature_items.append({
+                        'title': section.content.get(title_key),
+                        'desc': section.content.get(desc_key, ''),
+                        'icon': section.content.get(icon_key, '')
+                    }) %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {# Grid Layout Kartu Keunggulan #}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            <!-- Item 1 -->
-            {% if section.content.get('item1_title') %}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item1_title') }}</h3>
-                <p class="text-gray-600 text-sm">{{ section.content.get('item1_desc') }}</p>
-            </div>
-            {% endif %}
+            {% for item in feature_items %}
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                    <div>
+                        {# Container Ikon (Otomatis tampil jika ada ikon dari Bootstrap Icons / FontAwesome) #}
+                        {% if item.icon %}
+                            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                                <i class="{{ item.icon }} text-xl"></i>
+                            </div>
+                        {% endif %}
 
-            <!-- Item 2 -->
-            {% if section.content.get('item2_title') %}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item2_title') }}</h3>
-                <p class="text-gray-600 text-sm">{{ section.content.get('item2_desc') }}</p>
-            </div>
-            {% endif %}
+                        <h3 class="font-bold text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                            {{ item.title }}
+                        </h3>
 
-            <!-- Item 3 -->
-            {% if section.content.get('item3_title') %}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item3_title') }}</h3>
-                <p class="text-gray-600 text-sm">{{ section.content.get('item3_desc') }}</p>
-            </div>
-            {% endif %}
-
-            <!-- Item 4 -->
-            {% if section.content.get('item4_title') %}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">{{ section.content.get('item4_title') }}</h3>
-                <p class="text-gray-600 text-sm">{{ section.content.get('item4_desc') }}</p>
-            </div>
-            {% endif %}
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            {{ item.desc }}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 </section>

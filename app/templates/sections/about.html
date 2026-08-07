@@ -1,24 +1,31 @@
-<section id="{{ section.content.get('nav_id', 'profil') }}" class="py-16 px-6 bg-white">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
     <div class="max-w-4xl mx-auto">
+        {# Eyebrow / Sub-judul Kecil #}
         {% if section.content.get('eyebrow') %}
             <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
                 {{ section.content.get('eyebrow') }}
             </span>
         {% endif %}
-        
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+
+        {# Judul Utama Section #}
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 tracking-tight">
             {{ section.content.get('title', 'Tentang Kami') }}
         </h2>
-        
+
+        {# Konten Teks Deskripsi #}
         <div class="text-gray-700 leading-relaxed space-y-4 text-lg">
-            {{ section.content.get('content', 'Deskripsi profil yayasan...') }}
+            {{ section.content.get('content', 'Deskripsi profil yayasan...')|safe }}
         </div>
 
+        {# Gambar Lampiran Profil (Opsional) #}
         {% if section.content.get('image') %}
-            <div class="mt-8">
-                <img src="{{ section.content.get('image') }}" alt="Gambar Profil" class="w-full h-auto rounded-xl shadow-md">
+            <div class="mt-8 overflow-hidden rounded-2xl shadow-md border border-gray-100">
+                <img src="{{ section.content.get('image') }}" alt="{{ section.content.get('title', 'Gambar Profil') }}" class="w-full h-auto object-cover max-h-[500px]">
                 {% if section.content.get('image_caption') %}
-                    <p class="text-sm text-gray-500 text-center mt-2">{{ section.content.get('image_caption') }}</p>
+                    <p class="text-sm text-gray-500 text-center py-2 bg-gray-50 border-t border-gray-100">{{ section.content.get('image_caption') }}</p>
                 {% endif %}
             </div>
         {% endif %}

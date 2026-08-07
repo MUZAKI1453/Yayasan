@@ -1,25 +1,75 @@
-<section id="{{ section.content.get('nav_id', 'faq') }}" class="py-16 px-6 bg-white">
+{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
     <div class="max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold text-gray-900 text-center mb-10">
+        {# Judul Utama Section FAQ #}
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-10 tracking-tight">
             {{ section.content.get('title', 'Pertanyaan Umum (FAQ)') }}
         </h2>
 
-        <div class="space-y-6">
-            <!-- FAQ 1 -->
-            {% if section.content.get('faq_q1') %}
-            <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">Q: {{ section.content.get('faq_q1') }}</h3>
-                <p class="text-gray-600">A: {{ section.content.get('faq_a1') }}</p>
-            </div>
-            {% endif %}
+        {# Parse Data FAQ (Mendukung Format Array 'items' Maupun Key Legacy 'faq_q1') #}
+        {% set faq_items = section.content.get('items', []) %}
 
-            <!-- FAQ 2 -->
-            {% if section.content.get('faq_q2') %}
-            <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                <h3 class="font-bold text-lg text-gray-900 mb-2">Q: {{ section.content.get('faq_q2') }}</h3>
-                <p class="text-gray-600">A: {{ section.content.get('faq_a2') }}</p>
-            </div>
+        {% if not faq_items %}
+            {% set faq_items = [] %}
+            {% if section.content.get('faq_q1') %}
+                {% set _ = faq_items.append({'q': section.content.get('faq_q1'), 'a': section.content.get('faq_a1', '')}) %}
             {% endif %}
+            {% if section.content.get('faq_q2') %}
+                {% set _ = faq_items.append({'q': section.content.get('faq_q2'), 'a': section.content.get('faq_a2', '')}) %}
+            {% endif %}
+            {% if section.content.get('faq_q3') %}
+                {% set _ = faq_items.append({'q': section.content.get('faq_q3'), 'a': section.content.get('faq_a3', '')}) %}
+            {% endif %}
+        {% endif %}
+
+        {# List Item Accordion FAQ #}
+        <div class="space-y-3">
+            {% for item in faq_items %}
+                {% set q_text = item.q if item.q is defined else item.get('question') %}
+                {% set a_text = item.a if item.a is defined else item.get('answer') %}
+
+                {% if q_text %}
+                    <div class="faq-item border border-gray-200/80 rounded-2xl overflow-hidden bg-gray-50/50 hover:bg-gray-50 transition-all duration-200">
+                        <button type="button"
+                                onclick="toggleFaq(this)"
+                                class="w-full text-left px-6 py-4 font-semibold text-base md:text-lg text-gray-900 flex justify-between items-center gap-4 focus:outline-none cursor-pointer select-none">
+                            <span>{{ q_text }}</span>
+                            <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200 shrink-0 faq-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div class="faq-answer hidden px-6 pb-5 text-gray-600 text-sm md:text-base leading-relaxed border-t border-gray-100/80 pt-3">
+                            {{ a_text|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
         </div>
     </div>
 </section>
+
+<!-- SCRIPT ACCORDION FAQ -->
+<script>
+    function toggleFaq(btn) {
+        const item = btn.closest('.faq-item');
+        const answer = item.querySelector('.faq-answer');
+        const arrow = item.querySelector('.faq-arrow');
+        const isHidden = answer.classList.contains('hidden');
+
+        // Tutup item FAQ lain di section ini agar lebih rapi
+        const parentSection = btn.closest('section');
+        if (parentSection) {
+            parentSection.querySelectorAll('.faq-answer').forEach(el => el.classList.add('hidden'));
+            parentSection.querySelectorAll('.faq-arrow').forEach(el => el.classList.remove('rotate-180'));
+        }
+
+        // Toggle state item yang diklik
+        if (isHidden) {
+            answer.classList.remove('hidden');
+            arrow.classList.add('rotate-180');
+        }
+    }
+</script>

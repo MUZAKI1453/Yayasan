@@ -1,10 +1,9 @@
-# app/admin/templates.py
-import os
-import uuid
+import os, uuid
 from flask import current_app
 from werkzeug.utils import secure_filename
 from app.models import Section
 
+# Pemetaan Nama Publik Default berdasarkan Jenis Section
 SECTION_NAV_NAMES = {
     "hero": "Beranda",
     "about": "Profil",
@@ -21,17 +20,21 @@ DEFAULT_SECTION_CONTENTS = {
     "navbar": {
         "brand_name": "SDIP Baitussalam",
         "logo_url": "",
-        "nav_theme": "bg-white navbar-light shadow-sm",
-        "nav_position": "sticky-top",
+        "nav_font_family": "Plus Jakarta Sans",
+        "nav_bg_color": "#ffffff",
+        "nav_text_color": "dark",
+        "button_bg_color": "#2563eb",
+        "button_text_color": "#ffffff",
         "button_text_1": "Daftar PPDB",
-        "button_link_1": "#ppdb"
+        "button_link_1": "#sec_cta",
+        "nav_items": []
     },
     "hero": {
         "eyebrow": "Penerimaan Peserta Didik Baru (PPDB)",
         "title": "Membentuk Generasi Rabbani",
         "subtitle": "Selamat datang di sekolah kami...",
         "button_text": "Daftar Sekarang",
-        "button_link": "#ppdb",
+        "button_link": "#sec_cta",
         "bg_image": ""
     },
     "about": {
@@ -41,21 +44,26 @@ DEFAULT_SECTION_CONTENTS = {
     },
     "features": {
         "title": "Keunggulan Kami",
-        "item1_title": "Fasilitas Lengkap", "item1_desc": "Ruang belajar nyaman & AC."
+        "item1_title": "Fasilitas Lengkap",
+        "item1_desc": "Ruang belajar nyaman & AC."
     },
     "donation_campaign": {
         "eyebrow": "Program Wakaf & Infaq",
         "title": "Pembangunan Gedung Ruang Kelas Baru",
         "subtitle": "Mari dukung sarana belajar siswa.",
-        "target": 500000000, "collected": 0,
+        "target": 500000000,
+        "collected": 0,
         "bank_account": "BSI: 7123-4567-89 a.n. YPI Baitussalam"
     },
     "progress": {
         "title": "Progress Kuota",
-        "target": 60, "collected": 0
+        "target": 60,
+        "collected": 0
     },
     "gallery": {
-        "title": "Galeri Dokumentasi"
+        "title": "Galeri Dokumentasi",
+        "subtitle": "Dokumentasi kegiatan dan fasilitas di lingkungan sekolah kami.",
+        "photos": []
     },
     "testimonial": {
         "title": "Testimoni Orang Tua",
@@ -71,7 +79,8 @@ DEFAULT_SECTION_CONTENTS = {
     },
     "cta": {
         "title": "Segera Daftarkan Putra-Putri Anda",
-        "button_text": "Daftar Sekarang", "button_link": "#ppdb"
+        "button_text": "Daftar Sekarang",
+        "button_link": "#sec_cta"
     },
     "footer": {
         "title": "SDIP Baitussalam",
@@ -87,8 +96,7 @@ DEFAULT_SECTION_CONTENTS = {
 }
 
 PRESET_TEMPLATES = {
-    "template_ppdb": ["navbar", "hero", "about", "features", "progress", "gallery", "testimonial", "faq", "cta",
-                      "footer"],
+    "template_ppdb": ["navbar", "hero", "about", "features", "progress", "gallery", "testimonial", "faq", "cta", "footer"],
     "template_yayasan": ["navbar", "hero", "about", "features", "cta", "footer"],
     "template_donasi": ["navbar", "hero", "donation_campaign", "faq", "footer"]
 }
@@ -97,29 +105,35 @@ PRESET_TEMPLATES = {
 def generate_nav_items_for_page(page_id):
     """
     Fungsi Reaktif: Membaca seluruh section yang ada di database untuk halaman tertentu,
-    lalu menghasilkan list nav_items (mengabaikan navbar & footer).
+    lalu menghasilkan list nav_items (mengabaikan navbar & footer) lengkap dengan array children
+    untuk dukungan menu dropdown.
     """
     sections = Section.query.filter_by(page_id=page_id).order_by(Section.order.asc()).all()
     nav_items = []
 
     for sec in sections:
-        # PENGECUALIAN: Navbar & Footer tidak dibuatkan tombol menu di navbar
+        # PENGECUALIAN: Navbar & Footer tidak dibuatkan tombol menu utama tersendiri
         if sec.type in ["navbar", "footer"]:
             continue
 
         content = sec.content or {}
         nav_id = content.get("nav_id")
 
-        # Jika section lama belum punya nav_id, buatkan secara otomatis
+        # Jika section lama belum memiliki nav_id, generate secara otomatis
         if not nav_id:
             nav_id = f"sec_{uuid.uuid4().hex[:8]}"
             content["nav_id"] = nav_id
             sec.content = content
 
-        nav_text = SECTION_NAV_NAMES.get(sec.type, sec.type.capitalize())
+        # Tentukan teks menu (Prioritas: title dari content -> SECTION_NAV_NAMES -> format nama type)
+        raw_title = content.get("title") or SECTION_NAV_NAMES.get(sec.type, sec.type.replace('_', ' ').title())
+        nav_text = SECTION_NAV_NAMES.get(raw_title, raw_title)
+
         nav_items.append({
+            "id": nav_id,
             "text": nav_text,
-            "url": f"#{nav_id}"
+            "url": f"#{nav_id}",
+            "children": []  # Siap menampung sub-menu dropdown dinamis
         })
 
     return nav_items
@@ -143,10 +157,12 @@ def get_preset_sections(preset_key):
             nav_id = f"sec_{uuid.uuid4().hex[:8]}"
             content["nav_id"] = nav_id
 
-            nav_text = SECTION_NAV_NAMES.get(sec_type, sec_type.capitalize())
+            nav_text = SECTION_NAV_NAMES.get(sec_type, sec_type.replace('_', ' ').title())
             nav_items.append({
+                "id": nav_id,
                 "text": nav_text,
-                "url": f"#{nav_id}"
+                "url": f"#{nav_id}",
+                "children": []  # Siap menampung sub-menu dropdown
             })
 
         section_instances.append((sec_type, content))
@@ -160,6 +176,9 @@ def get_preset_sections(preset_key):
 
 
 def save_uploaded_file(file):
+    """
+    Helper untuk menyimpan file gambar yang di-upload ke folder /static/uploads
+    """
     if file and file.filename != '':
         filename = secure_filename(file.filename)
         ext = os.path.splitext(filename)[1].lower()

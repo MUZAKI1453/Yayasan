@@ -333,21 +333,32 @@
         }
     }
 
-    // 1. Fungsi Scroll Otomatis Iframe Preview ke Section Spesifik
+    // 1. Fungsi Scroll Otomatis Iframe Preview ke Section Spesifik (Lengkap dengan Penanganan ID Dynamic)
     function scrollToSectionInPreview(sectionType, sectionNavId) {
         const frame = document.getElementById('preview-frame');
         if (!frame || !frame.contentWindow) return;
 
         try {
             const frameDoc = frame.contentWindow.document;
+            const cleanId = sectionNavId ? sectionNavId.replace('#', '') : '';
 
-            let targetEl = frameDoc.getElementById(sectionNavId) ||
+            // Cari elemen berdasarkan urutan prioritas ID dan Atribut Data
+            let targetEl = (cleanId ? frameDoc.getElementById(cleanId) : null) ||
+                           (cleanId ? frameDoc.querySelector(`[data-nav-id="${cleanId}"]`) : null) ||
                            frameDoc.getElementById(`section-${sectionType}`) ||
                            frameDoc.getElementById(sectionType) ||
                            frameDoc.querySelector(`[data-section-type="${sectionType}"]`);
 
             if (targetEl) {
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Beri offset agar elemen tidak terpotong navbar sticky
+                const navbarOffset = 70;
+                const elementPosition = targetEl.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + frame.contentWindow.pageYOffset - navbarOffset;
+
+                frame.contentWindow.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
             }
         } catch (e) {
             console.log("Cross-origin or iframe frame content restriction:", e);
@@ -355,7 +366,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // 2. Inisialisasi Drag & Drop Sortable
+        // 2. Inisialisasi Drag & Drop Sortable Reorder Section
         const el = document.getElementById('section-list');
         if (el) {
             new Sortable(el, {
@@ -381,7 +392,7 @@
             });
         }
 
-        // 3. Auto-scroll Preview jika Form Edit sedang terbuka
+        // 3. Auto-scroll Preview saat Form Edit terbuka atau Iframe selesai dimuat
         const frame = document.getElementById('preview-frame');
         if (frame) {
             frame.addEventListener('load', function() {
