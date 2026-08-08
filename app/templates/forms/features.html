@@ -1,0 +1,101 @@
+<!-- FORM KHUSUS KEUNGGULAN & FASILITAS (FEATURES) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- JUDUL & SUBJUDUL SEKSI -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">
+                    Judul Seksi Keunggulan <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Keunggulan & Fasilitas Kami') }}" required placeholder="Contoh: Mengapa Memilih Sekolah Kami?">
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Deskripsi Singkat</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Masukkan deskripsi singkat pendukung seksi keunggulan...">{{ section.content.get('subtitle', '') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAFTAR ITEM KEUNGGULAN / FASILITAS -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <span class="fw-bold text-dark small d-block">Daftar Poin Keunggulan / Fasilitas</span>
+                <span class="text-muted" style="font-size: 0.72rem;">Tambahkan ikon, judul item, dan penjelasan singkat untuk setiap poin</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFeatureRow()">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Poin
+            </button>
+        </div>
+
+        <div id="features-container" class="d-flex flex-column gap-3">
+            {% set items = section.content.get('items', section.content.get('features', [])) %}
+            {% for item in items %}
+                {% set loop_idx = loop.index0 %}
+                <div class="p-3 border rounded-3 bg-white feature-item-card">
+                    <div class="row g-2 align-items-start">
+                        <div class="col-md-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Ikon Bootstrap (Bi Class)</label>
+                            <input type="text" name="items[{{ loop_idx }}][icon]" value="{{ item.get('icon', 'bi-star-fill') }}" class="form-control form-control-sm" placeholder="bi-check-circle">
+                            <small class="text-muted" style="font-size: 0.68rem;">Contoh: bi-award, bi-building, bi-shield-check</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Judul Poin Keunggulan</label>
+                            <input type="text" name="items[{{ loop_idx }}][title]" value="{{ item.get('title', '') }}" class="form-control form-control-sm" placeholder="Misal: Kurikulum Berstandar">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Keterangan / Deskripsi Ringkas</label>
+                            <textarea name="items[{{ loop_idx }}][description]" class="form-control form-control-sm" rows="1" placeholder="Penjelasan singkat poin ini...">{{ item.get('description', '') }}</textarea>
+                        </div>
+                        <div class="col-md-1 text-end pt-4">
+                            <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.feature-item-card').remove()" title="Hapus Poin Ini">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Keunggulan</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+    let featureCounter = {{ section.content.get('items', section.content.get('features', []))|length }};
+
+    function addFeatureRow() {
+        const container = document.getElementById('features-container');
+        const idx = featureCounter++;
+        const html = `
+            <div class="p-3 border rounded-3 bg-white feature-item-card">
+                <div class="row g-2 align-items-start">
+                    <div class="col-md-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Ikon Bootstrap (Bi Class)</label>
+                        <input type="text" name="items[${idx}][icon]" class="form-control form-control-sm" value="bi-check-circle" placeholder="bi-check-circle">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Judul Poin Keunggulan</label>
+                        <input type="text" name="items[${idx}][title]" class="form-control form-control-sm" placeholder="Nama Keunggulan / Fasilitas">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Keterangan / Deskripsi Ringkas</label>
+                        <textarea name="items[${idx}][description]" class="form-control form-control-sm" rows="1" placeholder="Penjelasan singkat poin ini..."></textarea>
+                    </div>
+                    <div class="col-md-1 text-end pt-4">
+                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.feature-item-card').remove()" title="Hapus Poin Ini">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>

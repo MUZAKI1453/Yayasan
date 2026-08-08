@@ -1,10 +1,11 @@
-<div class="tab-pane fade {% if not section %}show active{% endif %}" id="list-panel">
+<div class="tab-pane fade show active" id="list-panel">
     
-    <!-- Form Tambah Section Baru -->
+    <!-- FORM TAMBAH SECTION BARU -->
     <div class="card border shadow-sm rounded-3 mb-3">
         <div class="card-body p-3">
             <h6 class="fw-bold text-dark mb-2 fs-7">+ Tambah Section Baru</h6>
             <form action="{{ url_for('admin.add_section', page_id=page.id) }}" method="POST" class="row g-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
                 <div class="col-12">
                     <select name="type" class="form-select form-select-sm" required>
                         <option value="">-- Pilih Jenis Section --</option>
@@ -36,17 +37,65 @@
         </div>
     </div>
 
-    <!-- Daftar Section (Klik Blok Langsung Focus) -->
+    <!-- PANEL EDITOR SECTION (DITAMPILKAN JIKA SALAH SATU SECTION SEDANG DI-EDIT) -->
+    {% if section %}
+    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white border rounded-3 shadow-sm">
+        <div class="d-flex align-items-center gap-2 ps-2">
+            <i class="bi bi-sliders text-primary"></i>
+            <span class="fw-semibold text-dark small">Panel Editor Section</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 px-3 py-1 rounded-2"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#sectionEditCard"
+                aria-expanded="true"
+                aria-controls="sectionEditCard"
+                id="btnToggleSection">
+            <i class="bi bi-eye-slash toggle-icon"></i>
+            <span class="toggle-text small fw-medium">Sembunyikan Editor</span>
+        </button>
+    </div>
+
+    <div class="collapse show" id="sectionEditCard">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+            <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary-subtle text-primary p-2 rounded-2">
+                        <i class="bi bi-pencil-square fs-6"></i>
+                    </span>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                Edit {{ section.type.replace('_', ' ').title() }}
+                            </h6>
+                            <span class="badge bg-light text-secondary border fw-normal" style="font-size: 0.7rem;">Section</span>
+                        </div>
+                        <p class="text-muted small mb-0" style="font-size: 0.78rem;">Pengaturan komponen dan kustomisasi visual</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn-close" aria-label="Close"></a>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- FORM DINAMIS PER TIPE SECTION -->
+                {% include 'forms/' ~ section.type ~ '.html' %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- DAFTAR SECTION -->
     <div class="card border shadow-sm rounded-3">
         <div class="card-header bg-light py-2 px-3 border-bottom-0">
             <small class="fw-bold text-muted">Urutan Section (Klik blok untuk preview)</small>
         </div>
         <ul class="list-group list-group-flush" id="section-list">
             {% for sec in page.sections %}
+            <!-- REVISI KUNCI: MEMANGGIL SCROLL DENGAN MENGIRIMKAN NAV_ID SERTA DB_ID -->
             <li class="list-group-item section-list-item d-flex justify-content-between align-items-center py-2 px-3 {% if section and section.id == sec.id %}bg-light border-start border-3 border-success{% endif %}" 
                 data-id="{{ sec.id }}"
                 data-type="{{ sec.type }}"
-                onclick="scrollToSectionInPreview('{{ sec.type }}', '{{ sec.id }}')">
+                onclick="scrollToSectionInPreview('{{ sec.type }}', '{{ sec.content.get('nav_id', '') }}', '{{ sec.id }}')">
                 <div class="d-flex align-items-center me-2 overflow-hidden">
                     <i class="bi bi-grip-vertical text-muted me-2 cursor-grab"></i>
                     <div class="text-truncate">
@@ -61,6 +110,7 @@
                         <i class="bi bi-pencil-fill"></i> Edit
                     </a>
                     <form action="{{ url_for('admin.delete_section', section_id=sec.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus section ini?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
                         <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus">
                             <i class="bi bi-trash-fill"></i>
                         </button>
@@ -74,3 +124,23 @@
     </div>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sectionCard = document.getElementById('sectionEditCard');
+        const toggleBtn = document.getElementById('btnToggleSection');
+
+        if (sectionCard && toggleBtn) {
+            sectionCard.addEventListener('hide.bs.collapse', function () {
+                toggleBtn.querySelector('.toggle-icon').className = 'bi bi-eye toggle-icon';
+                toggleBtn.querySelector('.toggle-text').textContent = 'Tampilkan Editor';
+                toggleBtn.classList.replace('btn-outline-secondary', 'btn-primary');
+            });
+            sectionCard.addEventListener('show.bs.collapse', function () {
+                toggleBtn.querySelector('.toggle-icon').className = 'bi bi-eye-slash toggle-icon';
+                toggleBtn.querySelector('.toggle-text').textContent = 'Sembunyikan Editor';
+                toggleBtn.classList.replace('btn-primary', 'btn-outline-secondary');
+            });
+        }
+    });
+</script>

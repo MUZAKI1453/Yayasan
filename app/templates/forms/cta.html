@@ -1,0 +1,106 @@
+<!-- FORM KHUSUS CALL TO ACTION BANNER (CTA) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- JUDUL AJAKAN & DESKRIPSI -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">
+                    Judul Utama Call to Action <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Siap Bergabung Bersama Kami?') }}" required placeholder="Contoh: Tunggu Apa Lagi? Mendaftar Sekarang!">
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">Deskripsi Singkat / Subjudul</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="3" placeholder="Masukkan kalimat ajakan persuasif di sini...">{{ section.content.get('subtitle', section.content.get('description', '')) }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAMBAR LATAR / BANNER CTA (OPSIONAL) -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <label class="form-label fw-semibold small text-slate-700 mb-1">Gambar Latar / Poster CTA (Opsional)</label>
+        <input type="file" name="image_url_file" class="form-control form-control-sm mb-2" accept="image/*">
+        
+        {% set current_image = section.content.get('image_url', section.content.get('bg_image', '')) %}
+        {% if current_image %}
+            <div class="d-flex align-items-center gap-3 p-2 bg-light border rounded-2">
+                <img src="{{ current_image }}" class="rounded border object-fit-cover" style="width: 100px; height: 60px;">
+                <div class="lh-1">
+                    <span class="d-block text-dark fw-medium small mb-1">Gambar Latar Aktif</span>
+                    <span class="text-muted" style="font-size: 0.72rem;">Digunakan sebagai visual latar belakang banner CTA</span>
+                    <input type="hidden" name="image_url" value="{{ current_image }}">
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- TOMBOL AKSI UTAMA & SEKUNDER -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <span class="fw-bold text-dark small d-block mb-3">TOMBOL AKSI (CALL TO ACTION)</span>
+        
+        <!-- CTA PRIMER -->
+        <div class="row g-3 mb-3 p-2 border rounded bg-light-subtle">
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Teks Tombol Utama</label>
+                <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', section.content.get('cta_primary_text', 'Daftar Sekarang')) }}" placeholder="Contoh: Isi Formulir">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Target Link / Section Utama</label>
+                <select name="button_link_1" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
+                    <option value="#">-- Pilih Target Section --</option>
+                    {% for sec in page.sections %}
+                        {% if sec.type not in ['navbar', 'footer'] %}
+                            {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
+                            {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
+                            {% set target_url = '#' ~ sec_nav_id %}
+                            <option value="{{ target_url }}" {% if section.content.get('button_link_1') == target_url or section.content.get('cta_primary_url') == target_url %}selected{% endif %}>
+                                📌 {{ sec_title }} ({{ sec.type }})
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- CTA SEKUNDER (OPSIONAL) -->
+        <div class="row g-3 p-2 border rounded bg-light-subtle">
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Teks Tombol Sekunder (Opsional)</label>
+                <input type="text" name="button_text_2" class="form-control form-control-sm" value="{{ section.content.get('button_text_2', section.content.get('cta_secondary_text', '')) }}" placeholder="Contoh: Hubungi Kami">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Target Link / Section Sekunder</label>
+                <select name="button_link_2" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
+                    <option value="#">-- Pilih Target Section --</option>
+                    {% for sec in page.sections %}
+                        {% if sec.type not in ['navbar', 'footer'] %}
+                            {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
+                            {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
+                            {% set target_url = '#' ~ sec_nav_id %}
+                            <option value="{{ target_url }}" {% if section.content.get('button_link_2') == target_url or section.content.get('cta_secondary_url') == target_url %}selected{% endif %}>
+                                📌 {{ sec_title }} ({{ sec.type }})
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Seksi CTA</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+    function previewTargetSection(targetUrl) {
+        if (typeof scrollToSectionInPreview === 'function' && targetUrl && targetUrl !== '#') {
+            scrollToSectionInPreview('', targetUrl);
+        }
+    }
+</script>

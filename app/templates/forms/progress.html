@@ -1,0 +1,80 @@
+<!-- FORM KHUSUS PROGRESS KUOTA PENDAFTARAN (PROGRESS) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- JUDUL & DESKRIPSI SEKSI -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">
+                    Judul Seksi Progress <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Progress Kuota Pendaftaran') }}" required placeholder="Contoh: Kuota Penerimaan Siswa Baru">
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Catatan Penting</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Contoh: Segera lakukan pendaftaran sebelum kuota terpenuhi!">{{ section.content.get('subtitle', '') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANGKA KUOTA & PROGRESS -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <span class="fw-bold text-dark small d-block mb-3">DATA KUOTA PENDAFTARAN</span>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Total Target Kuota (Siswa/Peserta)</label>
+                <!-- Menampung variabel target_quota / total_quota -->
+                <input type="number" name="target_quota" class="form-control form-control-sm" value="{{ section.content.get('target_quota', section.content.get('total_quota', section.content.get('quota_total', 100))) }}" placeholder="Contoh: 120" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Kuota Terisi / Terdaftar Saat Ini</label>
+                <!-- Menampung variabel filled_quota / current_quota / quota_filled -->
+                <input type="number" name="filled_quota" class="form-control form-control-sm" value="{{ section.content.get('filled_quota', section.content.get('current_quota', section.content.get('quota_filled', 0))) }}" placeholder="Contoh: 85" required>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOMBOL AKSI / CALL TO ACTION (OPSIONAL) -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <span class="fw-bold text-dark small d-block mb-3">TOMBOL AJAKAN (CTA)</span>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Teks Tombol</label>
+                <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', section.content.get('cta_text', 'Daftar Kuota Sekarang')) }}" placeholder="Contoh: Ambil Kuota Sekarang">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-medium small text-slate-700">Target Link / Section</label>
+                <select name="button_link_1" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
+                    <option value="#">-- Pilih Target Section --</option>
+                    {% for sec in page.sections %}
+                        {% if sec.type not in ['navbar', 'footer'] %}
+                            {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
+                            {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
+                            {% set target_url = '#' ~ sec_nav_id %}
+                            <option value="{{ target_url }}" {% if section.content.get('button_link_1') == target_url or section.content.get('cta_url') == target_url %}selected{% endif %}>
+                                📌 {{ sec_title }} ({{ sec.type }})
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Progress Kuota</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+    function previewTargetSection(targetUrl) {
+        if (typeof scrollToSectionInPreview === 'function' && targetUrl && targetUrl !== '#') {
+            scrollToSectionInPreview('', targetUrl);
+        }
+    }
+</script>

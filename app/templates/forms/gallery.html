@@ -1,0 +1,100 @@
+<!-- FORM KHUSUS GALERI DOKUMENTASI (GALLERY) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- JUDUL & SUBJUDUL SEKSI -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">
+                    Judul Galeri <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Galeri & Dokumentasi') }}" required placeholder="Contoh: Dokumentasi Kegiatan Sekolah">
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Deskripsi Singkat</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Masukkan deskripsi singkat koleksi foto...">{{ section.content.get('subtitle', '') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAFTAR KOLEKSI FOTO -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <span class="fw-bold text-dark small d-block">Koleksi Foto Dokumentasi</span>
+                <span class="text-muted" style="font-size: 0.72rem;">Unggah foto dan berikan keterangan/caption pendek</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPhotoRow()">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Foto
+            </button>
+        </div>
+
+        <div id="gallery-items-container" class="d-flex flex-column gap-2">
+            {% set photos = section.content.get('photos', section.content.get('images', [])) %}
+            {% for photo in photos %}
+                {% set photo_url = photo.url if photo is mapping else photo %}
+                {% set photo_caption = photo.caption if photo is mapping else '' %}
+
+                <div class="p-2 border rounded-2 bg-white photo-row">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if photo_url %}
+                                <img src="{{ photo_url }}" class="rounded border" style="height: 48px; width: 48px; object-fit: cover;">
+                                <input type="hidden" name="existing_photo_urls[]" value="{{ photo_url }}">
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">Baru</span>
+                                <input type="hidden" name="existing_photo_urls[]" value="">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="photo_captions[]" value="{{ photo_caption }}" class="form-control form-control-sm" placeholder="Keterangan / Caption">
+                        </div>
+                        <div class="col-md-1 text-end">
+                            <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.photo-row').remove()" title="Hapus Foto">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Galeri</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+    function addPhotoRow() {
+        const container = document.getElementById('gallery-items-container');
+        const html = `
+            <div class="p-2 border rounded-2 bg-white photo-row">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-2 text-center">
+                        <span class="badge bg-info-subtle text-info">Baru</span>
+                        <input type="hidden" name="existing_photo_urls[]" value="">
+                    </div>
+                    <div class="col-md-5">
+                        <input type="file" name="gallery_files[]" class="form-control form-control-sm" accept="image/*" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" name="photo_captions[]" class="form-control form-control-sm" placeholder="Keterangan / Caption">
+                    </div>
+                    <div class="col-md-1 text-end">
+                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.photo-row').remove()" title="Hapus Foto">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>

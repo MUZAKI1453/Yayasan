@@ -45,7 +45,7 @@
         z-index: 9999;
     }
 
-    /* 4. SIDEBAR KIRI (TRANSISI SMOOTH SAAT HIDDEN) */
+    /* 4. SIDEBAR KIRI */
     .builder-sidebar {
         width: 420px;
         min-width: 420px;
@@ -63,7 +63,7 @@
     }
 
     .builder-sidebar.collapsed {
-        margin-left: -420px; /* Sembunyikan sidebar ke kiri */
+        margin-left: -420px;
     }
 
     .builder-sidebar-header {
@@ -94,7 +94,7 @@
     .preview-window {
         width: 100%;
         height: 100%;
-        background: #0f172a; /* Latar belakang gelap agar kontras dengan mode frame device */
+        background: #0f172a;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -120,7 +120,6 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    /* Mode Android / HP */
     #preview-frame.mode-mobile {
         width: 380px !important;
         height: 92% !important;
@@ -131,7 +130,6 @@
         margin-bottom: auto;
     }
 
-    /* Mode Tablet */
     #preview-frame.mode-tablet {
         width: 768px !important;
         height: 92% !important;
@@ -142,7 +140,6 @@
         margin-bottom: auto;
     }
 
-    /* Mode Desktop (Full Width) */
     #preview-frame.mode-desktop {
         width: 100% !important;
         height: 100% !important;
@@ -171,7 +168,6 @@
         color: #ffffff;
     }
 
-    /* TAMPILKAN FLOATING BTN HANYA KETIKA COLLAPSED */
     .builder-sidebar.collapsed ~ .builder-preview .floating-toggle-btn {
         display: flex;
     }
@@ -212,7 +208,6 @@
                     <h6 class="fw-bold mb-0 text-dark text-truncate">{{ page.title }}</h6>
                 </div>
 
-                <!-- TOMBOL ACTION & TOGGLE PALING KANAN -->
                 <div class="d-flex gap-1 flex-shrink-0 align-items-center">
                     <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-3"
                        data-bs-toggle="tooltip" title="Kembali ke Dashboard">
@@ -223,7 +218,6 @@
                         <i class="bi bi-box-arrow-up-right"></i>
                     </a>
 
-                    <!-- POSISI PALING KANAN: TOMBOL HIDE SIDEBAR (HANYA ICON) -->
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 ms-1"
                             onclick="toggleSidebar()" data-bs-toggle="tooltip" title="Sembunyikan Panel Editor">
                         <i class="bi bi-layout-sidebar text-dark"></i>
@@ -234,17 +228,8 @@
 
         <!-- BODY SIDEBAR -->
         <div class="builder-sidebar-body">
-            <div class="tab-content" id="editorTabsContent">
-
-                <!-- COMPONENT 1: DAFTAR SECTION & FORM TAMBAH -->
-                {% include "admin/section_list.html" %}
-
-                <!-- COMPONENT 2: FORM EDIT KONTEN SECTION -->
-                {% if section %}
-                {% include "admin/section_form.html" %}
-                {% endif %}
-
-            </div>
+            <!-- REVISI KUNCI 1: HANYA MEMANGGIL SECTION_LIST (SECTION_FORM SUDAH DI-INCLUDE DI DALAMNYA) -->
+            {% include "admin/section_list.html" %}
         </div>
     </div>
 
@@ -253,14 +238,11 @@
         <div class="preview-window">
             <div class="preview-browser-bar text-white position-relative">
 
-                <!-- BAGIAN KIRI: FLOATING BTN & DEKORASI DOT -->
                 <div class="d-flex align-items-center gap-2">
-                    <!-- TOMBOL UNHIDE FLOATING (HANYA MUNCUL SAAT PANEL DI-HIDE) -->
                     <button class="floating-toggle-btn" onclick="toggleSidebar()">
                         <i class="bi bi-layout-sidebar-reverse"></i>
                     </button>
 
-                    <!-- DOT BROWSER DEKORATIF -->
                     <div class="d-flex align-items-center gap-1.5">
                         <span class="rounded-circle bg-danger d-inline-block" style="width: 8px; height: 8px;"></span>
                         <span class="rounded-circle bg-warning d-inline-block" style="width: 8px; height: 8px;"></span>
@@ -268,13 +250,11 @@
                     </div>
                 </div>
 
-                <!-- BAGIAN TENGAH: ALAMAT URL (PRESI DI TENGAH) -->
                 <div class="position-absolute start-50 translate-middle-x text-slate-300 font-monospace bg-slate-800 border border-slate-700 px-3 py-0.5 rounded text-truncate"
                      style="max-width: 400px; font-size: 0.72rem;">
                     <i class="bi bi-lock-fill text-success me-1"></i>https://sip-baitussalam.or.id/{{ page.slug }}
                 </div>
 
-                <!-- BAGIAN KANAN: SWITCHER MODE DEVICE + REFRESH -->
                 <div class="d-flex align-items-center gap-2 flex-shrink-0 ms-auto">
                     <div class="btn-group btn-group-sm" role="group" aria-label="Device Switcher">
                         <button type="button" class="btn btn-dark text-slate-300 border-slate-700 active" id="btn-device-desktop" onclick="setDevicePreview('desktop')" title="Mode Desktop">
@@ -304,7 +284,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-    // 0. FUNGSI TOGGLE HIDE / UNHIDE SIDEBAR
     function toggleSidebar() {
         const sidebar = document.getElementById('builderSidebar');
         if (sidebar) {
@@ -312,20 +291,16 @@
         }
     }
 
-    // FUNGSI SWITCHER MODE PREVIEW DEVICE (DESKTOP, TABLET, MOBILE)
     function setDevicePreview(mode) {
         const frame = document.getElementById('preview-frame');
         if (!frame) return;
 
-        // Reset class mode
         frame.classList.remove('mode-desktop', 'mode-tablet', 'mode-mobile');
         
-        // Reset state tombol
         document.getElementById('btn-device-desktop')?.classList.remove('active', 'btn-primary');
         document.getElementById('btn-device-tablet')?.classList.remove('active', 'btn-primary');
         document.getElementById('btn-device-mobile')?.classList.remove('active', 'btn-primary');
 
-        // Set mode aktif
         frame.classList.add('mode-' + mode);
         const activeBtn = document.getElementById('btn-device-' + mode);
         if (activeBtn) {
@@ -333,24 +308,25 @@
         }
     }
 
-    // 1. Fungsi Scroll Otomatis Iframe Preview ke Section Spesifik (Lengkap dengan Penanganan ID Dynamic)
-    function scrollToSectionInPreview(sectionType, sectionNavId) {
+    /* REVISI KUNCI 2: ENHANCED SCROLL ENGINE UNTUK MENCARI TARGET SECARA PRESISI */
+    function scrollToSectionInPreview(sectionType, sectionNavId, sectionDbId) {
         const frame = document.getElementById('preview-frame');
         if (!frame || !frame.contentWindow) return;
 
         try {
             const frameDoc = frame.contentWindow.document;
-            const cleanId = sectionNavId ? sectionNavId.replace('#', '') : '';
+            const cleanNavId = sectionNavId ? sectionNavId.replace('#', '') : '';
 
-            // Cari elemen berdasarkan urutan prioritas ID dan Atribut Data
-            let targetEl = (cleanId ? frameDoc.getElementById(cleanId) : null) ||
-                           (cleanId ? frameDoc.querySelector(`[data-nav-id="${cleanId}"]`) : null) ||
+            // Cari elemen berdasarkan urutan kepastian
+            let targetEl = (cleanNavId ? frameDoc.getElementById(cleanNavId) : null) ||
+                           (cleanNavId ? frameDoc.querySelector(`[data-nav-id="${cleanNavId}"]`) : null) ||
+                           (sectionDbId ? frameDoc.getElementById(`sec_${sectionDbId}`) : null) ||
+                           (sectionDbId ? frameDoc.getElementById(`section-${sectionDbId}`) : null) ||
                            frameDoc.getElementById(`section-${sectionType}`) ||
                            frameDoc.getElementById(sectionType) ||
                            frameDoc.querySelector(`[data-section-type="${sectionType}"]`);
 
             if (targetEl) {
-                // Beri offset agar elemen tidak terpotong navbar sticky
                 const navbarOffset = 70;
                 const elementPosition = targetEl.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + frame.contentWindow.pageYOffset - navbarOffset;
@@ -366,7 +342,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        // 2. Inisialisasi Drag & Drop Sortable Reorder Section
         const el = document.getElementById('section-list');
         if (el) {
             new Sortable(el, {
@@ -392,12 +367,11 @@
             });
         }
 
-        // 3. Auto-scroll Preview saat Form Edit terbuka atau Iframe selesai dimuat
         const frame = document.getElementById('preview-frame');
         if (frame) {
             frame.addEventListener('load', function() {
                 {% if section %}
-                    scrollToSectionInPreview("{{ section.type }}", "{{ section.content.get('nav_id', '') }}");
+                    scrollToSectionInPreview("{{ section.type }}", "{{ section.content.get('nav_id', '') }}", "{{ section.id }}");
                 {% endif %}
             });
         }

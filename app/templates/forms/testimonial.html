@@ -1,0 +1,129 @@
+<!-- FORM KHUSUS TESTIMONI (TESTIMONIAL) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- JUDUL & SUBJUDUL SEKSI -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">
+                    Judul Seksi Testimoni <span class="text-danger">*</span>
+                </label>
+                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Apa Kata Mereka?') }}" required placeholder="Contoh: Apa Kata Orang Tua & Alumni?">
+            </div>
+
+            <div class="col-12">
+                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Deskripsi Singkat</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Pengalaman jujur dari siswa, orang tua, dan alumni kami...">{{ section.content.get('subtitle', '') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAFTAR ITEM TESTIMONI -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <span class="fw-bold text-dark small d-block">Daftar Testimoni & Ulasan</span>
+                <span class="text-muted" style="font-size: 0.72rem;">Tambahkan ulasan beserta nama, peran, pesan, dan rating</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTestimonialRow()">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Testimoni
+            </button>
+        </div>
+
+        <div id="testimonials-container" class="d-flex flex-column gap-3">
+            {% set items = section.content.get('items', section.content.get('testimonials', [])) %}
+            {% for item in items %}
+                {% set loop_idx = loop.index0 %}
+                <div class="p-3 border rounded-3 bg-white testimonial-item-card">
+                    <div class="row g-2 align-items-start">
+                        <div class="col-md-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Nama Pemberi Ulasan</label>
+                            <input type="text" name="items[{{ loop_idx }}][name]" value="{{ item.get('name', '') }}" class="form-control form-control-sm" placeholder="Contoh: Bpk. Ahmad Hidayat" required>
+                            
+                            <label class="form-label text-muted mb-1 mt-2" style="font-size: 0.7rem;">Jabatan / Peran / Status</label>
+                            <input type="text" name="items[{{ loop_idx }}][role]" value="{{ item.get('role', item.get('title', '')) }}" class="form-control form-control-sm" placeholder="Contoh: Orang Tua Siswa kelas X">
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Isi Testimoni / Ulasan</label>
+                            <textarea name="items[{{ loop_idx }}][quote]" class="form-control form-control-sm" rows="3" placeholder="Pesan atau pengalaman menarik..." required>{{ item.get('quote', item.get('content', '')) }}</textarea>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Rating Bintang (1 - 5)</label>
+                            <select name="items[{{ loop_idx }}][rating]" class="form-select form-select-sm mb-2">
+                                {% set current_rating = item.get('rating', 5)|int %}
+                                {% for r in range(5, 0, -1) %}
+                                    <option value="{{ r }}" {% if current_rating == r %}selected{% endif %}>⭐ {{ r }} Bintang</option>
+                                {% endfor %}
+                            </select>
+
+                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Foto Profil (URL Opsional)</label>
+                            <input type="text" name="items[{{ loop_idx }}][avatar_url]" value="{{ item.get('avatar_url', item.get('image_url', '')) }}" class="form-control form-control-sm" placeholder="https://...">
+                        </div>
+
+                        <div class="col-md-1 text-end pt-4">
+                            <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.testimonial-item-card').remove()" title="Hapus Ulasan Ini">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="d-flex gap-2 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Testimoni</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    </div>
+</form>
+
+<script>
+    let testimonialCounter = {{ section.content.get('items', section.content.get('testimonials', []))|length }};
+
+    function addTestimonialRow() {
+        const container = document.getElementById('testimonials-container');
+        const idx = testimonialCounter++;
+        const html = `
+            <div class="p-3 border rounded-3 bg-white testimonial-item-card">
+                <div class="row g-2 align-items-start">
+                    <div class="col-md-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Nama Pemberi Ulasan</label>
+                        <input type="text" name="items[${idx}][name]" class="form-control form-control-sm" placeholder="Contoh: Ibu Siti Rahma" required>
+                        
+                        <label class="form-label text-muted mb-1 mt-2" style="font-size: 0.7rem;">Jabatan / Peran / Status</label>
+                        <input type="text" name="items[${idx}][role]" class="form-control form-control-sm" placeholder="Contoh: Alumni Angkatan 2024">
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Isi Testimoni / Ulasan</label>
+                        <textarea name="items[${idx}][quote]" class="form-control form-control-sm" rows="3" placeholder="Pesan atau pengalaman menarik..." required></textarea>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Rating Bintang (1 - 5)</label>
+                        <select name="items[${idx}][rating]" class="form-select form-select-sm mb-2">
+                            <option value="5" selected>⭐ 5 Bintang</option>
+                            <option value="4">⭐ 4 Bintang</option>
+                            <option value="3">⭐ 3 Bintang</option>
+                            <option value="2">⭐ 2 Bintang</option>
+                            <option value="1">⭐ 1 Bintang</option>
+                        </select>
+
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Foto Profil (URL Opsional)</label>
+                        <input type="text" name="items[${idx}][avatar_url]" class="form-control form-control-sm" placeholder="https://...">
+                    </div>
+
+                    <div class="col-md-1 text-end pt-4">
+                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.testimonial-item-card').remove()" title="Hapus Ulasan Ini">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+</script>
