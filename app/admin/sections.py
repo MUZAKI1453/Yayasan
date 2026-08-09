@@ -43,7 +43,6 @@ def add_section(page_id):
     initial_content.setdefault("title", nav_text_default)
     initial_content["nav_id"] = sec_id_key
 
-    # Jika section tipe navbar
     if section_type == 'navbar':
         initial_content['nav_items'] = generate_nav_items_for_page(page.id)
 
@@ -55,7 +54,6 @@ def add_section(page_id):
     )
     db.session.add(new_section)
 
-    # Otomatis tambah menu ke Navbar yang ada jika BUKAN navbar/footer
     if section_type not in ['navbar', 'footer']:
         navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
         if navbar:
@@ -82,7 +80,7 @@ def add_section(page_id):
 @login_required
 def edit_section(section_id):
     """
-    EDIT KONTEN SECTION (NAVBAR, GALLERY, FOOTER, BIASA)
+    EDIT KONTEN SECTION
     """
     section = Section.query.get_or_404(section_id)
     page = section.page
@@ -90,15 +88,11 @@ def edit_section(section_id):
     if request.method == "POST":
         content = dict(section.content or {})
 
-        # ---------------------------------------------------------------------
-        # A. KHUSUS NAVBAR (MENDUKUNG PARENT MENU & SUB-MENU DROPDOWN)
-        # ---------------------------------------------------------------------
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
             content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
             content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
 
-            # SIMPAN TEMA, FONT, & WARNA DINAMIS NAVBAR
             content['nav_font_family'] = request.form.get('nav_font_family', 'Plus Jakarta Sans')
             content['nav_bg_color'] = request.form.get('nav_bg_color', '#ffffff')
             content['nav_text_color'] = request.form.get('nav_text_color', 'dark')
@@ -107,7 +101,6 @@ def edit_section(section_id):
 
             updated_nav_items = []
 
-            # Parse Index Parent dari form request
             parent_indices = sorted(list(set(
                 re.findall(r'nav_parents\[(\d+)\]', key)[0]
                 for key in request.form.keys()
@@ -119,18 +112,14 @@ def edit_section(section_id):
                     p_text = request.form.get(f'nav_parents[{idx}][text]', '').strip()
                     p_url = request.form.get(f'nav_parents[{idx}][url]', '').strip()
 
-                    # Konversi nama teknis ke nama publik jika ada
                     p_text = SECTION_NAV_NAMES.get(p_text, p_text)
 
                     if p_text:
-                        # Normalisasi URL Parent
-                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith(
-                                'https://') or p_url.startswith('/')):
+                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith('https://') or p_url.startswith('/')):
                             p_url = f"#{p_url}"
                         elif not p_url:
                             p_url = "#"
 
-                        # Parse sub-menu / children
                         children = []
                         child_texts = request.form.getlist(f'nav_parents[{idx}][children][][text]')
                         child_urls = request.form.getlist(f'nav_parents[{idx}][children][][url]')
@@ -148,17 +137,13 @@ def edit_section(section_id):
                                     child_texts.append(c_t)
                                     child_urls.append(c_u)
 
-                        # Olah data children
                         for c_text, c_url in zip(child_texts, child_urls):
                             c_text = c_text.strip()
                             c_url = c_url.strip()
                             if c_text:
-                                # Konversi nama teknis (misal 'hero') menjadi nama publik (misal 'Beranda')
                                 pretty_c_text = SECTION_NAV_NAMES.get(c_text, c_text.replace('_', ' ').title())
 
-                                if c_url and not (
-                                        c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith(
-                                        'https://') or c_url.startswith('/')):
+                                if c_url and not (c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith('https://') or c_url.startswith('/')):
                                     c_url = f"#{c_url}"
                                 elif not c_url:
                                     c_url = "#"
@@ -177,7 +162,6 @@ def edit_section(section_id):
 
                 content['nav_items'] = updated_nav_items
             else:
-                # Fallback untuk struktur form flat legacy (nav_texts[])
                 nav_texts = request.form.getlist("nav_texts[]")
                 nav_urls = request.form.getlist("nav_urls[]")
                 nav_ids = request.form.getlist("nav_ids[]")
@@ -187,21 +171,55 @@ def edit_section(section_id):
                         t_clean = text.strip()
                         if t_clean:
                             sec_url = nav_urls[i] if i < len(nav_urls) else '#'
-                            sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#',
-                                                                                                                  '')
+                            sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#', '')
 
                             updated_nav_items.append({
                                 'id': sec_id,
                                 'text': SECTION_NAV_NAMES.get(t_clean, t_clean),
-                                'url': sec_url if (
-                                            sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
+                                'url': sec_url if (sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
                                 'children': []
                             })
                     content['nav_items'] = updated_nav_items
 
-        # ---------------------------------------------------------------------
-        # B. KHUSUS GALLERY / DOKUMENTASI (MULTIPLE UPLOAD)
-        # ---------------------------------------------------------------------
+        elif section.type == 'hero':
+            content['hero_display_mode'] = request.form.get('hero_display_mode', 'banner_only').strip()
+            content['title'] = request.form.get('title', '').strip()
+            content['eyebrow'] = request.form.get('eyebrow', '').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
+            content['cta_primary_text'] = request.form.get('cta_primary_text', '').strip()
+            content['cta_primary_url'] = request.form.get('cta_primary_url', '#').strip()
+            content['cta_secondary_text'] = request.form.get('cta_secondary_text', '').strip()
+            content['cta_secondary_url'] = request.form.get('cta_secondary_url', '#').strip()
+
+            existing_bg_images = request.form.getlist('existing_bg_images[]')
+            files = request.files.getlist('hero_bg_files[]')
+
+            bg_images_list = []
+            file_idx = 0
+
+            for i in range(len(existing_bg_images)):
+                img_url = existing_bg_images[i].strip()
+
+                if file_idx < len(files) and files[file_idx] and files[file_idx].filename != '':
+                    uploaded_url = save_uploaded_file(files[file_idx])
+                    if uploaded_url:
+                        img_url = uploaded_url
+                    file_idx += 1
+                elif file_idx < len(files) and (not files[file_idx] or files[file_idx].filename == ''):
+                    file_idx += 1
+
+                if img_url:
+                    bg_images_list.append(img_url)
+
+            while file_idx < len(files):
+                if files[file_idx] and files[file_idx].filename != '':
+                    uploaded_url = save_uploaded_file(files[file_idx])
+                    if uploaded_url:
+                        bg_images_list.append(uploaded_url)
+                file_idx += 1
+
+            content['bg_images'] = bg_images_list
+
         elif section.type == 'gallery':
             content['title'] = request.form.get('title', 'Galeri & Dokumentasi')
             content['subtitle'] = request.form.get('subtitle', '')
@@ -229,15 +247,11 @@ def edit_section(section_id):
 
             content['photos'] = photos_list
 
-        # ---------------------------------------------------------------------
-        # C. SECTION BIASA (HERO, FOOTER, ABOUT, DLL)
-        # ---------------------------------------------------------------------
         else:
             for key, value in request.form.items():
                 if key != "csrf_token" and not key.endswith("[]"):
                     content[key] = value
 
-            # Jika Judul Section diubah, update teks di Navbar juga
             nav_id = content.get('nav_id')
             if nav_id and 'title' in content:
                 navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
@@ -251,9 +265,8 @@ def edit_section(section_id):
                     navbar.content = nav_content
                     flag_modified(navbar, "content")
 
-        # Handling Upload File Tunggal Umum (Logo / Gambar latar / Photo tunggal)
         for key, file in request.files.items():
-            if key != 'gallery_files[]' and file and file.filename != '':
+            if key not in ['gallery_files[]', 'hero_bg_files[]'] and not key.startswith('slide_bg_files_') and file and file.filename != '':
                 file_url = save_uploaded_file(file)
                 if file_url:
                     field_key = key.replace('_file', '')
@@ -266,7 +279,7 @@ def edit_section(section_id):
         db.session.commit()
 
         flash("Perubahan berhasil disimpan!", "success")
-        return redirect(url_for("admin.manage_section", page_id=page.id))
+        return redirect(url_for("admin.manage_section", page_id=page.id, section_id=section.id))
 
     return render_template("admin/manage_sections.html", section=section, page=page)
 

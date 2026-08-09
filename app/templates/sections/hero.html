@@ -1,45 +1,190 @@
-{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{# Mengambil ID unik section & mode tampilan #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-{% set bg_img = section.content.get('bg_image') %}
+{% set display_mode = section.content.get('hero_display_mode', 'banner_only') %}
 
-<section id="{{ section_anchor_id }}"
-         data-nav-id="{{ section_anchor_id }}"
-         class="relative py-20 md:py-28 px-6 text-center overflow-hidden bg-cover bg-center transition-all duration-300 flex items-center min-h-[500px]"
-         style="{% if bg_img %}background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('{{ bg_img }}');{% else %}background: linear-gradient(to bottom right, #eff6ff, #eef2ff);{% endif %}">
+{# CDN Swiper JS & CSS #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    <div class="max-w-4xl mx-auto relative z-10 w-full">
+{# Normalisasi Data Gambar Banner #}
+{% set bg_images = section.content.get('bg_images', []) %}
+{% if not bg_images %}
+    {% set single_bg = section.content.get('bg_image') or section.content.get('image_url') %}
+    {% set bg_images = [single_bg] if single_bg else [] %}
+{% endif %}
 
-        <!-- Eyebrow Badge (Adaptif Terhadap Latar Belakang) -->
-        {% if section.content.get('eyebrow') %}
-            <span class="inline-block {% if bg_img %}bg-white/20 text-white backdrop-blur-md border border-white/20{% else %}bg-blue-100 text-blue-800{% endif %} text-xs font-semibold px-3.5 py-1.5 rounded-full uppercase tracking-wider mb-5 shadow-2xs">
-                {{ section.content.get('eyebrow') }}
-            </span>
-        {% endif %}
+{% set cta_url = section.content.get('cta_primary_url') or section.content.get('button_link', '#') %}
 
-        <!-- Main Title -->
-        <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold {% if bg_img %}text-white{% else %}text-slate-900{% endif %} tracking-tight mb-6 leading-tight">
-            {{ section.content.get('title', 'Judul Utama Yayasan') }}
-        </h1>
+{% if display_mode == 'interactive_slide' %}
+<!-- MODE 2: INTERAKTIF MODAL POP-UP (GAMBAR BERSIH + MODAL DETAIL) -->
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full bg-slate-100 py-3 sm:py-6 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-md sm:shadow-xl bg-white border border-slate-200/80 group">
 
-        <!-- Subtitle -->
-        <p class="text-lg md:text-xl {% if bg_img %}text-slate-200{% else %}text-slate-600{% endif %} max-w-2xl mx-auto mb-8 leading-relaxed">
-            {{ section.content.get('subtitle', 'Deskripsi singkat yayasan atau program unggulan...') }}
-        </p>
+            <div class="swiper heroSwiperModal w-full">
+                <div class="swiper-wrapper">
+                    {% if bg_images and bg_images|length > 0 and bg_images[0] %}
+                        {% for img in bg_images %}
+                            {% if img %}
+                                <div class="swiper-slide w-full flex items-center justify-center bg-slate-50 cursor-pointer" onclick="openHeroModal('{{ img }}', '{{ section.id }}')">
+                                    <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px] relative">
+                                        <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
 
-        <!-- Call to Action Button dengan Smooth Scroll -->
-        {% if section.content.get('button_text') %}
-            {% set btn_link = section.content.get('button_link', '#') %}
-            <div class="flex justify-center gap-4">
-                <a href="{{ btn_link }}"
-                   onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ btn_link }}')"
-                   class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-decoration-none inline-flex items-center gap-2">
-                    <span>{{ section.content.get('button_text') }}</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                </a>
+                                        <!-- BADGE PETUNJUK KECIL DI POJOK (TIDAK MENGHALANGI POSTER) -->
+                                        <div class="absolute bottom-3 right-3 bg-slate-900/75 hover:bg-blue-600 text-white text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-md shadow-md transition-all flex items-center gap-1.5">
+                                            <i class="bi bi-arrows-angle-expand"></i>
+                                            <span>Lihat Detail Program</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="swiper-slide w-full py-16 text-center text-slate-400 text-xs sm:text-sm">
+                            Belum ada gambar banner diunggah.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="swiper-button-next !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
+                <div class="swiper-button-prev !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
+                <div class="swiper-pagination"></div>
             </div>
-        {% endif %}
 
+        </div>
     </div>
 </section>
+
+<!-- POP-UP LIGHTBOX MODAL TERPISAH -->
+<div id="heroModal_{{ section.id }}" class="fixed inset-0 z-[99999] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+
+        <!-- TOMBOL CLOSE -->
+        <button type="button" onclick="closeHeroModal('{{ section.id }}')" class="absolute top-3 right-3 z-10 bg-slate-100 hover:bg-slate-200 text-slate-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">
+            &times;
+        </button>
+
+        <!-- KANAN/ATAS: GAMBAR POSTER FULL FIT -->
+        <div class="md:w-3/5 bg-slate-100 flex items-center justify-center p-2 border-b md:border-b-0 md:border-r border-slate-200">
+            <img id="modalImg_{{ section.id }}" src="" class="max-w-full h-auto max-h-[50vh] md:max-h-[75vh] object-contain rounded-lg" alt="Poster Full">
+        </div>
+
+        <!-- KIRI/BAWAH: INFORMASI TEKS & TOMBOL CTA -->
+        <div class="md:w-2/5 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+            <div>
+                {% if section.content.get('eyebrow') %}
+                    <span class="inline-block px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider mb-3">
+                        {{ section.content.get('eyebrow') }}
+                    </span>
+                {% endif %}
+
+                <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3">
+                    {{ section.content.get('title', 'Informasi Detail Banner') }}
+                </h3>
+
+                {% if section.content.get('subtitle') %}
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                        {{ section.content.get('subtitle') }}
+                    </p>
+                {% endif %}
+            </div>
+
+            {% set btn_text = section.content.get('cta_primary_text') or section.content.get('button_text', '') %}
+            {% if btn_text %}
+                <div class="pt-4 border-t border-slate-100 mt-4">
+                    <a href="{{ cta_url }}"
+                       onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
+                       class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl shadow-md text-sm transition-all text-decoration-none">
+                        <span>{{ btn_text }}</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% else %}
+<!-- MODE 1: BANNER MURNI (SEPERTI BAITULWAKAF.ID) -->
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full bg-slate-100 py-3 sm:py-6 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-md sm:shadow-xl bg-white border border-slate-200/80">
+            <div class="swiper heroSwiperPure w-full">
+                <div class="swiper-wrapper">
+                    {% if bg_images and bg_images|length > 0 and bg_images[0] %}
+                        {% for img in bg_images %}
+                            {% if img %}
+                                <div class="swiper-slide w-full flex items-center justify-center bg-slate-50">
+                                    {% if cta_url and cta_url != '#' %}
+                                        <a href="{{ cta_url }}" class="w-full block">
+                                            <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px]">
+                                                <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
+                                            </div>
+                                        </a>
+                                    {% else %}
+                                        <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px]">
+                                            <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="swiper-slide w-full py-16 text-center text-slate-400 text-xs sm:text-sm">
+                            Belum ada gambar banner diunggah.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="swiper-button-next !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
+                <div class="swiper-button-prev !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof Swiper !== 'undefined') {
+            const hasMulti = {{ 'true' if bg_images|length > 1 else 'false' }};
+
+            if (document.querySelector('.heroSwiperPure')) {
+                new Swiper(".heroSwiperPure", {
+                    loop: hasMulti,
+                    autoplay: { delay: 5000, disableOnInteraction: false },
+                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                    speed: 600
+                });
+            }
+
+            if (document.querySelector('.heroSwiperModal')) {
+                new Swiper(".heroSwiperModal", {
+                    loop: hasMulti,
+                    autoplay: { delay: 6000, disableOnInteraction: false },
+                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                    speed: 600
+                });
+            }
+        }
+    });
+
+    function openHeroModal(imgSrc, secId) {
+        const modal = document.getElementById('heroModal_' + secId);
+        const img = document.getElementById('modalImg_' + secId);
+        if (modal && img) {
+            img.src = imgSrc;
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeHeroModal(secId) {
+        const modal = document.getElementById('heroModal_' + secId);
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+</script>

@@ -1,102 +1,222 @@
-<!-- FORM KHUSUS HERO BANNER UTAMA -->
+<!-- FORM KHUSUS HERO BANNER SINGLE-TEXT MULTI-IMAGE (SINGLE CTA) -->
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- TEKS UTAMA & DESKRIPSI -->
-    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
-        <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">
-                    Judul Utama Hero (Headline) <span class="text-danger">*</span>
-                </label>
-                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', '') }}" required placeholder="Contoh: Penerimaan Peserta Didik Baru (PPDB) 2026/2027">
-            </div>
-
-            <div class="col-12">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Deskripsi Singkat</label>
-                <textarea name="subtitle" class="form-control form-control-sm" rows="3" placeholder="Masukkan ringkasan ajakan atau keunggulan sekolah di sini...">{{ section.content.get('subtitle', '') }}</textarea>
-            </div>
+    <!-- 0. PILIHAN MODE TAMPILAN HERO BANNER -->
+    <div class="card border mb-3 shadow-sm rounded-3">
+        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center">
+            <i class="bi bi-layout-split me-2 text-primary"></i>MODE TAMPILAN HERO
         </div>
-    </div>
+        <div class="card-body p-3">
+            <label class="form-label text-secondary small fw-semibold mb-2">Pilih Cara Menampilkan Banner & Konten <span class="text-danger">*</span></label>
 
-    <!-- GAMBAR BANNER / HERO IMAGE -->
-    <div class="p-3 border rounded-3 bg-white mb-4">
-        <label class="form-label fw-semibold small text-slate-700 mb-1">Gambar Hero / Banner Utama</label>
-        <input type="file" name="image_url_file" class="form-control form-control-sm mb-2" accept="image/*">
-        
-        {% if section.content.get('image_url') %}
-            <div class="d-flex align-items-center gap-3 p-2 bg-light border rounded-2">
-                <img src="{{ section.content.get('image_url') }}" class="rounded border object-fit-cover" style="width: 100px; height: 60px;">
-                <div class="lh-1">
-                    <span class="d-block text-dark fw-medium small mb-1">Gambar Banner Aktif</span>
-                    <span class="text-muted" style="font-size: 0.72rem;">Digunakan sebagai visual utama pada bagian atas halaman</span>
-                    <input type="hidden" name="image_url" value="{{ section.content.get('image_url') }}">
+            {% set current_mode = section.content.get('hero_display_mode', 'banner_only') %}
+            <div class="row g-2">
+                <!-- Pilihan 1: Hanya Banner Murni (Seperti baitulwakaf.id) -->
+                <div class="col-md-6">
+                    <div class="form-check custom-option p-2.5 border rounded-3 bg-white h-100 shadow-xs">
+                        <input class="form-check-input" type="radio" name="hero_display_mode" id="mode_banner_only" value="banner_only" {% if current_mode == 'banner_only' %}checked{% endif %}>
+                        <label class="form-check-label ms-1 small fw-semibold cursor-pointer d-block" for="mode_banner_only">
+                            <i class="bi bi-image text-primary me-1"></i> Hanya Banner / Poster Murni
+                            <span class="d-block text-muted extra-small fw-normal mt-1">
+                                Tampilan bersih seperti <b>baitulwakaf.id</b>. Menampilkan gambar banner full/fit tanpa teks dan tombol sistem yang menutupi.
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Pilihan 2: Interactive / Slide Overlay -->
+                <div class="col-md-6">
+                    <div class="form-check custom-option p-2.5 border rounded-3 bg-white h-100 shadow-xs">
+                        <input class="form-check-input" type="radio" name="hero_display_mode" id="mode_interactive" value="interactive_slide" {% if current_mode == 'interactive_slide' %}checked{% endif %}>
+                        <label class="form-check-label ms-1 small fw-semibold cursor-pointer d-block" for="mode_interactive">
+                            <i class="bi bi-hand-index-thumb text-success me-1"></i> Interaktif (Detail Teks Murni Overlay/Pop-up)
+                            <span class="d-block text-muted extra-small fw-normal mt-1">
+                                Banner tampil bersih di awal. Saat banner diklik/diusap/hover, panel info & tombol CTA akan muncul terpisah.
+                            </span>
+                        </label>
+                    </div>
                 </div>
             </div>
-        {% endif %}
+        </div>
     </div>
 
-    <!-- TOMBOL AKSI UTAMA (CTA 1 & CTA 2) -->
-    <div class="p-3 border rounded-3 bg-white mb-4">
-        <span class="fw-bold text-dark small d-block mb-3">PENGATURAN TOMBOL AKSI (CALL TO ACTION)</span>
-        
-        <!-- CTA PRIMER -->
-        <div class="row g-3 mb-3 p-2 border rounded bg-light-subtle">
-            <div class="col-md-6">
-                <label class="form-label fw-medium small text-slate-700">Teks Tombol Utama (Primer)</label>
-                <input type="text" name="cta_primary_text" class="form-control form-control-sm" value="{{ section.content.get('cta_primary_text', section.content.get('button_text_1', '')) }}" placeholder="Contoh: Daftar Sekarang">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-medium small text-slate-700">Target Link / Section Primer</label>
-                <select name="cta_primary_url" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
-                    <option value="#">-- Pilih Target Section --</option>
-                    {% for sec in page.sections %}
-                        {% if sec.type not in ['navbar', 'footer'] %}
-                            {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
-                            {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
-                            {% set target_url = '#' ~ sec_nav_id %}
-                            <option value="{{ target_url }}" {% if section.content.get('cta_primary_url') == target_url or section.content.get('button_link_1') == target_url %}selected{% endif %}>
-                                📌 {{ sec_title }} ({{ sec.type }})
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
+    <!-- 1. INFORMASI TEKS HERO -->
+    <div class="card border mb-3 shadow-sm rounded-3">
+        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center">
+            <i class="bi bi-type-h1 me-2 text-primary"></i>INFORMASI KONTEN HERO
         </div>
-
-        <!-- CTA SEKUNDER (OPSIONAL) -->
-        <div class="row g-3 p-2 border rounded bg-light-subtle">
-            <div class="col-md-6">
-                <label class="form-label fw-medium small text-slate-700">Teks Tombol Sekunder (Opsional)</label>
-                <input type="text" name="cta_secondary_text" class="form-control form-control-sm" value="{{ section.content.get('cta_secondary_text', section.content.get('button_text_2', '')) }}" placeholder="Contoh: Lihat Fasilitas">
+        <div class="card-body p-3">
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-semibold mb-1">Badge Teks / Eyebrow <span class="text-muted fw-normal">(Opsional)</span></label>
+                <input type="text" name="eyebrow" value="{{ section.content.get('eyebrow', '') }}" class="form-control form-control-sm" placeholder="Contoh: PPDB 2026/2027">
             </div>
-            <div class="col-md-6">
-                <label class="form-label fw-medium small text-slate-700">Target Link / Section Sekunder</label>
-                <select name="cta_secondary_url" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
-                    <option value="#">-- Pilih Target Section --</option>
-                    {% for sec in page.sections %}
-                        {% if sec.type not in ['navbar', 'footer'] %}
-                            {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
-                            {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
-                            {% set target_url = '#' ~ sec_nav_id %}
-                            <option value="{{ target_url }}" {% if section.content.get('cta_secondary_url') == target_url or section.content.get('button_link_2') == target_url %}selected{% endif %}>
-                                📌 {{ sec_title }} ({{ sec.type }})
-                            </option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-semibold mb-1">Judul Utama Hero <span class="text-danger">*</span></label>
+                <input type="text" name="title" value="{{ section.content.get('title', '') }}" class="form-control form-control-sm fw-semibold" required placeholder="Masukkan judul banner...">
+            </div>
+
+            <div class="mb-0">
+                <label class="form-label text-secondary small fw-semibold mb-1">Subjudul / Deskripsi Singkat</label>
+                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Tuliskan deskripsi atau keunggulan singkat...">{{ section.content.get('subtitle', '') }}</textarea>
             </div>
         </div>
     </div>
 
-    <!-- ACTION BUTTONS -->
-    <div class="d-flex gap-2 pt-3 border-top">
-        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Perubahan Hero</button>
-        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    <!-- 2. TOMBOL AKSI UTAMA (SINGLE CTA) -->
+    <div class="card border mb-3 shadow-sm rounded-3">
+        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center justify-content-between">
+            <span class="d-flex align-items-center">
+                <i class="bi bi-box-arrow-up-right me-2 text-primary"></i>TOMBOL AKSI (CTA)
+            </span>
+            <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none extra-small" onclick="clearCta()">
+                <i class="bi bi-x-circle me-1"></i>Hapus Tombol
+            </button>
+        </div>
+        <div class="card-body p-3">
+            <p class="text-muted extra-small mb-3">
+                <i class="bi bi-info-circle me-1"></i>Kosongkan teks tombol jika tidak ingin menampilkan tombol aksi pada hero banner.
+            </p>
+
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label text-muted extra-small mb-1">Teks Tombol</label>
+                    <input type="text" id="cta_primary_text" name="cta_primary_text" value="{{ section.content.get('cta_primary_text') or section.content.get('button_text', '') }}" class="form-control form-control-sm" placeholder="Contoh: Daftar Sekarang">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted extra-small mb-1">Target Link / Section</label>
+                    <select id="cta_primary_url" name="cta_primary_url" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
+                        <option value="#">-- Pilih Target Section --</option>
+                        {% for sec in page.sections %}
+                            {% if sec.type not in ['navbar', 'footer'] %}
+                                {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
+                                {% set target_url = '#' ~ sec_nav_id %}
+                                <option value="{{ target_url }}" {% if (section.content.get('cta_primary_url') or section.content.get('button_link')) == target_url %}selected{% endif %}>
+                                    📌 {{ sec.content.get('title') or sec.type|replace('_', ' ')|title }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. KOLEKSI GAMBAR BANNER (DESAIN MODERN & FIT) -->
+    <div class="card border mb-4 shadow-sm rounded-3">
+        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-images me-2 text-primary"></i>GAMBAR BACKGROUND HERO SLIDER</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle extra-small">Multi-Image</span>
+        </div>
+        <div class="card-body p-3">
+            {% set bg_images = section.content.get('bg_images', []) %}
+            {% if not bg_images %}
+                {% set single_bg = section.content.get('bg_image') or section.content.get('image_url') %}
+                {% set bg_images = [single_bg] if single_bg else [] %}
+            {% endif %}
+
+            <!-- CONTAINER LIST GAMBAR -->
+            <div id="banner-images-container" class="d-flex flex-column gap-2 mb-3">
+                {% for img_url in bg_images %}
+                    <div class="p-2 border rounded-3 bg-white banner-img-row shadow-sm transition-all hover-shadow">
+                        <div class="row g-2 align-items-center">
+                            <!-- THUMBNAIL PREVIEW -->
+                            <div class="col-3 col-sm-2">
+                                <div class="ratio ratio-16x9 rounded overflow-hidden border bg-light">
+                                    <img src="{{ img_url }}" class="object-fit-cover w-100 h-100" alt="Banner Preview">
+                                </div>
+                                <input type="hidden" name="existing_bg_images[]" value="{{ img_url }}">
+                            </div>
+                            <!-- INPUT UPLOAD BARU / REPLACE -->
+                            <div class="col-7 col-sm-8">
+                                <input type="file" name="hero_bg_files[]" class="form-control form-control-sm" accept="image/*">
+                                <span class="text-muted extra-small d-block mt-1">Pilih file baru jika ingin mengganti gambar ini</span>
+                            </div>
+                            <!-- TOMBOL HAPUS BARIS -->
+                            <div class="col-2 text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-1" onclick="removeBannerRow(this)" title="Hapus Gambar">
+                                    <i class="bi bi-trash fs-6"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- EMPTY STATE IF NO IMAGES -->
+            <div id="empty-banner-msg" class="text-center py-4 border border-dashed rounded-3 bg-light-subtle mb-3 {% if bg_images %}d-none{% endif %}">
+                <i class="bi bi-image text-muted fs-3 d-block mb-1"></i>
+                <span class="text-muted small fw-medium">Belum ada gambar background slider.</span>
+            </div>
+
+            <!-- TOMBOL FIT TAMBAH GAMBAR -->
+            <button type="button" class="btn btn-outline-primary border-dashed w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-2 font-semibold shadow-xs" onclick="addBannerImageRow()">
+                <i class="bi bi-plus-circle-fill fs-6"></i>
+                <span class="small fw-bold">Tambah Gambar Background</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SUBMIT BUTTON -->
+    <div class="pt-2 border-top">
+        <button type="submit" class="btn btn-primary w-100 fw-semibold shadow-sm py-2">
+            <i class="bi bi-check-circle me-1"></i>Simpan Perubahan Hero
+        </button>
     </div>
 </form>
 
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .border-dashed { border-style: dashed !important; border-width: 1.5px !important; }
+    .btn-outline-primary.border-dashed:hover { background-color: var(--bs-primary-bg-subtle, #e0cffc); color: var(--bs-primary); }
+    .hover-shadow:hover { box-shadow: 0 .25rem .5rem rgba(0,0,0,.05)!important; }
+    .cursor-pointer { cursor: pointer; }
+</style>
+
 <script>
+    function clearCta() {
+        document.getElementById('cta_primary_text').value = '';
+        document.getElementById('cta_primary_url').value = '#';
+    }
+
+    function addBannerImageRow() {
+        const container = document.getElementById('banner-images-container');
+        const emptyMsg = document.getElementById('empty-banner-msg');
+
+        if (emptyMsg) emptyMsg.classList.add('d-none');
+
+        const html = `
+            <div class="p-2 border rounded-3 bg-white banner-img-row shadow-sm transition-all hover-shadow">
+                <div class="row g-2 align-items-center">
+                    <div class="col-3 col-sm-2 text-center">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle extra-small py-1 px-2">Baru</span>
+                        <input type="hidden" name="existing_bg_images[]" value="">
+                    </div>
+                    <div class="col-7 col-sm-8">
+                        <input type="file" name="hero_bg_files[]" class="form-control form-control-sm" accept="image/*" required>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-1" onclick="removeBannerRow(this)" title="Hapus Gambar">
+                            <i class="bi bi-trash fs-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeBannerRow(btn) {
+        const row = btn.closest('.banner-img-row');
+        row.remove();
+
+        const container = document.getElementById('banner-images-container');
+        const emptyMsg = document.getElementById('empty-banner-msg');
+        if (container && container.children.length === 0 && emptyMsg) {
+            emptyMsg.classList.remove('d-none');
+        }
+    }
+
     function previewTargetSection(targetUrl) {
         if (typeof scrollToSectionInPreview === 'function' && targetUrl && targetUrl !== '#') {
             scrollToSectionInPreview('', targetUrl);
