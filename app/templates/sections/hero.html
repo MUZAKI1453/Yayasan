@@ -1,190 +1,206 @@
-{# Mengambil ID unik section & mode tampilan #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-{% set display_mode = section.content.get('hero_display_mode', 'banner_only') %}
+{% set slides = section.content.get('slides', []) %}
 
-{# CDN Swiper JS & CSS #}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-{# Normalisasi Data Gambar Banner #}
-{% set bg_images = section.content.get('bg_images', []) %}
-{% if not bg_images %}
-    {% set single_bg = section.content.get('bg_image') or section.content.get('image_url') %}
-    {% set bg_images = [single_bg] if single_bg else [] %}
+{% if not slides %}
+    {% set legacy_image = section.content.get('bg_image') or section.content.get('image_url') %}
+    {% set legacy_cta_text = section.content.get('cta_primary_text') or section.content.get('button_text', '') %}
+    {% set legacy_cta_url = section.content.get('cta_primary_url') or section.content.get('button_link', '#') %}
+    {% if legacy_image or section.content.get('title') or section.content.get('subtitle') %}
+        {% set slides = [{
+            'image': legacy_image or '',
+            'eyebrow': section.content.get('eyebrow', ''),
+            'title': section.content.get('title', ''),
+            'subtitle': section.content.get('subtitle', ''),
+            'cta': {'text': legacy_cta_text, 'url': legacy_cta_url}
+        }] %}
+    {% endif %}
 {% endif %}
 
-{% set cta_url = section.content.get('cta_primary_url') or section.content.get('button_link', '#') %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-{% if display_mode == 'interactive_slide' %}
-<!-- MODE 2: INTERAKTIF MODAL POP-UP (GAMBAR BERSIH + MODAL DETAIL) -->
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full bg-slate-100 py-3 sm:py-6 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-md sm:shadow-xl bg-white border border-slate-200/80 group">
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full overflow-hidden bg-slate-900">
+    <div class="swiper heroSwiper w-full">
+        <div class="swiper-wrapper">
+            {% if slides %}
+                {% for slide in slides %}
+                    {% set cta = slide.get('cta', {}) %}
+                    <div class="swiper-slide relative w-full aspect-[16/9] overflow-hidden bg-slate-900 md:aspect-auto md:h-[calc(100svh-4.5rem)] md:min-h-[400px] lg:h-[calc(100svh-4.5rem)] lg:min-h-[calc(100svh-4.5rem)]">
+                        {% if slide.get('image') %}
+                            <img
+                                src="{{ slide.get('image') }}"
+                                class="absolute inset-0 w-full h-full object-cover"
+                                alt="{{ slide.get('title') or 'Hero' }}"
+                            >
+                        {% else %}
+                            <div class="absolute inset-0 bg-slate-800"></div>
+                        {% endif %}
 
-            <div class="swiper heroSwiperModal w-full">
-                <div class="swiper-wrapper">
-                    {% if bg_images and bg_images|length > 0 and bg_images[0] %}
-                        {% for img in bg_images %}
-                            {% if img %}
-                                <div class="swiper-slide w-full flex items-center justify-center bg-slate-50 cursor-pointer" onclick="openHeroModal('{{ img }}', '{{ section.id }}')">
-                                    <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px] relative">
-                                        <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 sm:from-black/85 sm:via-black/35 sm:to-black/5"></div>
 
-                                        <!-- BADGE PETUNJUK KECIL DI POJOK (TIDAK MENGHALANGI POSTER) -->
-                                        <div class="absolute bottom-3 right-3 bg-slate-900/75 hover:bg-blue-600 text-white text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-md shadow-md transition-all flex items-center gap-1.5">
-                                            <i class="bi bi-arrows-angle-expand"></i>
-                                            <span>Lihat Detail Program</span>
+                        <div class="absolute inset-x-0 bottom-0">
+                            <div class="mx-auto w-full max-w-7xl px-5 pb-8 sm:px-8 sm:pb-10 lg:px-10 lg:pb-14">
+                                <div class="max-w-2xl text-white">
+                                    {% if slide.get('eyebrow') %}
+                                        <div class="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-xs">
+                                            {{ slide.get('eyebrow') }}
                                         </div>
-                                    </div>
+                                    {% endif %}
+
+                                    {% if slide.get('title') %}
+                                        <h1 class="mb-1.5 text-lg font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)] sm:mb-2 sm:text-4xl lg:text-5xl">
+                                            {{ slide.get('title') }}
+                                        </h1>
+                                    {% endif %}
+
+                                    {% if slide.get('subtitle') %}
+                                        <p class="mb-3 max-w-xl text-[11px] leading-snug text-white/90 sm:mb-4 sm:text-sm lg:text-base">
+                                            {{ slide.get('subtitle') }}
+                                        </p>
+                                    {% endif %}
+
+                                    {% if cta.get('text') and cta.get('url') and cta.get('url') != '#' %}
+                                        <a
+                                            href="{{ cta.get('url') }}"
+                                            onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ cta.get('url') }}')"
+                                            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-[11px] font-semibold text-white no-underline shadow-lg transition hover:bg-blue-700 sm:gap-2 sm:px-5 sm:py-3 sm:text-sm"
+                                        >
+                                            {{ cta.get('text') }}
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="swiper-slide w-full py-16 text-center text-slate-400 text-xs sm:text-sm">
-                            Belum ada gambar banner diunggah.
+                            </div>
                         </div>
-                    {% endif %}
-                </div>
-
-                <div class="swiper-button-next !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
-                <div class="swiper-button-prev !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
-                <div class="swiper-pagination"></div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-<!-- POP-UP LIGHTBOX MODAL TERPISAH -->
-<div id="heroModal_{{ section.id }}" class="fixed inset-0 z-[99999] hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
-    <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
-
-        <!-- TOMBOL CLOSE -->
-        <button type="button" onclick="closeHeroModal('{{ section.id }}')" class="absolute top-3 right-3 z-10 bg-slate-100 hover:bg-slate-200 text-slate-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">
-            &times;
-        </button>
-
-        <!-- KANAN/ATAS: GAMBAR POSTER FULL FIT -->
-        <div class="md:w-3/5 bg-slate-100 flex items-center justify-center p-2 border-b md:border-b-0 md:border-r border-slate-200">
-            <img id="modalImg_{{ section.id }}" src="" class="max-w-full h-auto max-h-[50vh] md:max-h-[75vh] object-contain rounded-lg" alt="Poster Full">
-        </div>
-
-        <!-- KIRI/BAWAH: INFORMASI TEKS & TOMBOL CTA -->
-        <div class="md:w-2/5 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
-            <div>
-                {% if section.content.get('eyebrow') %}
-                    <span class="inline-block px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase tracking-wider mb-3">
-                        {{ section.content.get('eyebrow') }}
-                    </span>
-                {% endif %}
-
-                <h3 class="text-lg sm:text-2xl font-extrabold text-slate-900 leading-snug mb-3">
-                    {{ section.content.get('title', 'Informasi Detail Banner') }}
-                </h3>
-
-                {% if section.content.get('subtitle') %}
-                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                        {{ section.content.get('subtitle') }}
-                    </p>
-                {% endif %}
-            </div>
-
-            {% set btn_text = section.content.get('cta_primary_text') or section.content.get('button_text', '') %}
-            {% if btn_text %}
-                <div class="pt-4 border-t border-slate-100 mt-4">
-                    <a href="{{ cta_url }}"
-                       onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
-                       class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl shadow-md text-sm transition-all text-decoration-none">
-                        <span>{{ btn_text }}</span>
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="swiper-slide relative flex w-full aspect-[16/9] items-center justify-center bg-slate-800 text-sm text-white/60 md:aspect-auto md:h-[calc(100svh-4.5rem)] md:min-h-[400px]">
+                    Belum ada slide Hero.
                 </div>
             {% endif %}
         </div>
 
-    </div>
-</div>
-
-{% else %}
-<!-- MODE 1: BANNER MURNI (SEPERTI BAITULWAKAF.ID) -->
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full bg-slate-100 py-3 sm:py-6 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-        <div class="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-md sm:shadow-xl bg-white border border-slate-200/80">
-            <div class="swiper heroSwiperPure w-full">
-                <div class="swiper-wrapper">
-                    {% if bg_images and bg_images|length > 0 and bg_images[0] %}
-                        {% for img in bg_images %}
-                            {% if img %}
-                                <div class="swiper-slide w-full flex items-center justify-center bg-slate-50">
-                                    {% if cta_url and cta_url != '#' %}
-                                        <a href="{{ cta_url }}" class="w-full block">
-                                            <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px]">
-                                                <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
-                                            </div>
-                                        </a>
-                                    {% else %}
-                                        <div class="w-full flex items-center justify-center min-h-[220px] sm:min-h-[360px] md:min-h-[440px] lg:min-h-[520px] max-h-[600px]">
-                                            <img src="{{ img }}" class="w-full h-auto object-cover sm:object-contain max-h-[600px]" alt="Hero Banner">
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="swiper-slide w-full py-16 text-center text-slate-400 text-xs sm:text-sm">
-                            Belum ada gambar banner diunggah.
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="swiper-button-next !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
-                <div class="swiper-button-prev !w-7 !h-7 sm:!w-9 sm:!h-9 !bg-white/90 !text-slate-800 rounded-full shadow-md after:!text-[10px] sm:after:!text-xs"></div>
-                <div class="swiper-pagination"></div>
-            </div>
-        </div>
+        {% if slides|length > 1 %}
+            <div class="swiper-button-next !right-0 !top-1/2 !mt-0 !h-14 !w-7 !-translate-y-1/2 !rounded-l-md !rounded-r-none !border !border-r-0 !border-white/25 !bg-black/15 !text-white/90 !backdrop-blur-md !transition-all !duration-300 hover:!bg-black/35 hover:!text-white after:!text-[10px] sm:!h-16 sm:!w-8 sm:after:!text-[11px]"></div>
+            <div class="swiper-button-prev !left-0 !top-1/2 !mt-0 !h-14 !w-7 !-translate-y-1/2 !rounded-r-md !rounded-l-none !border !border-l-0 !border-white/25 !bg-black/15 !text-white/90 !backdrop-blur-md !transition-all !duration-300 hover:!bg-black/35 hover:!text-white after:!text-[10px] sm:!h-16 sm:!w-8 sm:after:!text-[11px]"></div>
+            <div class="swiper-pagination !bottom-4 sm:!bottom-6"></div>
+        {% endif %}
     </div>
 </section>
-{% endif %}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (typeof Swiper !== 'undefined') {
-            const hasMulti = {{ 'true' if bg_images|length > 1 else 'false' }};
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Swiper === 'undefined') return;
 
-            if (document.querySelector('.heroSwiperPure')) {
-                new Swiper(".heroSwiperPure", {
-                    loop: hasMulti,
-                    autoplay: { delay: 5000, disableOnInteraction: false },
-                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-                    pagination: { el: '.swiper-pagination', clickable: true },
-                    speed: 600
-                });
-            }
+        const section = document.getElementById('{{ section_anchor_id }}');
+        const el = section ? section.querySelector('.heroSwiper') : null;
 
-            if (document.querySelector('.heroSwiperModal')) {
-                new Swiper(".heroSwiperModal", {
-                    loop: hasMulti,
-                    autoplay: { delay: 6000, disableOnInteraction: false },
-                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-                    pagination: { el: '.swiper-pagination', clickable: true },
-                    speed: 600
-                });
-            }
+        if (!el || el.dataset.initialized === 'true') return;
+
+        const nextButton = section.querySelector('.swiper-button-next');
+        const prevButton = section.querySelector('.swiper-button-prev');
+        const pagination = section.querySelector('.swiper-pagination');
+
+        el.dataset.initialized = 'true';
+
+        const swiper = new Swiper(el, {
+            loop: {{ 'true' if slides|length > 1 else 'false' }},
+
+            autoplay: {{ '{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: false }' if slides|length > 1 else 'false' }},
+
+            navigation: {{ '{ nextEl: nextButton, prevEl: prevButton }' if slides|length > 1 else 'false' }},
+
+            pagination: {{ '{ el: pagination, clickable: true }' if slides|length > 1 else 'false' }},
+
+            speed: 700,
+
+            allowTouchMove: {{ 'true' if slides|length > 1 else 'false' }},
+            simulateTouch: {{ 'true' if slides|length > 1 else 'false' }},
+            grabCursor: {{ 'true' if slides|length > 1 else 'false' }},
+
+            preventClicks: false,
+            preventClicksPropagation: false,
+            touchStartPreventDefault: false
+        });
+
+        {% if slides|length > 1 %}
+        if (swiper.autoplay) {
+            swiper.autoplay.start();
         }
+
+        [nextButton, prevButton].forEach(function (button) {
+            if (!button) return;
+
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            });
+        });
+
+        let moved = false;
+
+        swiper.on('touchMove', function () {
+            moved = true;
+        });
+
+        swiper.on('touchEnd', function () {
+            window.setTimeout(function () {
+                moved = false;
+            }, 0);
+        });
+
+        section.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                if (moved) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        });
+
+        {% endif %}
     });
-
-    function openHeroModal(imgSrc, secId) {
-        const modal = document.getElementById('heroModal_' + secId);
-        const img = document.getElementById('modalImg_' + secId);
-        if (modal && img) {
-            img.src = imgSrc;
-            modal.classList.remove('hidden');
-        }
-    }
-
-    function closeHeroModal(secId) {
-        const modal = document.getElementById('heroModal_' + secId);
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    }
 </script>
+
+<style>
+    #{{ section_anchor_id }} .swiper-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    #{{ section_anchor_id }} .swiper-pagination-bullet {
+        width: 22px;
+        height: 2px;
+        margin: 0 !important;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.45);
+        opacity: 1;
+        transition:
+            width 0.35s ease,
+            background-color 0.35s ease,
+            opacity 0.35s ease;
+    }
+
+    #{{ section_anchor_id }} .swiper-pagination-bullet-active {
+        width: 38px;
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    @media (max-width: 639px) {
+        #{{ section_anchor_id }} .swiper-pagination {
+            gap: 4px;
+        }
+
+        #{{ section_anchor_id }} .swiper-pagination-bullet {
+            width: 16px;
+            height: 2px;
+        }
+
+        #{{ section_anchor_id }} .swiper-pagination-bullet-active {
+            width: 28px;
+        }
+    }
+</style>

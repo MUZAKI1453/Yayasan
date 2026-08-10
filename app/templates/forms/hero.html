@@ -1,225 +1,197 @@
-<!-- FORM KHUSUS HERO BANNER SINGLE-TEXT MULTI-IMAGE (SINGLE CTA) -->
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- 0. PILIHAN MODE TAMPILAN HERO BANNER -->
-    <div class="card border mb-3 shadow-sm rounded-3">
-        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center">
-            <i class="bi bi-layout-split me-2 text-primary"></i>MODE TAMPILAN HERO
-        </div>
-        <div class="card-body p-3">
-            <label class="form-label text-secondary small fw-semibold mb-2">Pilih Cara Menampilkan Banner & Konten <span class="text-danger">*</span></label>
+    {% set hero_slides = section.content.get('slides', []) %}
+    {% if not hero_slides %}
+        {% set legacy_image = section.content.get('bg_image') or section.content.get('image_url') %}
+        {% set hero_slides = [{
+            'image': legacy_image or '',
+            'eyebrow': section.content.get('eyebrow', ''),
+            'title': section.content.get('title', ''),
+            'subtitle': section.content.get('subtitle', ''),
+            'cta': {
+                'text': section.content.get('cta_primary_text') or section.content.get('button_text', ''),
+                'url': section.content.get('cta_primary_url') or section.content.get('button_link', '#')
+            }
+        }] %}
+    {% endif %}
 
-            {% set current_mode = section.content.get('hero_display_mode', 'banner_only') %}
-            <div class="row g-2">
-                <!-- Pilihan 1: Hanya Banner Murni (Seperti baitulwakaf.id) -->
-                <div class="col-md-6">
-                    <div class="form-check custom-option p-2.5 border rounded-3 bg-white h-100 shadow-xs">
-                        <input class="form-check-input" type="radio" name="hero_display_mode" id="mode_banner_only" value="banner_only" {% if current_mode == 'banner_only' %}checked{% endif %}>
-                        <label class="form-check-label ms-1 small fw-semibold cursor-pointer d-block" for="mode_banner_only">
-                            <i class="bi bi-image text-primary me-1"></i> Hanya Banner / Poster Murni
-                            <span class="d-block text-muted extra-small fw-normal mt-1">
-                                Tampilan bersih seperti <b>baitulwakaf.id</b>. Menampilkan gambar banner full/fit tanpa teks dan tombol sistem yang menutupi.
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Pilihan 2: Interactive / Slide Overlay -->
-                <div class="col-md-6">
-                    <div class="form-check custom-option p-2.5 border rounded-3 bg-white h-100 shadow-xs">
-                        <input class="form-check-input" type="radio" name="hero_display_mode" id="mode_interactive" value="interactive_slide" {% if current_mode == 'interactive_slide' %}checked{% endif %}>
-                        <label class="form-check-label ms-1 small fw-semibold cursor-pointer d-block" for="mode_interactive">
-                            <i class="bi bi-hand-index-thumb text-success me-1"></i> Interaktif (Detail Teks Murni Overlay/Pop-up)
-                            <span class="d-block text-muted extra-small fw-normal mt-1">
-                                Banner tampil bersih di awal. Saat banner diklik/diusap/hover, panel info & tombol CTA akan muncul terpisah.
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            </div>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h5 class="mb-1 fw-bold">Hero</h5>
+            <div class="text-muted small">Buat satu atau beberapa slide dengan konten masing-masing.</div>
         </div>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addHeroSlide()">
+            <i class="bi bi-plus-lg me-1"></i>Tambah Slide
+        </button>
     </div>
 
-    <!-- 1. INFORMASI TEKS HERO -->
-    <div class="card border mb-3 shadow-sm rounded-3">
-        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center">
-            <i class="bi bi-type-h1 me-2 text-primary"></i>INFORMASI KONTEN HERO
-        </div>
-        <div class="card-body p-3">
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Badge Teks / Eyebrow <span class="text-muted fw-normal">(Opsional)</span></label>
-                <input type="text" name="eyebrow" value="{{ section.content.get('eyebrow', '') }}" class="form-control form-control-sm" placeholder="Contoh: PPDB 2026/2027">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Judul Utama Hero <span class="text-danger">*</span></label>
-                <input type="text" name="title" value="{{ section.content.get('title', '') }}" class="form-control form-control-sm fw-semibold" required placeholder="Masukkan judul banner...">
-            </div>
-
-            <div class="mb-0">
-                <label class="form-label text-secondary small fw-semibold mb-1">Subjudul / Deskripsi Singkat</label>
-                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Tuliskan deskripsi atau keunggulan singkat...">{{ section.content.get('subtitle', '') }}</textarea>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. TOMBOL AKSI UTAMA (SINGLE CTA) -->
-    <div class="card border mb-3 shadow-sm rounded-3">
-        <div class="card-header bg-light py-2 px-3 fw-bold small text-dark d-flex align-items-center justify-content-between">
-            <span class="d-flex align-items-center">
-                <i class="bi bi-box-arrow-up-right me-2 text-primary"></i>TOMBOL AKSI (CTA)
-            </span>
-            <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none extra-small" onclick="clearCta()">
-                <i class="bi bi-x-circle me-1"></i>Hapus Tombol
-            </button>
-        </div>
-        <div class="card-body p-3">
-            <p class="text-muted extra-small mb-3">
-                <i class="bi bi-info-circle me-1"></i>Kosongkan teks tombol jika tidak ingin menampilkan tombol aksi pada hero banner.
-            </p>
-
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <label class="form-label text-muted extra-small mb-1">Teks Tombol</label>
-                    <input type="text" id="cta_primary_text" name="cta_primary_text" value="{{ section.content.get('cta_primary_text') or section.content.get('button_text', '') }}" class="form-control form-control-sm" placeholder="Contoh: Daftar Sekarang">
+    <div id="hero-slides-container" class="d-flex flex-column gap-4">
+        {% for slide in hero_slides %}
+            {% set cta = slide.get('cta', {}) %}
+            <div class="card border shadow-sm hero-slide" data-slide-index="{{ loop.index0 }}">
+                <div class="card-header py-3 px-4 d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold">Slide {{ loop.index }}</span>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="removeHeroSlide(this)">
+                        <i class="bi bi-trash me-1"></i>Hapus
+                    </button>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label text-muted extra-small mb-1">Target Link / Section</label>
-                    <select id="cta_primary_url" name="cta_primary_url" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
-                        <option value="#">-- Pilih Target Section --</option>
-                        {% for sec in page.sections %}
-                            {% if sec.type not in ['navbar', 'footer'] %}
-                                {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
-                                {% set target_url = '#' ~ sec_nav_id %}
-                                <option value="{{ target_url }}" {% if (section.content.get('cta_primary_url') or section.content.get('button_link')) == target_url %}selected{% endif %}>
-                                    📌 {{ sec.content.get('title') or sec.type|replace('_', ' ')|title }}
-                                </option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- 3. KOLEKSI GAMBAR BANNER (DESAIN MODERN & FIT) -->
-    <div class="card border mb-4 shadow-sm rounded-3">
-        <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="fw-bold small text-dark"><i class="bi bi-images me-2 text-primary"></i>GAMBAR BACKGROUND HERO SLIDER</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle extra-small">Multi-Image</span>
-        </div>
-        <div class="card-body p-3">
-            {% set bg_images = section.content.get('bg_images', []) %}
-            {% if not bg_images %}
-                {% set single_bg = section.content.get('bg_image') or section.content.get('image_url') %}
-                {% set bg_images = [single_bg] if single_bg else [] %}
-            {% endif %}
-
-            <!-- CONTAINER LIST GAMBAR -->
-            <div id="banner-images-container" class="d-flex flex-column gap-2 mb-3">
-                {% for img_url in bg_images %}
-                    <div class="p-2 border rounded-3 bg-white banner-img-row shadow-sm transition-all hover-shadow">
-                        <div class="row g-2 align-items-center">
-                            <!-- THUMBNAIL PREVIEW -->
-                            <div class="col-3 col-sm-2">
-                                <div class="ratio ratio-16x9 rounded overflow-hidden border bg-light">
-                                    <img src="{{ img_url }}" class="object-fit-cover w-100 h-100" alt="Banner Preview">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Gambar</label>
+                        <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-light border hero-preview mb-3">
+                            {% if slide.get('image') %}
+                                <img src="{{ slide.get('image') }}" class="w-100 h-100 object-fit-cover" alt="Preview Slide {{ loop.index }}">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center text-muted small">
+                                    <div class="text-center"><i class="bi bi-image fs-3 d-block mb-1"></i>Belum ada gambar</div>
                                 </div>
-                                <input type="hidden" name="existing_bg_images[]" value="{{ img_url }}">
-                            </div>
-                            <!-- INPUT UPLOAD BARU / REPLACE -->
-                            <div class="col-7 col-sm-8">
-                                <input type="file" name="hero_bg_files[]" class="form-control form-control-sm" accept="image/*">
-                                <span class="text-muted extra-small d-block mt-1">Pilih file baru jika ingin mengganti gambar ini</span>
-                            </div>
-                            <!-- TOMBOL HAPUS BARIS -->
-                            <div class="col-2 text-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-1" onclick="removeBannerRow(this)" title="Hapus Gambar">
-                                    <i class="bi bi-trash fs-6"></i>
-                                </button>
-                            </div>
+                            {% endif %}
+                        </div>
+                        <input type="hidden" name="slides[{{ loop.index0 }}][existing_image]" value="{{ slide.get('image', '') }}">
+                        <input type="file" name="slides[{{ loop.index0 }}][image]" class="form-control" accept="image/*">
+                        <div class="form-text">Gunakan gambar landscape agar hasil Hero lebih optimal.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Eyebrow</label>
+                        <input type="text" name="slides[{{ loop.index0 }}][eyebrow]" value="{{ slide.get('eyebrow', '') }}" class="form-control" placeholder="Teks pendukung">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Judul</label>
+                        <input type="text" name="slides[{{ loop.index0 }}][title]" value="{{ slide.get('title', '') }}" class="form-control" placeholder="Judul utama">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Deskripsi</label>
+                        <textarea name="slides[{{ loop.index0 }}][subtitle]" class="form-control" rows="4" placeholder="Deskripsi singkat">{{ slide.get('subtitle', '') }}</textarea>
+                    </div>
+
+                    <div class="pt-4 border-top">
+                        <div class="fw-semibold mb-3">Tombol</div>
+                        <div class="mb-3">
+                            <label class="form-label mb-2">Teks Tombol</label>
+                            <input type="text" name="slides[{{ loop.index0 }}][cta_text]" value="{{ cta.get('text', '') }}" class="form-control" placeholder="Teks tombol">
+                        </div>
+                        <div>
+                            <label class="form-label mb-2">Target Tombol</label>
+                            <select name="slides[{{ loop.index0 }}][cta_url]" class="form-select">
+                                <option value="#">-- Tanpa target --</option>
+                                {% for sec in page.sections %}
+                                    {% if sec.type not in ['navbar', 'footer'] %}
+                                        {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
+                                        {% set target_url = '#' ~ sec_nav_id %}
+                                        <option value="{{ target_url }}" {% if cta.get('url', '#') == target_url %}selected{% endif %}>
+                                            {{ sec.content.get('title') or sec.type|replace('_', ' ')|title }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
-                {% endfor %}
+                </div>
             </div>
-
-            <!-- EMPTY STATE IF NO IMAGES -->
-            <div id="empty-banner-msg" class="text-center py-4 border border-dashed rounded-3 bg-light-subtle mb-3 {% if bg_images %}d-none{% endif %}">
-                <i class="bi bi-image text-muted fs-3 d-block mb-1"></i>
-                <span class="text-muted small fw-medium">Belum ada gambar background slider.</span>
-            </div>
-
-            <!-- TOMBOL FIT TAMBAH GAMBAR -->
-            <button type="button" class="btn btn-outline-primary border-dashed w-100 py-2 rounded-3 d-flex align-items-center justify-content-center gap-2 font-semibold shadow-xs" onclick="addBannerImageRow()">
-                <i class="bi bi-plus-circle-fill fs-6"></i>
-                <span class="small fw-bold">Tambah Gambar Background</span>
-            </button>
-        </div>
+        {% endfor %}
     </div>
 
-    <!-- SUBMIT BUTTON -->
-    <div class="pt-2 border-top">
-        <button type="submit" class="btn btn-primary w-100 fw-semibold shadow-sm py-2">
-            <i class="bi bi-check-circle me-1"></i>Simpan Perubahan Hero
+    <div id="hero-empty" class="text-center border border-dashed rounded-3 py-5 text-muted {% if hero_slides %}d-none{% endif %}">
+        <i class="bi bi-images fs-2 d-block mb-2"></i>
+        <div class="small">Belum ada slide.</div>
+        <button type="button" class="btn btn-sm btn-outline-primary mt-3" onclick="addHeroSlide()">Tambah Slide</button>
+    </div>
+
+    <div class="pt-4 mt-4 border-top">
+        <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">
+            <i class="bi bi-check-circle me-1"></i>Simpan Hero
         </button>
     </div>
 </form>
 
 <style>
-    .extra-small { font-size: 0.75rem; }
-    .border-dashed { border-style: dashed !important; border-width: 1.5px !important; }
-    .btn-outline-primary.border-dashed:hover { background-color: var(--bs-primary-bg-subtle, #e0cffc); color: var(--bs-primary); }
-    .hover-shadow:hover { box-shadow: 0 .25rem .5rem rgba(0,0,0,.05)!important; }
-    .cursor-pointer { cursor: pointer; }
+    .border-dashed { border-style: dashed !important; }
+    .hero-preview img { object-fit: cover; }
 </style>
 
 <script>
-    function clearCta() {
-        document.getElementById('cta_primary_text').value = '';
-        document.getElementById('cta_primary_url').value = '#';
-    }
+    let heroSlideIndex = {{ hero_slides|length }};
 
-    function addBannerImageRow() {
-        const container = document.getElementById('banner-images-container');
-        const emptyMsg = document.getElementById('empty-banner-msg');
-
-        if (emptyMsg) emptyMsg.classList.add('d-none');
+    function addHeroSlide() {
+        const container = document.getElementById('hero-slides-container');
+        const empty = document.getElementById('hero-empty');
+        const index = heroSlideIndex++;
 
         const html = `
-            <div class="p-2 border rounded-3 bg-white banner-img-row shadow-sm transition-all hover-shadow">
-                <div class="row g-2 align-items-center">
-                    <div class="col-3 col-sm-2 text-center">
-                        <span class="badge bg-success-subtle text-success border border-success-subtle extra-small py-1 px-2">Baru</span>
-                        <input type="hidden" name="existing_bg_images[]" value="">
+            <div class="card border shadow-sm hero-slide" data-slide-index="${index}">
+                <div class="card-header py-3 px-4 d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold">Slide baru</span>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="removeHeroSlide(this)">
+                        <i class="bi bi-trash me-1"></i>Hapus
+                    </button>
+                </div>
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Gambar</label>
+                        <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-light border hero-preview mb-3">
+                            <div class="d-flex align-items-center justify-content-center text-muted small"><div class="text-center"><i class="bi bi-image fs-3 d-block mb-1"></i>Belum ada gambar</div></div>
+                        </div>
+                        <input type="hidden" name="slides[${index}][existing_image]" value="">
+                        <input type="file" name="slides[${index}][image]" class="form-control" accept="image/*">
+                        <div class="form-text">Gunakan gambar landscape agar hasil Hero lebih optimal.</div>
                     </div>
-                    <div class="col-7 col-sm-8">
-                        <input type="file" name="hero_bg_files[]" class="form-control form-control-sm" accept="image/*" required>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Eyebrow</label>
+                        <input type="text" name="slides[${index}][eyebrow]" class="form-control" placeholder="Teks pendukung">
                     </div>
-                    <div class="col-2 text-end">
-                        <button type="button" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-1" onclick="removeBannerRow(this)" title="Hapus Gambar">
-                            <i class="bi bi-trash fs-6"></i>
-                        </button>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Judul</label>
+                        <input type="text" name="slides[${index}][title]" class="form-control" placeholder="Judul utama">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Deskripsi</label>
+                        <textarea name="slides[${index}][subtitle]" class="form-control" rows="4" placeholder="Deskripsi singkat"></textarea>
+                    </div>
+                    <div class="pt-4 border-top">
+                        <div class="fw-semibold mb-3">Tombol</div>
+                        <div class="mb-3">
+                            <label class="form-label mb-2">Teks Tombol</label>
+                            <input type="text" name="slides[${index}][cta_text]" class="form-control" placeholder="Teks tombol">
+                        </div>
+                        <div>
+                            <label class="form-label mb-2">Target Tombol</label>
+                            <select name="slides[${index}][cta_url]" class="form-select">
+                                <option value="#">-- Tanpa target --</option>
+                                {% for sec in page.sections %}{% if sec.type not in ['navbar', 'footer'] %}{% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}<option value="#{{ sec_nav_id }}">{{ sec.content.get('title') or sec.type|replace('_', ' ')|title }}</option>{% endif %}{% endfor %}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>`;
+
         container.insertAdjacentHTML('beforeend', html);
+        if (empty) empty.classList.add('d-none');
+        renumberHeroSlides();
     }
 
-    function removeBannerRow(btn) {
-        const row = btn.closest('.banner-img-row');
-        row.remove();
-
-        const container = document.getElementById('banner-images-container');
-        const emptyMsg = document.getElementById('empty-banner-msg');
-        if (container && container.children.length === 0 && emptyMsg) {
-            emptyMsg.classList.remove('d-none');
-        }
+    function removeHeroSlide(btn) {
+        const row = btn.closest('.hero-slide');
+        if (row) row.remove();
+        renumberHeroSlides();
     }
 
-    function previewTargetSection(targetUrl) {
-        if (typeof scrollToSectionInPreview === 'function' && targetUrl && targetUrl !== '#') {
-            scrollToSectionInPreview('', targetUrl);
-        }
+    function renumberHeroSlides() {
+        const rows = document.querySelectorAll('#hero-slides-container .hero-slide');
+        rows.forEach((row, i) => {
+            row.dataset.slideIndex = i;
+            const label = row.querySelector('.card-header .fw-semibold');
+            if (label) label.textContent = `Slide ${i + 1}`;
+            row.querySelectorAll('[name]').forEach((field) => {
+                field.name = field.name.replace(/slides\[\d+\]/, `slides[${i}]`);
+            });
+        });
+        const empty = document.getElementById('hero-empty');
+        if (empty) empty.classList.toggle('d-none', rows.length > 0);
+        heroSlideIndex = rows.length;
     }
 </script>

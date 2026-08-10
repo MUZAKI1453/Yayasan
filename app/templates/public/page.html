@@ -53,6 +53,12 @@
         html {
             scroll-behavior: smooth;
         }
+
+        /* Reset spacing pada wrapper CMS; setiap section mengatur spacing-nya sendiri. */
+        body { margin: 0; padding: 0; }
+        main.w-full { margin: 0; padding: 0; }
+        .section-wrapper { margin: 0; padding: 0; }
+        .section-wrapper.navbar { margin: 0; padding: 0; }
     </style>
 </head>
 <body class="{% if not page.sections %}d-flex align-items-center justify-content-center min-vh-100 p-3{% else %}bg-white{% endif %}">

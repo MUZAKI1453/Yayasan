@@ -35,7 +35,7 @@
 {% endif %}
 
 <!-- TOP NAVBAR (DESKTOP & HEADER MOBILE) -->
-<nav class="w-full z-40 top-0 sticky shadow-sm transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
+<nav class="w-full z-40 top-0 sticky m-0 p-0 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
 
@@ -44,8 +44,15 @@
                 {% if section.content.get('logo_url') %}
                     <img class="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
-                <span class="font-bold text-xl tracking-tight {{ brand_text_class }}">
-                    {{ section.content.get('brand_name', 'Yayasan') }}
+                <span class="flex flex-col leading-tight">
+                    <span class="font-bold text-xl tracking-tight {{ brand_text_class }}">
+                        {{ section.content.get('brand_name', 'Yayasan') }}
+                    </span>
+                    {% if section.content.get('brand_subtitle') %}
+                        <span class="text-[11px] leading-none font-medium {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
+                            {{ section.content.get('brand_subtitle') }}
+                        </span>
+                    {% endif %}
                 </span>
             </a>
 
@@ -177,6 +184,32 @@
 </div>
 
 <style>
+    /* Navbar harus menempel ke batas section/page tanpa gap dari wrapper */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    main.w-full {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .section-wrapper.navbar {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: normal;
+    }
+
+    .section-wrapper.navbar > nav {
+        display: block;
+        position: sticky;
+        top: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
     .nav-dropdown-card {
         display: none;
         opacity: 0;

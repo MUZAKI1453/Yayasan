@@ -90,6 +90,7 @@ def edit_section(section_id):
 
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
+            content['brand_subtitle'] = request.form.get('brand_subtitle', content.get('brand_subtitle', 'Official Portal')).strip()
             content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
             content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
 
@@ -182,43 +183,48 @@ def edit_section(section_id):
                     content['nav_items'] = updated_nav_items
 
         elif section.type == 'hero':
-            content['hero_display_mode'] = request.form.get('hero_display_mode', 'banner_only').strip()
-            content['title'] = request.form.get('title', '').strip()
-            content['eyebrow'] = request.form.get('eyebrow', '').strip()
-            content['subtitle'] = request.form.get('subtitle', '').strip()
-            content['cta_primary_text'] = request.form.get('cta_primary_text', '').strip()
-            content['cta_primary_url'] = request.form.get('cta_primary_url', '#').strip()
-            content['cta_secondary_text'] = request.form.get('cta_secondary_text', '').strip()
-            content['cta_secondary_url'] = request.form.get('cta_secondary_url', '#').strip()
+            # Canonical Hero schema: one array of slides, each with its own
+            # image, text, and CTA. Legacy Hero data is accepted by the form
+            # and converted to this schema when saved.
+            slide_indices = sorted({
+                int(match.group(1))
+                for key in request.form.keys()
+                for match in [re.match(r'slides\[(\d+)\]\[', key)]
+                if match
+            })
 
-            existing_bg_images = request.form.getlist('existing_bg_images[]')
-            files = request.files.getlist('hero_bg_files[]')
+            slides = []
+            for idx in slide_indices:
+                image_url = request.form.get(f'slides[{idx}][existing_image]', '').strip()
+                uploaded_file = request.files.get(f'slides[{idx}][image]')
 
-            bg_images_list = []
-            file_idx = 0
-
-            for i in range(len(existing_bg_images)):
-                img_url = existing_bg_images[i].strip()
-
-                if file_idx < len(files) and files[file_idx] and files[file_idx].filename != '':
-                    uploaded_url = save_uploaded_file(files[file_idx])
+                if uploaded_file and uploaded_file.filename:
+                    uploaded_url = save_uploaded_file(uploaded_file)
                     if uploaded_url:
-                        img_url = uploaded_url
-                    file_idx += 1
-                elif file_idx < len(files) and (not files[file_idx] or files[file_idx].filename == ''):
-                    file_idx += 1
+                        image_url = uploaded_url
 
-                if img_url:
-                    bg_images_list.append(img_url)
+                eyebrow = request.form.get(f'slides[{idx}][eyebrow]', '').strip()
+                title = request.form.get(f'slides[{idx}][title]', '').strip()
+                subtitle = request.form.get(f'slides[{idx}][subtitle]', '').strip()
+                cta_text = request.form.get(f'slides[{idx}][cta_text]', '').strip()
+                cta_url = request.form.get(f'slides[{idx}][cta_url]', '#').strip() or '#'
 
-            while file_idx < len(files):
-                if files[file_idx] and files[file_idx].filename != '':
-                    uploaded_url = save_uploaded_file(files[file_idx])
-                    if uploaded_url:
-                        bg_images_list.append(uploaded_url)
-                file_idx += 1
+                # Keep only meaningful slides. An empty newly-added row is ignored.
+                if not any([image_url, eyebrow, title, subtitle, cta_text]):
+                    continue
 
-            content['bg_images'] = bg_images_list
+                slides.append({
+                    'image': image_url,
+                    'eyebrow': eyebrow,
+                    'title': title,
+                    'subtitle': subtitle,
+                    'cta': {
+                        'text': cta_text,
+                        'url': cta_url
+                    }
+                })
+
+            content = {'slides': slides}
 
         elif section.type == 'gallery':
             content['title'] = request.form.get('title', 'Galeri & Dokumentasi')

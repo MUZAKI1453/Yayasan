@@ -1,5 +1,5 @@
 import os, uuid
-from flask import current_app
+from flask import current_app, url_for
 from werkzeug.utils import secure_filename
 from app.models import Section
 
@@ -19,6 +19,7 @@ SECTION_NAV_NAMES = {
 DEFAULT_SECTION_CONTENTS = {
     "navbar": {
         "brand_name": "SDIP Baitussalam",
+        "brand_subtitle": "Official Portal",
         "logo_url": "",
         "nav_font_family": "Plus Jakarta Sans",
         "nav_bg_color": "#ffffff",
@@ -30,12 +31,18 @@ DEFAULT_SECTION_CONTENTS = {
         "nav_items": []
     },
     "hero": {
-        "eyebrow": "Penerimaan Peserta Didik Baru (PPDB)",
-        "title": "Membentuk Generasi Rabbani",
-        "subtitle": "Selamat datang di sekolah kami...",
-        "button_text": "Daftar Sekarang",
-        "button_link": "#sec_cta",
-        "bg_image": ""
+        "slides": [
+            {
+                "image": "",
+                "eyebrow": "",
+                "title": "",
+                "subtitle": "",
+                "cta": {
+                    "text": "",
+                    "url": "#"
+                }
+            }
+        ]
     },
     "about": {
         "eyebrow": "Profil",
@@ -187,5 +194,5 @@ def save_uploaded_file(file):
         os.makedirs(upload_folder, exist_ok=True)
         filepath = os.path.join(upload_folder, unique_filename)
         file.save(filepath)
-        return f"/static/uploads/{unique_filename}"
+        return url_for('static', filename=f'uploads/{unique_filename}')
     return None
