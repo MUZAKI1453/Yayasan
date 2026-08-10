@@ -30,6 +30,18 @@
                             </a>
                         {% endif %}
 
+                        {% if section.content.get('youtube_url') %}
+                            <a href="{{ section.content.get('youtube_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="YouTube">
+                                <i class="bi bi-youtube text-base"></i>
+                            </a>
+                        {% endif %}
+
+                        {% if section.content.get('tiktok_url') %}
+                            <a href="{{ section.content.get('tiktok_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="TikTok">
+                                <i class="bi bi-tiktok text-base"></i>
+                            </a>
+                        {% endif %}
+
                         {% if section.content.get('whatsapp_number') %}
                             <a href="https://wa.me/{{ section.content.get('whatsapp_number') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="WhatsApp">
                                 <i class="bi bi-whatsapp text-base"></i>
@@ -57,6 +69,12 @@
                         <li class="flex items-center gap-3">
                             <i class="bi bi-telephone-fill text-emerald-400 text-base flex-shrink-0"></i>
                             <span class="text-slate-300 font-medium">{{ section.content.get('phone') }}</span>
+                        </li>
+                    {% endif %}
+                    {% if section.content.get('email') %}
+                        <li class="flex items-center gap-3">
+                            <i class="bi bi-envelope-fill text-emerald-400 text-base flex-shrink-0"></i>
+                            <a href="mailto:{{ section.content.get('email') }}" class="text-slate-300 font-medium hover:text-white transition-colors">{{ section.content.get('email') }}</a>
                         </li>
                     {% endif %}
                 </ul>

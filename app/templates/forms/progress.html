@@ -43,18 +43,18 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label fw-medium small text-slate-700">Teks Tombol</label>
-                <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', section.content.get('cta_text', 'Daftar Kuota Sekarang')) }}" placeholder="Contoh: Ambil Kuota Sekarang">
+                <input type="text" name="button_text" class="form-control form-control-sm" value="{{ section.content.get('button', {}).get('text', section.content.get('button_text_1', 'Daftar Kuota Sekarang')) }}" placeholder="Contoh: Ambil Kuota Sekarang">
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-medium small text-slate-700">Target Link / Section</label>
-                <select name="button_link_1" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
+                <select name="button_url" class="form-select form-select-sm" onchange="previewTargetSection(this.value)">
                     <option value="#">-- Pilih Target Section --</option>
                     {% for sec in page.sections %}
                         {% if sec.type not in ['navbar', 'footer'] %}
                             {% set sec_nav_id = sec.content.get('nav_id') or ('sec_' ~ sec.id) %}
                             {% set sec_title = sec.content.get('title') or sec.type|replace('_', ' ')|title %}
                             {% set target_url = '#' ~ sec_nav_id %}
-                            <option value="{{ target_url }}" {% if section.content.get('button_link_1') == target_url or section.content.get('cta_url') == target_url %}selected{% endif %}>
+                            <option value="{{ target_url }}" {% if section.content.get('button', {}).get('url') == target_url or section.content.get('button_link_1') == target_url or section.content.get('cta_url') == target_url %}selected{% endif %}>
                                 📌 {{ sec_title }} ({{ sec.type }})
                             </option>
                         {% endif %}

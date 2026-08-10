@@ -27,8 +27,8 @@
         {% endif %}
 
         {# Kalkulasi Progress Kuota #}
-        {% set target = section.content.get('target', 60)|float %}
-        {% set collected = section.content.get('collected', 0)|float %}
+        {% set target = section.content.get('target_quota', section.content.get('target', 0))|float %}
+        {% set collected = section.content.get('filled_quota', section.content.get('collected', 0))|float %}
         {% set percent = (collected / target * 100) if target > 0 else 0 %}
         {% set progress_width = 100 if percent > 100 else percent %}
 
@@ -56,6 +56,16 @@
             <span class="text-gray-400 mx-1">/</span>
             Target Kuota <strong class="text-gray-900 font-bold">{{ target|int }} Siswa</strong>
         </p>
+
+        {% set button = section.content.get('button', {}) %}
+        {% if button.get('text') %}
+            <div class="mt-6">
+                <a href="{{ button.get('url', '#') }}"
+                   class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    {{ button.get('text') }}
+                </a>
+            </div>
+        {% endif %}
 
     </div>
 </section>

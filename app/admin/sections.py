@@ -253,31 +253,21 @@ def edit_section(section_id):
         elif section.type == 'about':
             content['title'] = request.form.get('title', '').strip()
             content['eyebrow'] = request.form.get('eyebrow', '').strip()
-            
-            raw_desc = request.form.get('description', request.form.get('content', '')).strip()
-            content['content'] = raw_desc
-            content['description'] = raw_desc
-
+            content['description'] = request.form.get('description', request.form.get('content', '')).strip()
             content['image_caption'] = request.form.get('image_caption', '').strip()
-            content['button_text_1'] = request.form.get('button_text_1', '').strip()
-            content['button_link_1'] = request.form.get('button_link_1', '').strip()
 
-            old_image = request.form.get('image', '').strip() or content.get('image', '') or content.get('image_url', '')
-
+            old_image = request.form.get('image', '').strip() or content.get('image_url', '') or content.get('image', '')
             uploaded_file = request.files.get('image_file')
-            if uploaded_file and uploaded_file.filename != '':
+            if uploaded_file and uploaded_file.filename:
                 saved_url = save_uploaded_file(uploaded_file)
                 if saved_url:
-                    content['image'] = saved_url
-                else:
-                    content['image'] = old_image
-            else:
-                content['image'] = old_image
+                    old_image = saved_url
+            content['image_url'] = old_image
 
-            content['image_url'] = content['image']
-            content['subtitle'] = content['eyebrow']
-            content['cta_text'] = content['button_text_1']
-            content['cta_url'] = content['button_link_1']
+            content['button'] = {
+                'text': request.form.get('button_text_1', '').strip(),
+                'url': request.form.get('button_link_1', '').strip() or '#'
+            }
 
         elif section.type == 'features':
             content['title'] = request.form.get('title', 'Keunggulan & Fasilitas Kami').strip()
@@ -304,7 +294,97 @@ def edit_section(section_id):
                     })
 
             content['items'] = features_list
-            content['features'] = features_list  # Dual-write sync
+
+        elif section.type == 'testimonial':
+            content['title'] = request.form.get('title', content.get('title', 'Testimoni')).strip()
+            content['subtitle'] = request.form.get('subtitle', content.get('subtitle', '')).strip()
+
+            item_indices = sorted({
+                int(match.group(1))
+                for key in request.form.keys()
+                for match in [re.match(r'items\[(\d+)\]\[(?:name|quote)\]$', key)]
+                if match
+            })
+
+            items = []
+            for idx in item_indices:
+                name = request.form.get(f'items[{idx}][name]', '').strip()
+                quote = request.form.get(f'items[{idx}][quote]', '').strip()
+                if name or quote:
+                    items.append({
+                        'name': name,
+                        'quote': quote
+                    })
+
+            content['items'] = items
+
+        elif section.type == 'faq':
+            content['title'] = request.form.get('title', content.get('title', 'Pertanyaan Umum (FAQ)')).strip()
+            content['subtitle'] = request.form.get('subtitle', content.get('subtitle', '')).strip()
+
+            item_indices = sorted({
+                int(match.group(1))
+                for key in request.form.keys()
+                for match in [re.match(r'items\[(\d+)\]\[(?:question|answer)\]$', key)]
+                if match
+            })
+
+            items = []
+            for idx in item_indices:
+                question = request.form.get(f'items[{idx}][question]', '').strip()
+                answer = request.form.get(f'items[{idx}][answer]', '').strip()
+                if question or answer:
+                    items.append({
+                        'question': question,
+                        'answer': answer
+                    })
+
+            content['items'] = items
+
+        elif section.type == 'cta':
+            content = {
+                'nav_id': content.get('nav_id'),
+                'title': request.form.get('title', '').strip(),
+                'subtitle': request.form.get('subtitle', '').strip(),
+                'button': {
+                    'text': request.form.get('button_text', '').strip(),
+                    'url': request.form.get('button_url', '#').strip() or '#'
+                }
+            }
+
+        elif section.type == 'progress':
+            content['title'] = request.form.get('title', 'Progress Kuota Pendaftaran').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
+
+            try:
+                content['target_quota'] = float(request.form.get('target_quota', 0) or 0)
+            except (TypeError, ValueError):
+                content['target_quota'] = 0
+
+            try:
+                content['filled_quota'] = float(request.form.get('filled_quota', 0) or 0)
+            except (TypeError, ValueError):
+                content['filled_quota'] = 0
+
+            button_text = request.form.get('button_text', request.form.get('button_text_1', '')).strip()
+            button_url = request.form.get('button_url', request.form.get('button_link_1', '#')).strip() or '#'
+            content['button'] = {
+                'text': button_text,
+                'url': button_url
+            }
+
+        elif section.type == 'footer':
+            content['title'] = request.form.get('title', '').strip()
+            content['description'] = request.form.get('description', '').strip()
+            content['address'] = request.form.get('address', '').strip()
+            content['phone'] = request.form.get('phone', '').strip()
+            content['whatsapp_number'] = request.form.get('whatsapp', '').strip()
+            content['email'] = request.form.get('email', '').strip()
+            content['facebook_url'] = request.form.get('facebook_url', '').strip()
+            content['instagram_url'] = request.form.get('instagram_url', '').strip()
+            content['youtube_url'] = request.form.get('youtube_url', '').strip()
+            content['tiktok_url'] = request.form.get('tiktok_url', '').strip()
+            content['copyright'] = request.form.get('copyright', '').strip()
 
         elif section.type == 'donation_campaign':
             content['eyebrow'] = request.form.get('eyebrow', '').strip()

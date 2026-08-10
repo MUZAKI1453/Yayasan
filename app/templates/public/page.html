@@ -108,7 +108,7 @@
                 <div id="section-{{ section.type }}" 
                      data-section-type="{{ section.type }}" 
                      data-section-id="{{ section.id }}" 
-                     class="section-wrapper {{ section.type }}">
+                     class="section-wrapper{% if section.type == 'progress' %} section-progress{% else %} {{ section.type }}{% endif %}">
                     {% include 'sections/' ~ section.type ~ '.html' ignore missing %}
                 </div>
             {% endfor %}

@@ -1,98 +1,101 @@
-<!-- FORM KHUSUS FAQ (PERTANYAAN UMUM) -->
-<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+<!-- FORM FAQ -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- JUDUL & SUBJUDUL -->
-    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
-        <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">
-                    Judul FAQ <span class="text-danger">*</span>
-                </label>
-                <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Pertanyaan yang Sering Diajukan (FAQ)') }}" required placeholder="Contoh: Pertanyaan Populer Pendaftaran">
-            </div>
-
-            <div class="col-12">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">Subjudul / Deskripsi Singkat</label>
-                <textarea name="subtitle" class="form-control form-control-sm" rows="2" placeholder="Temukan jawaban cepat atas pertanyaan yang sering diajukan di sini...">{{ section.content.get('subtitle', '') }}</textarea>
-            </div>
+    <div class="p-4 border rounded-3 bg-light-subtle mb-4">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Judul FAQ <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" value="{{ section.content.get('title', 'Pertanyaan Umum (FAQ)') }}" required placeholder="Contoh: Pertanyaan yang Sering Diajukan">
+        </div>
+        <div>
+            <label class="form-label fw-semibold">Subjudul</label>
+            <textarea name="subtitle" class="form-control" rows="2" placeholder="Deskripsi singkat FAQ">{{ section.content.get('subtitle', '') }}</textarea>
         </div>
     </div>
 
-    <!-- DAFTAR ITEM FAQ -->
     <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <span class="fw-bold text-dark small d-block">Daftar Pertanyaan & Jawaban</span>
-                <span class="text-muted" style="font-size: 0.72rem;">Tambahkan pasangan pertanyaan dan jawaban singkat</span>
+                <span class="fw-bold d-block">Daftar FAQ</span>
+                <span class="text-muted small">Tambahkan pertanyaan dan jawaban secara dinamis.</span>
             </div>
             <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFaqRow()">
-                <i class="bi bi-plus-lg me-1"></i>Tambah Pertanyaan
+                <i class="bi bi-plus-lg me-1"></i>Tambah
             </button>
         </div>
 
-        <div id="faq-container" class="d-flex flex-column gap-3">
-            {% set items = section.content.get('items', section.content.get('faqs', [])) %}
+        <div id="faq-container" class="d-flex flex-column gap-4">
+            {% set items = section.content.get('items', []) %}
             {% for item in items %}
-                {% set loop_idx = loop.index0 %}
-                <div class="p-3 border rounded-3 bg-white faq-item-card">
-                    <div class="row g-2 align-items-start">
-                        <div class="col-md-11">
-                            <div class="mb-2">
-                                <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Pertanyaan <span class="text-danger">*</span></label>
-                                <input type="text" name="items[{{ loop_idx }}][question]" value="{{ item.get('question', item.get('q', '')) }}" class="form-control form-control-sm" placeholder="Contoh: Kapan pendaftaran gelombang 1 dibuka?" required>
-                            </div>
-                            <div>
-                                <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Jawaban <span class="text-danger">*</span></label>
-                                <textarea name="items[{{ loop_idx }}][answer]" class="form-control form-control-sm" rows="3" placeholder="Tuliskan jawaban yang lengkap dan meyakinkan di sini..." required>{{ item.get('answer', item.get('a', '')) }}</textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-md-1 text-end pt-4">
-                            <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.faq-item-card').remove()" title="Hapus FAQ Ini">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
+                {% set idx = loop.index0 %}
+                <div class="p-4 border rounded-3 bg-white faq-item-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-semibold">FAQ {{ loop.index }}</span>
+                        <button type="button" class="btn btn-sm btn-light text-danger border" onclick="removeFaqRow(this)">
+                            <i class="bi bi-trash me-1"></i>Hapus
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Pertanyaan <span class="text-danger">*</span></label>
+                        <input type="text" name="items[{{ idx }}][question]" value="{{ item.get('question', item.get('q', '')) }}" class="form-control" required placeholder="Tulis pertanyaan...">
+                    </div>
+                    <div>
+                        <label class="form-label">Jawaban <span class="text-danger">*</span></label>
+                        <textarea name="items[{{ idx }}][answer]" class="form-control" rows="4" required placeholder="Tulis jawaban...">{{ item.get('answer', item.get('a', '')) }}</textarea>
                     </div>
                 </div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- ACTION BUTTONS -->
     <div class="d-flex gap-2 pt-3 border-top">
-        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan FAQ</button>
-        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary px-4">Simpan FAQ</button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4">Batal</a>
     </div>
 </form>
 
 <script>
-    let faqCounter = {{ section.content.get('items', section.content.get('faqs', []))|length }};
+(function () {
+    let faqCounter = {{ section.content.get('items', [])|length }};
 
-    function addFaqRow() {
+    function reindexFaq() {
+        document.querySelectorAll('#faq-container .faq-item-card').forEach((card, index) => {
+            card.querySelectorAll('[name]').forEach(input => {
+                input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`);
+            });
+            const label = card.querySelector('.fw-semibold');
+            if (label) label.textContent = `FAQ ${index + 1}`;
+        });
+        faqCounter = document.querySelectorAll('#faq-container .faq-item-card').length;
+    }
+
+    window.removeFaqRow = function (button) {
+        button.closest('.faq-item-card').remove();
+        reindexFaq();
+    };
+
+    window.addFaqRow = function () {
         const container = document.getElementById('faq-container');
         const idx = faqCounter++;
-        const html = `
-            <div class="p-3 border rounded-3 bg-white faq-item-card">
-                <div class="row g-2 align-items-start">
-                    <div class="col-md-11">
-                        <div class="mb-2">
-                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Pertanyaan <span class="text-danger">*</span></label>
-                            <input type="text" name="items[${idx}][question]" class="form-control form-control-sm" placeholder="Contoh: Apa saja syarat pendaftaran?" required>
-                        </div>
-                        <div>
-                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Jawaban <span class="text-danger">*</span></label>
-                            <textarea name="items[${idx}][answer]" class="form-control form-control-sm" rows="3" placeholder="Tuliskan jawaban di sini..." required></textarea>
-                        </div>
-                    </div>
-
-                    <div class="col-md-1 text-end pt-4">
-                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.faq-item-card').remove()" title="Hapus FAQ Ini">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
+        container.insertAdjacentHTML('beforeend', `
+            <div class="p-4 border rounded-3 bg-white faq-item-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-semibold">FAQ ${idx + 1}</span>
+                    <button type="button" class="btn btn-sm btn-light text-danger border" onclick="removeFaqRow(this)">
+                        <i class="bi bi-trash me-1"></i>Hapus
+                    </button>
                 </div>
-            </div>`;
-        container.insertAdjacentHTML('beforeend', html);
-    }
+                <div class="mb-3">
+                    <label class="form-label">Pertanyaan <span class="text-danger">*</span></label>
+                    <input type="text" name="items[${idx}][question]" class="form-control" required placeholder="Tulis pertanyaan...">
+                </div>
+                <div>
+                    <label class="form-label">Jawaban <span class="text-danger">*</span></label>
+                    <textarea name="items[${idx}][answer]" class="form-control" rows="4" required placeholder="Tulis jawaban..."></textarea>
+                </div>
+            </div>
+        `);
+        reindexFaq();
+    };
+})();
 </script>

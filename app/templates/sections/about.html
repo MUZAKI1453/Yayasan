@@ -1,10 +1,11 @@
 {# Mengambil ID unik bagian halaman (Prioritas: nav_id dari DB -> sec_ID_Database) #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 {% set eyebrow_text = section.content.get('eyebrow') %}
-{% set body_text = section.content.get('content') or section.content.get('description') %}
-{% set img_src = section.content.get('image') or section.content.get('image_url') or section.content.get('photo_url') %}
-{% set cta_text = section.content.get('button_text_1') or section.content.get('cta_text') %}
-{% set cta_link = section.content.get('button_link_1') or section.content.get('cta_url') %}
+{% set body_text = section.content.get('description') or section.content.get('content') %}
+{% set img_src = section.content.get('image_url') or section.content.get('image') or section.content.get('photo_url') %}
+{% set about_button = section.content.get('button', {}) %}
+{% set cta_text = about_button.get('text') or section.content.get('button_text_1') or section.content.get('cta_text') %}
+{% set cta_link = about_button.get('url') or section.content.get('button_link_1') or section.content.get('cta_url') %}
 
 <section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
     <div class="max-w-6xl mx-auto">

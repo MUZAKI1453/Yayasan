@@ -47,12 +47,15 @@ DEFAULT_SECTION_CONTENTS = {
     "about": {
         "eyebrow": "Profil",
         "title": "Tentang Kami",
-        "content": "Tuliskan deskripsi/profil di sini..."
+        "description": "Tuliskan deskripsi/profil di sini...",
+        "image_url": "",
+        "image_caption": "",
+        "button": {"text": "", "url": "#"}
     },
     "features": {
         "title": "Keunggulan Kami",
-        "item1_title": "Fasilitas Lengkap",
-        "item1_desc": "Ruang belajar nyaman & AC."
+        "subtitle": "",
+        "items": []
     },
     "donation_campaign": {
         "eyebrow": "Program Wakaf & Infaq",
@@ -94,9 +97,12 @@ DEFAULT_SECTION_CONTENTS = {
         "description": "Lembaga pendidikan Islam terpadu unggulan.",
         "address": "Jl. Pendidikan No. 123, Bandung",
         "phone": "+62 812-3456-7890",
+        "whatsapp_number": "6281234567890",
+        "email": "",
         "facebook_url": "https://facebook.com",
         "instagram_url": "https://instagram.com",
-        "whatsapp_number": "6281234567890",
+        "youtube_url": "",
+        "tiktok_url": "",
         "maps_embed_url": "",
         "copyright": "© 2026 SDIP Baitussalam. All rights reserved."
     }
