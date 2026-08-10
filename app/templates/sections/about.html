@@ -1,33 +1,61 @@
-{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{# Mengambil ID unik bagian halaman (Prioritas: nav_id dari DB -> sec_ID_Database) #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+{% set eyebrow_text = section.content.get('eyebrow') %}
+{% set body_text = section.content.get('content') or section.content.get('description') %}
+{% set img_src = section.content.get('image') or section.content.get('image_url') or section.content.get('photo_url') %}
+{% set cta_text = section.content.get('button_text_1') or section.content.get('cta_text') %}
+{% set cta_link = section.content.get('button_link_1') or section.content.get('cta_url') %}
 
 <section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
-    <div class="max-w-4xl mx-auto">
-        {# Eyebrow / Sub-judul Kecil #}
-        {% if section.content.get('eyebrow') %}
-            <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
-                {{ section.content.get('eyebrow') }}
-            </span>
-        {% endif %}
+    <div class="max-w-6xl mx-auto">
+        {# Container Utama: Grid 1 kolom di HP, 12 kolom di Desktop #}
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {# KOLOM KIRI: TEKS & JUDUL (6 atau 7 Kolom jika ada gambar) #}
+            <div class="{% if img_src %}md:col-span-7{% else %}md:col-span-12{% endif %}">
+                {# Eyebrow / Sub-heading Kecil #}
+                {% if eyebrow_text %}
+                    <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
+                        {{ eyebrow_text }}
+                    </span>
+                {% endif %}
 
-        {# Judul Utama Section #}
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 tracking-tight">
-            {{ section.content.get('title', 'Tentang Kami') }}
-        </h2>
+                {# Judul Utama Bagian #}
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 tracking-tight">
+                    {{ section.content.get('title', 'Tentang Kami') }}
+                </h2>
 
-        {# Konten Teks Deskripsi #}
-        <div class="text-gray-700 leading-relaxed space-y-4 text-lg">
-            {{ section.content.get('content', 'Deskripsi profil yayasan...')|safe }}
-        </div>
+                {# Konten Teks Deskripsi #}
+                {% if body_text %}
+                    <div class="text-gray-700 leading-relaxed space-y-4 text-base md:text-lg mb-6">
+                        {{ body_text|safe }}
+                    </div>
+                {% endif %}
 
-        {# Gambar Lampiran Profil (Opsional) #}
-        {% if section.content.get('image') %}
-            <div class="mt-8 overflow-hidden rounded-2xl shadow-md border border-gray-100">
-                <img src="{{ section.content.get('image') }}" alt="{{ section.content.get('title', 'Gambar Profil') }}" class="w-full h-auto object-cover max-h-[500px]">
-                {% if section.content.get('image_caption') %}
-                    <p class="text-sm text-gray-500 text-center py-2 bg-gray-50 border-t border-gray-100">{{ section.content.get('image_caption') }}</p>
+                {# Tombol Aksi / Call to Action (Opsional) #}
+                {% if cta_text and cta_link %}
+                    <div class="mt-6">
+                        <a href="{{ cta_link }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                            {{ cta_text }}
+                        </a>
+                    </div>
                 {% endif %}
             </div>
-        {% endif %}
+
+            {# KOLOM KANAN: GAMBAR PROFIL (5 Kolom) #}
+            {% if img_src %}
+                <div class="md:col-span-5 w-full">
+                    <div class="overflow-hidden rounded-2xl shadow-md border border-gray-100 bg-gray-50">
+                        <img src="{{ img_src }}" alt="{{ section.content.get('title', 'Gambar Profil') }}" class="w-full h-auto object-cover max-h-[450px]">
+                        {% if section.content.get('image_caption') %}
+                            <p class="text-xs md:text-sm text-gray-500 text-center py-2 bg-gray-50 border-t border-gray-100">
+                                {{ section.content.get('image_caption') }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
     </div>
 </section>

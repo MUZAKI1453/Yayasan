@@ -2,12 +2,12 @@
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- JUDUL & DESKRIPSI SEKSI -->
+    <!-- JUDUL & DESKRIPSI -->
     <div class="p-3 border rounded-3 bg-light-subtle mb-4">
         <div class="row g-3">
             <div class="col-12">
                 <label class="form-label fw-semibold small text-slate-700 mb-1">
-                    Judul Seksi Progress <span class="text-danger">*</span>
+                    Judul<span class="text-danger">*</span>
                 </label>
                 <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Progress Kuota Pendaftaran') }}" required placeholder="Contoh: Kuota Penerimaan Siswa Baru">
             </div>

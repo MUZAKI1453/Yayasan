@@ -183,9 +183,6 @@ def edit_section(section_id):
                     content['nav_items'] = updated_nav_items
 
         elif section.type == 'hero':
-            # Canonical Hero schema: one array of slides, each with its own
-            # image, text, and CTA. Legacy Hero data is accepted by the form
-            # and converted to this schema when saved.
             slide_indices = sorted({
                 int(match.group(1))
                 for key in request.form.keys()
@@ -209,7 +206,6 @@ def edit_section(section_id):
                 cta_text = request.form.get(f'slides[{idx}][cta_text]', '').strip()
                 cta_url = request.form.get(f'slides[{idx}][cta_url]', '#').strip() or '#'
 
-                # Keep only meaningful slides. An empty newly-added row is ignored.
                 if not any([image_url, eyebrow, title, subtitle, cta_text]):
                     continue
 
@@ -227,8 +223,8 @@ def edit_section(section_id):
             content = {'slides': slides}
 
         elif section.type == 'gallery':
-            content['title'] = request.form.get('title', 'Galeri & Dokumentasi')
-            content['subtitle'] = request.form.get('subtitle', '')
+            content['title'] = request.form.get('title', 'Galeri & Dokumentasi').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
 
             existing_urls = request.form.getlist('existing_photo_urls[]')
             captions = request.form.getlist('photo_captions[]')
@@ -240,6 +236,7 @@ def edit_section(section_id):
                 photo_url = existing_urls[i]
                 caption = captions[i] if i < len(captions) else ''
 
+                # Jika ada file baru diunggah untuk menggantikan foto lama/slot ini
                 if i < len(files) and files[i] and files[i].filename != '':
                     uploaded_url = save_uploaded_file(files[i])
                     if uploaded_url:
@@ -253,6 +250,96 @@ def edit_section(section_id):
 
             content['photos'] = photos_list
 
+        elif section.type == 'about':
+            content['title'] = request.form.get('title', '').strip()
+            content['eyebrow'] = request.form.get('eyebrow', '').strip()
+            
+            raw_desc = request.form.get('description', request.form.get('content', '')).strip()
+            content['content'] = raw_desc
+            content['description'] = raw_desc
+
+            content['image_caption'] = request.form.get('image_caption', '').strip()
+            content['button_text_1'] = request.form.get('button_text_1', '').strip()
+            content['button_link_1'] = request.form.get('button_link_1', '').strip()
+
+            old_image = request.form.get('image', '').strip() or content.get('image', '') or content.get('image_url', '')
+
+            uploaded_file = request.files.get('image_file')
+            if uploaded_file and uploaded_file.filename != '':
+                saved_url = save_uploaded_file(uploaded_file)
+                if saved_url:
+                    content['image'] = saved_url
+                else:
+                    content['image'] = old_image
+            else:
+                content['image'] = old_image
+
+            content['image_url'] = content['image']
+            content['subtitle'] = content['eyebrow']
+            content['cta_text'] = content['button_text_1']
+            content['cta_url'] = content['button_link_1']
+
+        elif section.type == 'features':
+            content['title'] = request.form.get('title', 'Keunggulan & Fasilitas Kami').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
+
+            item_indices = sorted(list(set(
+                re.findall(r'items\[(\d+)\]', key)[0]
+                for key in request.form.keys()
+                if key.startswith('items[')
+            )), key=int)
+
+            features_list = []
+            for idx in item_indices:
+                f_title = request.form.get(f'items[{idx}][title]', '').strip()
+                f_desc = request.form.get(f'items[{idx}][description]', request.form.get(f'items[{idx}][desc]', '')).strip()
+                f_icon = request.form.get(f'items[{idx}][icon]', 'bi-check-circle').strip()
+
+                if f_title:
+                    features_list.append({
+                        'title': f_title,
+                        'desc': f_desc,           # Untuk template publik (item.desc)
+                        'description': f_desc,    # Dual-write sync
+                        'icon': f_icon or 'bi-check-circle'
+                    })
+
+            content['items'] = features_list
+            content['features'] = features_list  # Dual-write sync
+
+        elif section.type == 'donation_campaign':
+            content['eyebrow'] = request.form.get('eyebrow', '').strip()
+            content['title'] = request.form.get('title', 'Program Donasi & Wakaf').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
+            
+            # Target & Capaian Nominal
+            content['target'] = float(request.form.get('target', 0) or 0)
+            content['collected'] = float(request.form.get('collected', 0) or 0)
+            content['bank_account'] = request.form.get('bank_account', '').strip()
+            
+            # Info Banner Konfirmasi & Telepon
+            confirm_info = request.form.get('confirm_info', '').strip()
+            admin_phone = request.form.get('admin_phone', '').strip()
+            button_text = request.form.get('button_text', 'Klik disini untuk konfirmasi').strip()
+            
+            content['confirm_info'] = confirm_info
+            content['admin_phone'] = admin_phone
+            content['button_text'] = button_text
+
+            # --- OTOMATISASI LINK WHATSAPP ---
+            # Membersihkan karakter selain angka
+            clean_phone = ''.join(filter(str.isdigit, admin_phone))
+            
+            # Mengubah format 08xx / 62xx / 8xx menjadi format Internasional 628xx
+            if clean_phone.startswith('0'):
+                clean_phone = '62' + clean_phone[1:]
+            elif clean_phone.startswith('8'):
+                clean_phone = '62' + clean_phone
+                
+            if clean_phone:
+                content['button_link'] = f"https://wa.me/{clean_phone}"
+            else:
+                content['button_link'] = request.form.get('button_link', '#').strip()
+    
         else:
             for key, value in request.form.items():
                 if key != "csrf_token" and not key.endswith("[]"):
@@ -271,8 +358,11 @@ def edit_section(section_id):
                     navbar.content = nav_content
                     flag_modified(navbar, "content")
 
+        # --- UNIVERSAL FILE UPLOADER ---
+        excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file']
+        
         for key, file in request.files.items():
-            if key not in ['gallery_files[]', 'hero_bg_files[]'] and not key.startswith('slide_bg_files_') and file and file.filename != '':
+            if key not in excluded_file_keys and not key.startswith('slide_bg_files_') and file and file.filename != '':
                 file_url = save_uploaded_file(file)
                 if file_url:
                     field_key = key.replace('_file', '')

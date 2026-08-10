@@ -1,61 +1,72 @@
-{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
-{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-gray-50/80 transition-all duration-300">
-    <div class="max-w-6xl mx-auto text-center">
-        {# Judul Utama Section #}
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            {{ section.content.get('title', 'Keunggulan Kami') }}
-        </h2>
-
-        {# Sub-Judul / Deskripsi #}
-        {% if section.content.get('subtitle') %}
-            <p class="text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed text-base md:text-lg">
-                {{ section.content.get('subtitle') }}
-            </p>
-        {% endif %}
-
-        {# Parsing Data: Mendukung Array 'items' Maupun Key Legacy 'item1_title' #}
-        {% set feature_items = section.content.get('items', []) %}
-
-        {% if not feature_items %}
-            {% set feature_items = [] %}
-            {% for i in range(1, 5) %}
-                {% set title_key = 'item' ~ i ~ '_title' %}
-                {% set desc_key = 'item' ~ i ~ '_desc' %}
-                {% set icon_key = 'item' ~ i ~ '_icon' %}
-                {% if section.content.get(title_key) %}
-                    {% set _ = feature_items.append({
-                        'title': section.content.get(title_key),
-                        'desc': section.content.get(desc_key, ''),
-                        'icon': section.content.get(icon_key, '')
-                    }) %}
+<section id="{{ section.content.get('nav_id', 'sec_features') }}" class="py-5 bg-light">
+    <div class="container py-4">
+        
+        <!-- Header Section (Judul & Subtitle) -->
+        {% if section.content.get('title') or section.content.get('subtitle') %}
+        <div class="row justify-content-center text-center mb-5">
+            <div class="col-lg-8">
+                {% if section.content.get('title') %}
+                <h2 class="fw-bold display-6 mb-3 text-dark">
+                    {{ section.content.get('title') }}
+                </h2>
                 {% endif %}
-            {% endfor %}
+                
+                {% if section.content.get('subtitle') %}
+                <p class="lead text-muted fs-5">
+                    {{ section.content.get('subtitle') }}
+                </p>
+                {% endif %}
+                <div class="mx-auto mt-3 border-top border-primary border-3" style="width: 60px;"></div>
+            </div>
+        </div>
         {% endif %}
 
-        {# Grid Layout Kartu Keunggulan #}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            {% for item in feature_items %}
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-                    <div>
-                        {# Container Ikon (Otomatis tampil jika ada ikon dari Bootstrap Icons / FontAwesome) #}
-                        {% if item.icon %}
-                            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                                <i class="{{ item.icon }} text-xl"></i>
-                            </div>
-                        {% endif %}
+        <!-- Grid Cards Keunggulan / Fitur Dinamis -->
+        <div class="row g-4 justify-content-center">
+            {% set items = section.content.get('items', section.content.get('features', [])) %}
+            
+            {% for item in items %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all rounded-4 p-3">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
+                        
+                        <!-- Icon Container -->
+                        <div class="feature-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 70px; height: 70px;">
+                            <i class="bi {{ item.get('icon', 'bi-check-circle') }} fs-2"></i>
+                        </div>
 
-                        <h3 class="font-bold text-lg text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                            {{ item.title }}
-                        </h3>
+                        <!-- Judul Fitur -->
+                        <h5 class="card-title fw-bold text-dark mb-3">
+                            {{ item.get('title', 'Fitur Unggulan') }}
+                        </h5>
 
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            {{ item.desc }}
+                        <!-- Deskripsi Fitur -->
+                        <p class="card-text text-secondary mb-0 flex-grow-1">
+                            {{ item.get('desc', item.get('description', '')) }}
                         </p>
+
                     </div>
                 </div>
+            </div>
+            {% else %}
+            <!-- Fallback Jika Belum Ada Data -->
+            <div class="col-12 text-center text-muted py-4">
+                <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+                <p class="mb-0">Belum ada fitur atau keunggulan yang ditambahkan.</p>
+            </div>
             {% endfor %}
         </div>
+
     </div>
 </section>
+
+<!-- Tambahan Styling CSS Opsional untuk Hover Effect -->
+<style>
+    .transition-all {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+    }
+</style>
