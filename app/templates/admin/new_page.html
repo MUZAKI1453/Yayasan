@@ -6,16 +6,14 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div>
-                    <h3 class="fw-bold mb-1">Buat Landing Page Baru</h3>
-                    <p class="text-muted mb-0">Pilih template yang sesuai dengan kebutuhan sekolah atau yayasan Anda.</p>
-                </div>
-                <a href="{{ url_for('admin.list_pages') }}" class="btn btn-outline-secondary">← Batal</a>
+            <!-- Header -->
+            <div class="mb-4">
+                <h3 class="fw-bold mb-1">Buat Landing Page Baru</h3>
+                <p class="text-muted mb-0">Pilih template yang sesuai dengan kebutuhan sekolah atau yayasan Anda.</p>
             </div>
 
             <form action="{{ url_for('admin.new_page') }}" method="POST">
-                <!-- 1. Input Judul Halaman -->
+                <!-- 1. Input Judul -->
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-body p-4">
                         <label class="form-label fw-bold fs-5">1. Judul Halaman / Unit *</label>
@@ -25,10 +23,10 @@
                     </div>
                 </div>
 
-                <!-- 2. Pilih Preset Template Visual -->
+                <!-- 2. Pilih Template -->
                 <h5 class="fw-bold mb-3">2. Pilih Template Landing Page Full-Page</h5>
                 <div class="row g-4 mb-4">
-                    <!-- Template 1: PPDB & Profil Sekolah -->
+                    <!-- Template 1 -->
                     <div class="col-md-4">
                         <div class="card h-100 shadow-sm border-2 rounded-4 template-card" style="cursor: pointer;" onclick="selectTemplate('template_ppdb', this)">
                             <div class="card-body p-4">
@@ -44,7 +42,7 @@
                         </div>
                     </div>
 
-                    <!-- Template 2: Profil Yayasan Utama -->
+                    <!-- Template 2 -->
                     <div class="col-md-4">
                         <div class="card h-100 shadow-sm border-2 rounded-4 template-card" style="cursor: pointer;" onclick="selectTemplate('template_yayasan', this)">
                             <div class="card-body p-4">
@@ -60,7 +58,7 @@
                         </div>
                     </div>
 
-                    <!-- Template 3: Donasi & Wakaf Pembangunan -->
+                    <!-- Template 3 -->
                     <div class="col-md-4">
                         <div class="card h-100 shadow-sm border-2 rounded-4 template-card" style="cursor: pointer;" onclick="selectTemplate('template_donasi', this)">
                             <div class="card-body p-4">
@@ -77,12 +75,14 @@
                     </div>
                 </div>
 
-                <!-- Hidden Input untuk menyimpan ID Template yang dipilih -->
+                <!-- Hidden Input -->
                 <input type="hidden" name="template_id" id="template_id" value="template_ppdb">
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill fw-bold">
-                        Buat & Buka Editor Visual →
+                <!-- Tombol Submit Minimalis & UI/UX Friendly -->
+                <div class="d-flex justify-content-end pt-2">
+                    <button type="submit" class="btn btn-primary px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 btn-ui-ux">
+                        <span>Lanjut ke Editor</span>
+                        <i class="bi bi-arrow-right small"></i>
                     </button>
                 </div>
             </form>
@@ -95,7 +95,7 @@
         transition: all 0.2s ease-in-out;
     }
     .template-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-4px);
     }
     .template-card.selected {
         border-color: #0d6efd !important;
@@ -105,6 +105,21 @@
         background-color: #0d6efd;
         color: white;
     }
+
+    /* Micro Interaction ringkas & responsif */
+    .btn-ui-ux {
+        font-size: 0.9rem;
+        transition: all 0.15s ease-in-out;
+    }
+    .btn-ui-ux:hover {
+        transform: translateX(2px);
+    }
+    @media (max-width: 576px) {
+        .btn-ui-ux {
+            width: 100%;
+            justify-content: center;
+        }
+    }
 </style>
 
 <script>
@@ -113,7 +128,6 @@
         element.classList.add('selected');
         document.getElementById('template_id').value = templateId;
     }
-    // Default terpilih pertama
     document.querySelector('.template-card').classList.add('selected');
 </script>
 {% endblock %}
