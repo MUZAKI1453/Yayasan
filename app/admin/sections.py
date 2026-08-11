@@ -90,7 +90,8 @@ def edit_section(section_id):
 
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
-            content['brand_subtitle'] = request.form.get('brand_subtitle', content.get('brand_subtitle', 'Official Portal')).strip()
+            content['brand_subtitle'] = request.form.get('brand_subtitle',
+                                                         content.get('brand_subtitle', 'Official Portal')).strip()
             content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
             content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
 
@@ -116,7 +117,8 @@ def edit_section(section_id):
                     p_text = SECTION_NAV_NAMES.get(p_text, p_text)
 
                     if p_text:
-                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith('https://') or p_url.startswith('/')):
+                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith(
+                                'https://') or p_url.startswith('/')):
                             p_url = f"#{p_url}"
                         elif not p_url:
                             p_url = "#"
@@ -144,7 +146,9 @@ def edit_section(section_id):
                             if c_text:
                                 pretty_c_text = SECTION_NAV_NAMES.get(c_text, c_text.replace('_', ' ').title())
 
-                                if c_url and not (c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith('https://') or c_url.startswith('/')):
+                                if c_url and not (
+                                        c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith(
+                                        'https://') or c_url.startswith('/')):
                                     c_url = f"#{c_url}"
                                 elif not c_url:
                                     c_url = "#"
@@ -172,12 +176,14 @@ def edit_section(section_id):
                         t_clean = text.strip()
                         if t_clean:
                             sec_url = nav_urls[i] if i < len(nav_urls) else '#'
-                            sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#', '')
+                            sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#',
+                                                                                                                  '')
 
                             updated_nav_items.append({
                                 'id': sec_id,
                                 'text': SECTION_NAV_NAMES.get(t_clean, t_clean),
-                                'url': sec_url if (sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
+                                'url': sec_url if (
+                                            sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
                                 'children': []
                             })
                     content['nav_items'] = updated_nav_items
@@ -236,7 +242,6 @@ def edit_section(section_id):
                 photo_url = existing_urls[i]
                 caption = captions[i] if i < len(captions) else ''
 
-                # Jika ada file baru diunggah untuk menggantikan foto lama/slot ini
                 if i < len(files) and files[i] and files[i].filename != '':
                     uploaded_url = save_uploaded_file(files[i])
                     if uploaded_url:
@@ -256,7 +261,8 @@ def edit_section(section_id):
             content['description'] = request.form.get('description', request.form.get('content', '')).strip()
             content['image_caption'] = request.form.get('image_caption', '').strip()
 
-            old_image = request.form.get('image', '').strip() or content.get('image_url', '') or content.get('image', '')
+            old_image = request.form.get('image', '').strip() or content.get('image_url', '') or content.get('image',
+                                                                                                             '')
             uploaded_file = request.files.get('image_file')
             if uploaded_file and uploaded_file.filename:
                 saved_url = save_uploaded_file(uploaded_file)
@@ -282,14 +288,15 @@ def edit_section(section_id):
             features_list = []
             for idx in item_indices:
                 f_title = request.form.get(f'items[{idx}][title]', '').strip()
-                f_desc = request.form.get(f'items[{idx}][description]', request.form.get(f'items[{idx}][desc]', '')).strip()
+                f_desc = request.form.get(f'items[{idx}][description]',
+                                          request.form.get(f'items[{idx}][desc]', '')).strip()
                 f_icon = request.form.get(f'items[{idx}][icon]', 'bi-check-circle').strip()
 
                 if f_title:
                     features_list.append({
                         'title': f_title,
-                        'desc': f_desc,           # Untuk template publik (item.desc)
-                        'description': f_desc,    # Dual-write sync
+                        'desc': f_desc,
+                        'description': f_desc,
                         'icon': f_icon or 'bi-check-circle'
                     })
 
@@ -378,48 +385,61 @@ def edit_section(section_id):
             content['description'] = request.form.get('description', '').strip()
             content['address'] = request.form.get('address', '').strip()
             content['phone'] = request.form.get('phone', '').strip()
-            content['whatsapp_number'] = request.form.get('whatsapp', '').strip()
+            content['whatsapp_number'] = request.form.get('whatsapp', request.form.get('whatsapp_number', '')).strip()
             content['email'] = request.form.get('email', '').strip()
+
+            # --- SOSIAL MEDIA ---
             content['facebook_url'] = request.form.get('facebook_url', '').strip()
             content['instagram_url'] = request.form.get('instagram_url', '').strip()
             content['youtube_url'] = request.form.get('youtube_url', '').strip()
             content['tiktok_url'] = request.form.get('tiktok_url', '').strip()
+
+            # --- PETA & LOKASI ---
+            content['maps_url'] = request.form.get('maps_url', request.form.get('google_maps_link', '')).strip()
+            content['maps_embed_url'] = request.form.get('maps_embed_url', request.form.get('maps_embed', '')).strip()
+
             content['copyright'] = request.form.get('copyright', '').strip()
+
+            # --- UPLOAD LOGO FOOTER ---
+            logo_file = request.files.get('logo_file') or request.files.get('logo')
+            if logo_file and logo_file.filename != '':
+                saved_logo = save_uploaded_file(logo_file)
+                if saved_logo:
+                    content['logo_url'] = saved_logo
+            else:
+                existing_logo = request.form.get('existing_logo', request.form.get('logo_url', '')).strip()
+                if existing_logo:
+                    content['logo_url'] = existing_logo
 
         elif section.type == 'donation_campaign':
             content['eyebrow'] = request.form.get('eyebrow', '').strip()
             content['title'] = request.form.get('title', 'Program Donasi & Wakaf').strip()
             content['subtitle'] = request.form.get('subtitle', '').strip()
-            
-            # Target & Capaian Nominal
+
             content['target'] = float(request.form.get('target', 0) or 0)
             content['collected'] = float(request.form.get('collected', 0) or 0)
             content['bank_account'] = request.form.get('bank_account', '').strip()
-            
-            # Info Banner Konfirmasi & Telepon
+
             confirm_info = request.form.get('confirm_info', '').strip()
             admin_phone = request.form.get('admin_phone', '').strip()
             button_text = request.form.get('button_text', 'Klik disini untuk konfirmasi').strip()
-            
+
             content['confirm_info'] = confirm_info
             content['admin_phone'] = admin_phone
             content['button_text'] = button_text
 
-            # --- OTOMATISASI LINK WHATSAPP ---
-            # Membersihkan karakter selain angka
             clean_phone = ''.join(filter(str.isdigit, admin_phone))
-            
-            # Mengubah format 08xx / 62xx / 8xx menjadi format Internasional 628xx
+
             if clean_phone.startswith('0'):
                 clean_phone = '62' + clean_phone[1:]
             elif clean_phone.startswith('8'):
                 clean_phone = '62' + clean_phone
-                
+
             if clean_phone:
                 content['button_link'] = f"https://wa.me/{clean_phone}"
             else:
                 content['button_link'] = request.form.get('button_link', '#').strip()
-    
+
         else:
             for key, value in request.form.items():
                 if key != "csrf_token" and not key.endswith("[]"):
@@ -439,8 +459,8 @@ def edit_section(section_id):
                     flag_modified(navbar, "content")
 
         # --- UNIVERSAL FILE UPLOADER ---
-        excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file']
-        
+        excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file', 'logo_file', 'logo']
+
         for key, file in request.files.items():
             if key not in excluded_file_keys and not key.startswith('slide_bg_files_') and file and file.filename != '':
                 file_url = save_uploaded_file(file)

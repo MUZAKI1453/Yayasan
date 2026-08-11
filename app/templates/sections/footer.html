@@ -1,49 +1,61 @@
 <footer id="{{ section.content.get('nav_id', 'kontak') }}" class="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800 font-sans">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- GRID UTAMA (RESPONSIF SANGAT RAPI) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-10 border-b border-slate-800">
+        <!-- GRID UTAMA (RESPONSIF UNTUK HP, TABLET, & DESKTOP) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-10 border-b border-slate-800/80">
 
-            <!-- KOLOM 1: BRAND INFO & SOSMED (5/12 DI DESKTOP) -->
+            <!-- KOLOM 1: LOGO, BRAND INFO, & SOSMED (5/12 DI DESKTOP) -->
             <div class="lg:col-span-5 space-y-4">
-                <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                    {{ section.content.get('title', 'SDIP Baitussalam') }}
-                </h3>
 
+                <!-- BRAND / LOGO & JUDUL -->
+                <div class="flex items-center gap-3">
+                    {% set logo_img = section.content.get('logo_url') or section.content.get('logo') or section.content.get('image_url') %}
+                    {% if logo_img %}
+                        <img src="{{ logo_img }}" alt="Logo {{ section.content.get('title', 'Lembaga') }}" class="h-10 sm:h-12 w-auto object-contain flex-shrink-0">
+                    {% endif %}
+
+                    <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight leading-snug">
+                        {{ section.content.get('title', 'SDIP Baitussalam') }}
+                    </h3>
+                </div>
+
+                <!-- DESKRIPSI SINGKAT -->
                 <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md">
                     {{ section.content.get('description', 'Lembaga pendidikan Islam terpadu yang mencetak generasi bertakwa, cerdas, dan berakhlaqul karimah.') }}
                 </p>
 
-                <!-- Ikon Sosmed Kotak Minimalis (Rapi di HP & Desktop) -->
+                <!-- SOSIAL MEDIA -->
                 <div class="pt-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-2.5">Media Sosial</span>
-                    <div class="flex items-center gap-2.5">
+                    <div class="flex flex-wrap items-center gap-2.5">
                         {% if section.content.get('facebook_url') %}
-                            <a href="{{ section.content.get('facebook_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="Facebook">
+                            <a href="{{ section.content.get('facebook_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Facebook">
                                 <i class="bi bi-facebook text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('instagram_url') %}
-                            <a href="{{ section.content.get('instagram_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="Instagram">
+                            <a href="{{ section.content.get('instagram_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Instagram">
                                 <i class="bi bi-instagram text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('youtube_url') %}
-                            <a href="{{ section.content.get('youtube_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="YouTube">
+                            <a href="{{ section.content.get('youtube_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="YouTube">
                                 <i class="bi bi-youtube text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('tiktok_url') %}
-                            <a href="{{ section.content.get('tiktok_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="TikTok">
+                            <a href="{{ section.content.get('tiktok_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="TikTok">
                                 <i class="bi bi-tiktok text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('whatsapp_number') %}
-                            <a href="https://wa.me/{{ section.content.get('whatsapp_number') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60" title="WhatsApp">
+                            {% set wa_num = section.content.get('whatsapp_number') %}
+                            {% set wa_link = wa_num if wa_num.startswith('http') else 'https://wa.me/' ~ wa_num %}
+                            <a href="{{ wa_link }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="WhatsApp">
                                 <i class="bi bi-whatsapp text-base"></i>
                             </a>
                         {% endif %}
@@ -61,41 +73,54 @@
                     {% if section.content.get('address') %}
                         <li class="flex items-start gap-3">
                             <i class="bi bi-geo-alt-fill text-emerald-400 text-base flex-shrink-0 mt-0.5"></i>
-                            <span class="leading-relaxed text-slate-300">{{ section.content.get('address') }}</span>
+                            <div class="flex flex-col gap-1">
+                                <span class="leading-relaxed text-slate-300">{{ section.content.get('address') }}</span>
+
+                                {# TOMBOL LINK KE GOOGLE MAPS #}
+                                {% set maps_link = section.content.get('maps_url') or section.content.get('google_maps_link') or section.content.get('maps_location_url') %}
+                                {% if maps_link %}
+                                    <a href="{{ maps_link }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors mt-0.5">
+                                        <span>Buka Petunjuk Arah</span>
+                                        <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
                         </li>
                     {% endif %}
 
                     {% if section.content.get('phone') %}
                         <li class="flex items-center gap-3">
                             <i class="bi bi-telephone-fill text-emerald-400 text-base flex-shrink-0"></i>
-                            <span class="text-slate-300 font-medium">{{ section.content.get('phone') }}</span>
+                            <a href="tel:{{ section.content.get('phone') }}" class="text-slate-300 font-medium hover:text-white transition-colors">{{ section.content.get('phone') }}</a>
                         </li>
                     {% endif %}
+
                     {% if section.content.get('email') %}
                         <li class="flex items-center gap-3">
                             <i class="bi bi-envelope-fill text-emerald-400 text-base flex-shrink-0"></i>
-                            <a href="mailto:{{ section.content.get('email') }}" class="text-slate-300 font-medium hover:text-white transition-colors">{{ section.content.get('email') }}</a>
+                            <a href="mailto:{{ section.content.get('email') }}" class="text-slate-300 font-medium hover:text-white transition-colors break-all">{{ section.content.get('email') }}</a>
                         </li>
                     {% endif %}
                 </ul>
             </div>
 
-            <!-- KOLOM 3: PETA LOKASI (4/12 DI DESKTOP, FULL WIDTH DI TABLET/MOBILE) -->
+            <!-- KOLOM 3: PETA LOKASI (4/12 DI DESKTOP) -->
             <div class="md:col-span-2 lg:col-span-4 space-y-3">
                 <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">
                     Lokasi Sekolah
                 </h4>
 
-                {% set raw_maps = section.content.get('maps_embed_url', '') %}
+                {% set raw_maps = section.content.get('maps_embed_url') or section.content.get('maps_url') or section.content.get('google_maps_embed', '') %}
 
+                {# Ekstraksi URL jika admin memasukkan kode iframe lengkap #}
                 {% if 'src="' in raw_maps %}
                     {% set maps_url = raw_maps.split('src="')[1].split('"')[0] %}
                 {% else %}
                     {% set maps_url = raw_maps %}
                 {% endif %}
 
-                {% if maps_url %}
-                    <div class="w-full h-40 rounded-xl overflow-hidden border border-slate-800 shadow-sm">
+                {% if maps_url and (maps_url.startswith('http://') or maps_url.startswith('https://')) %}
+                    <div class="w-full h-44 rounded-xl overflow-hidden border border-slate-800 shadow-sm bg-slate-800 relative group">
                         <iframe
                             src="{{ maps_url }}"
                             class="w-full h-full border-0"
@@ -105,13 +130,24 @@
                         </iframe>
                     </div>
                 {% else %}
-                    <p class="text-xs text-slate-500 italic">Peta lokasi belum diisi.</p>
+                    <!-- TAMPILAN FALLBACK JIKA EMBED PETA BELUM DIISI -->
+                    <div class="w-full p-4 rounded-xl border border-slate-800/80 bg-slate-800/40 text-center space-y-2">
+                        <i class="bi bi-map text-2xl text-slate-500 d-block"></i>
+                        <p class="text-xs text-slate-400">Peta lokasi interaktif belum dikonfigurasi.</p>
+                        {% set direct_maps = section.content.get('maps_url') or section.content.get('google_maps_link') %}
+                        {% if direct_maps %}
+                            <a href="{{ direct_maps }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <span>Lihat Peta Google Maps</span>
+                            </a>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
 
         </div>
 
-        <!-- COPYRIGHT (PRESISI EXACT CENTER DENGAN MARGIN/PADDING KECIL) -->
+        <!-- COPYRIGHT -->
         <div class="pt-6 text-center">
             <p class="text-xs text-slate-500 font-medium m-0 block">
                 {{ section.content.get('copyright', '© 2026 SDIP Baitussalam. All rights reserved.') }}
