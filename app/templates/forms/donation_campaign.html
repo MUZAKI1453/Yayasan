@@ -1,76 +1,138 @@
-<!-- FORM DONATION CAMPAIGN (AUTOMATIC WA LINK) -->
-<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST">
+<!-- FORM DONATION CAMPAIGN (MULTI-BANK & AUTO WA LINK) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- JUDUL & SUBJUDUL PROGRAM -->
-    <div class="mb-4">
+    <!-- 1. JUDUL & SUBJUDUL PROGRAM -->
+    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
         <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Label Kecil (Eyebrow)</label>
+            <label class="form-label small fw-semibold text-secondary mb-1">Label Kecil (Eyebrow)</label>
             <input type="text" name="eyebrow" class="form-control form-control-sm" value="{{ section.content.get('eyebrow', 'PROGRAM KEBAIKAN') }}" placeholder="Contoh: PROGRAM KEBAIKAN">
         </div>
 
         <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Judul Program Donasi / Wakaf <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold text-secondary mb-1">Judul Program Donasi / Wakaf <span class="text-danger">*</span></label>
             <input type="text" name="title" class="form-control form-control-sm" value="{{ section.content.get('title', 'Program Donasi & Wakaf') }}" required placeholder="Contoh: Wakaf Pembebasan Lahan">
         </div>
 
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Deskripsi Program (Subtitle)</label>
+        <div class="mb-0">
+            <label class="form-label small fw-semibold text-secondary mb-1">Deskripsi Program (Subtitle)</label>
             <textarea name="subtitle" class="form-control form-control-sm" rows="3" placeholder="Deskripsi mengenai peruntukan donasi dan urgensi program...">{{ section.content.get('subtitle', '') }}</textarea>
         </div>
     </div>
 
-    <hr class="my-4 text-muted opacity-25">
-
-    <!-- TARGET & CAPAIAN NOMINAL -->
-    <div class="mb-4">
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Target Nominal Dana (Rp)</label>
-            <div class="input-group input-group-sm">
-                <span class="input-group-text">Rp</span>
-                <input type="number" name="target" class="form-control form-control-sm" value="{{ section.content.get('target', section.content.get('target_amount', '')) }}" placeholder="500000000">
+    <!-- 2. TARGET & CAPAIAN NOMINAL -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <span class="fw-bold text-dark small d-block mb-3">TARGET & PROGRESS DANA</span>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Target Nominal Dana (Rp)</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Rp</span>
+                    <input type="number" name="target" class="form-control" value="{{ section.content.get('target', 0) }}" placeholder="500000000">
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Dana Terkumpul Saat Ini (Rp)</label>
-            <div class="input-group input-group-sm">
-                <span class="input-group-text">Rp</span>
-                <input type="number" name="collected" class="form-control form-control-sm" value="{{ section.content.get('collected', section.content.get('current_amount', section.content.get('raised_amount', ''))) }}" placeholder="150000000">
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Dana Terkumpul Saat Ini (Rp)</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Rp</span>
+                    <input type="number" name="collected" class="form-control" value="{{ section.content.get('collected', 0) }}" placeholder="150000000">
+                </div>
             </div>
         </div>
     </div>
 
-    <hr class="my-4 text-muted opacity-25">
-
-    <!-- INFORMASI REKENING & BANNER KONFIRMASI WHATSAPP -->
-    <div class="mb-4">
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Rekening Transfer Donasi</label>
-            <input type="text" name="bank_account" class="form-control form-control-sm" value="{{ section.content.get('bank_account', section.content.get('bank_info', '')) }}" placeholder="Contoh: BSI 7123456789 a.n Yayasan Baitussalam">
+    <!-- 3. MULTI REKENING BANK & QRIS -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="fw-bold text-dark small">DAFTAR REKENING BANK YAYASAN</span>
+            <button type="button" class="btn btn-outline-primary btn-sm extra-small py-1" onclick="addBankRow()">
+                <i class="bi bi-plus-circle me-1"></i>Tambah Rekening
+            </button>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Teks Informasi Konfirmasi</label>
-            <input type="text" name="confirm_info" class="form-control form-control-sm" value="{{ section.content.get('confirm_info', 'Konfirmasi transfer via Admin Keuangan Baitussalam:') }}" placeholder="Konfirmasi transfer via Admin Keuangan Baitussalam:">
-        </div>
+        {% set bank_list = section.content.get('bank_accounts', []) %}
+        {% if not bank_list and section.content.get('bank_account') %}
+            {% set bank_list = [section.content.get('bank_account')] %}
+        {% endif %}
 
-        <!-- FIELD NOMOR TELEPON ADMIN (LINK WA GENERATE OTOMATIS) -->
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Nomor Telepon Admin Keuangan</label>
-            <input type="text" name="admin_phone" class="form-control form-control-sm" value="{{ section.content.get('admin_phone', '0821-2924-1114') }}" placeholder="Contoh: 0821-2924-1114">
-            <div class="form-text text-muted" style="font-size: 0.72rem;">*Link WhatsApp tombol konfirmasi akan dibuat otomatis berdasarkan nomor ini.</div>
+        <div id="bank-accounts-container" class="d-flex flex-column gap-2 mb-3">
+            {% for bank in bank_list %}
+                <div class="input-group input-group-sm bank-row">
+                    <span class="input-group-text bg-light"><i class="bi bi-credit-card"></i></span>
+                    <input type="text" name="bank_accounts[]" class="form-control" value="{{ bank }}" placeholder="Contoh: BSI 7123456789 a.n Yayasan">
+                    <button type="button" class="btn btn-outline-danger" onclick="removeBankRow(this)"><i class="bi bi-trash"></i></button>
+                </div>
+            {% else %}
+                <div class="input-group input-group-sm bank-row">
+                    <span class="input-group-text bg-light"><i class="bi bi-credit-card"></i></span>
+                    <input type="text" name="bank_accounts[]" class="form-control" value="" placeholder="Contoh: BSI 7123456789 a.n Yayasan">
+                    <button type="button" class="btn btn-outline-danger" onclick="removeBankRow(this)"><i class="bi bi-trash"></i></button>
+                </div>
+            {% endfor %}
         </div>
+        <div class="form-text extra-small text-muted">*Ketik nama bank (seperti BSI, BCA, BRI, Mandiri, BNI) agar logo bank terdeteksi otomatis.</div>
 
-        <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Teks Tombol WA (CTA)</label>
-            <input type="text" name="button_text" class="form-control form-control-sm" value="{{ section.content.get('button_text', 'Klik disini untuk konfirmasi') }}" placeholder="Klik disini untuk konfirmasi">
+        <!-- UPLOAD QRIS -->
+        <div class="mt-3 pt-3 border-top">
+            <label class="form-label small fw-semibold text-secondary mb-1">Gambar Barcode QRIS <span class="text-muted fw-normal">(Opsional)</span></label>
+            {% if section.content.get('qris_image') %}
+                <div class="mb-2 d-flex align-items-center gap-2">
+                    <img src="{{ section.content.get('qris_image') }}" alt="QRIS" class="img-thumbnail" style="max-height: 60px;">
+                    <span class="small text-muted">QRIS Aktif</span>
+                </div>
+            {% endif %}
+            <input type="file" name="qris_file" class="form-control form-control-sm" accept="image/*">
+            <input type="hidden" name="existing_qris" value="{{ section.content.get('qris_image', '') }}">
         </div>
     </div>
 
-    <!-- TOMBOL AKSI SIMPAN -->
+    <!-- 4. KARTU KONFIRMASI WHATSAPP -->
+    <div class="p-3 border rounded-3 bg-white mb-4">
+        <span class="fw-bold text-dark small d-block mb-3">KONFIRMASI WHATSAPP ADMIN</span>
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label small fw-semibold text-secondary mb-1">Teks Informasi Konfirmasi</label>
+                <input type="text" name="confirm_info" class="form-control form-control-sm" value="{{ section.content.get('confirm_info', 'Konfirmasi transfer via Admin Keuangan:') }}" placeholder="Konfirmasi transfer via Admin Keuangan:">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Nomor WA Admin Keuangan <span class="text-danger">*</span></label>
+                <input type="text" name="admin_phone" class="form-control form-control-sm" value="{{ section.content.get('admin_phone', '') }}" placeholder="Contoh: 082129241114">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-secondary mb-1">Teks Tombol WA (CTA)</label>
+                <input type="text" name="button_text" class="form-control form-control-sm" value="{{ section.content.get('button_text', 'Klik disini untuk konfirmasi') }}" placeholder="Klik disini untuk konfirmasi">
+            </div>
+        </div>
+    </div>
+
+    <!-- TOMBOL SIMPAN -->
     <div class="d-flex gap-2 pt-3 border-top">
         <button type="submit" class="btn btn-primary btn-sm px-4">Simpan Program</button>
         <a href="{{ url_for('admin.manage_section', page_id=section.page_id) }}" class="btn btn-light btn-sm border px-4">Batal</a>
     </div>
 </form>
+
+<script>
+    function addBankRow() {
+        const container = document.getElementById('bank-accounts-container');
+        const html = `
+            <div class="input-group input-group-sm bank-row mt-2">
+                <span class="input-group-text bg-light"><i class="bi bi-credit-card"></i></span>
+                <input type="text" name="bank_accounts[]" class="form-control" value="" placeholder="Contoh: BCA 1234567890 a.n Yayasan">
+                <button type="button" class="btn btn-outline-danger" onclick="removeBankRow(this)"><i class="bi bi-trash"></i></button>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeBankRow(btn) {
+        const rows = document.querySelectorAll('.bank-row');
+        if (rows.length > 1) {
+            btn.closest('.bank-row').remove();
+        } else {
+            btn.closest('.bank-row').querySelector('input').value = '';
+        }
+    }
+</script>

@@ -412,15 +412,34 @@ def edit_section(section_id):
                     content['logo_url'] = existing_logo
 
         elif section.type == 'donation_campaign':
-            content['eyebrow'] = request.form.get('eyebrow', '').strip()
+            content['eyebrow'] = request.form.get('eyebrow', 'PROGRAM KEBAIKAN').strip()
             content['title'] = request.form.get('title', 'Program Donasi & Wakaf').strip()
             content['subtitle'] = request.form.get('subtitle', '').strip()
 
-            content['target'] = float(request.form.get('target', 0) or 0)
-            content['collected'] = float(request.form.get('collected', 0) or 0)
-            content['bank_account'] = request.form.get('bank_account', '').strip()
+            # Target & Capaian Nominal
+            try:
+                content['target'] = float(request.form.get('target', 0) or 0)
+            except (TypeError, ValueError):
+                content['target'] = 0
 
-            confirm_info = request.form.get('confirm_info', '').strip()
+            try:
+                content['collected'] = float(request.form.get('collected', 0) or 0)
+            except (TypeError, ValueError):
+                content['collected'] = 0
+
+            # --- MULTI REKENING BANK ---
+            bank_accounts = request.form.getlist('bank_accounts[]')
+            clean_banks = [b.strip() for b in bank_accounts if b.strip()]
+
+            single_bank = request.form.get('bank_account', '').strip()
+            if single_bank and single_bank not in clean_banks:
+                clean_banks.insert(0, single_bank)
+
+            content['bank_accounts'] = clean_banks
+            content['bank_account'] = clean_banks[0] if clean_banks else ''
+
+            # --- INFORMASI KONFIRMASI & TELEPON ADMIN ---
+            confirm_info = request.form.get('confirm_info', 'Konfirmasi transfer via Admin Keuangan:').strip()
             admin_phone = request.form.get('admin_phone', '').strip()
             button_text = request.form.get('button_text', 'Klik disini untuk konfirmasi').strip()
 
@@ -428,8 +447,8 @@ def edit_section(section_id):
             content['admin_phone'] = admin_phone
             content['button_text'] = button_text
 
+            # --- GENERATE LINK WHATSAPP ---
             clean_phone = ''.join(filter(str.isdigit, admin_phone))
-
             if clean_phone.startswith('0'):
                 clean_phone = '62' + clean_phone[1:]
             elif clean_phone.startswith('8'):
@@ -439,6 +458,15 @@ def edit_section(section_id):
                 content['button_link'] = f"https://wa.me/{clean_phone}"
             else:
                 content['button_link'] = request.form.get('button_link', '#').strip()
+
+            # --- UPLOAD GAMBAR BARCODE QRIS ---
+            qris_file = request.files.get('qris_file')
+            if qris_file and qris_file.filename != '':
+                saved_qris = save_uploaded_file(qris_file)
+                if saved_qris:
+                    content['qris_image'] = saved_qris
+            else:
+                content['qris_image'] = request.form.get('existing_qris', content.get('qris_image', '')).strip()
 
         else:
             for key, value in request.form.items():
@@ -459,7 +487,7 @@ def edit_section(section_id):
                     flag_modified(navbar, "content")
 
         # --- UNIVERSAL FILE UPLOADER ---
-        excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file', 'logo_file', 'logo']
+        excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file', 'logo_file', 'logo', 'qris_file']
 
         for key, file in request.files.items():
             if key not in excluded_file_keys and not key.startswith('slide_bg_files_') and file and file.filename != '':
