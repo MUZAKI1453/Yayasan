@@ -3,10 +3,11 @@ from flask import current_app, url_for
 from werkzeug.utils import secure_filename
 from app.models import Section
 
-# Pemetaan Nama Publik Default berdasarkan Jenis Section
+# 1. Pemetaan Nama Publik Default berdasarkan Jenis Section (DITAMBAHKAN vision_mission)
 SECTION_NAV_NAMES = {
     "hero": "Beranda",
     "about": "Profil",
+    "vision_mission": "Visi & Misi",
     "features": "Keunggulan",
     "donation_campaign": "Donasi",
     "progress": "Progress",
@@ -16,6 +17,7 @@ SECTION_NAV_NAMES = {
     "cta": "PPDB"
 }
 
+# 2. Konten Default untuk Masing-masing Section (DITAMBAHKAN vision_mission)
 DEFAULT_SECTION_CONTENTS = {
     "navbar": {
         "brand_name": "SDIP Baitussalam",
@@ -51,6 +53,13 @@ DEFAULT_SECTION_CONTENTS = {
         "image_url": "",
         "image_caption": "",
         "button": {"text": "", "url": "#"}
+    },
+    "vision_mission": {
+        "eyebrow": "Arah & Tujuan",
+        "title": "Visi & Misi Yayasan",
+        "subtitle": "Komitmen kami dalam membimbing dan membangun generasi Rabbani.",
+        "visi": "Menjadi lembaga pendidikan dan yayasan Islam yang unggul, terpercaya, serta mencetak generasi berakhlaqul karimah.",
+        "misi": "<ul class='list-disc list-inside space-y-2 text-slate-600'><li>Menyelenggarakan pendidikan Islam terpadu yang berkualitas.</li><li>Membentuk karakter siswa yang mandiri dan berwawasan luas.</li><li>Mengelola amanah umat secara transparan dan profesional.</li></ul>"
     },
     "features": {
         "title": "Keunggulan Kami",
@@ -108,9 +117,10 @@ DEFAULT_SECTION_CONTENTS = {
     }
 }
 
+# 3. Susunan Preset Template (DITAMBAHKAN vision_mission di template_yayasan)
 PRESET_TEMPLATES = {
-    "template_ppdb": ["navbar", "hero", "about", "features", "progress", "gallery", "testimonial", "faq", "cta", "footer"],
-    "template_yayasan": ["navbar", "hero", "about", "features", "cta", "footer"],
+    "template_ppdb": ["navbar", "hero", "about", "vision_mission", "features", "progress", "gallery", "testimonial", "faq", "cta", "footer"],
+    "template_yayasan": ["navbar", "hero", "about", "vision_mission", "features", "cta", "footer"],
     "template_donasi": ["navbar", "hero", "donation_campaign", "faq", "footer"]
 }
 

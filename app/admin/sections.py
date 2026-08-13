@@ -89,11 +89,11 @@ def edit_section(section_id):
         content = dict(section.content or {})
 
         if section.type == 'navbar':
-            content['brand_name'] = request.form.get('brand_name', content.get('brand_name', ''))
+            content['brand_name'] = request.form.get('brand_name', content.get('brand_name', '')).strip()
             content['brand_subtitle'] = request.form.get('brand_subtitle',
                                                          content.get('brand_subtitle', 'Official Portal')).strip()
-            content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', ''))
-            content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', ''))
+            content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', '')).strip()
+            content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', '')).strip()
 
             content['nav_font_family'] = request.form.get('nav_font_family', 'Plus Jakarta Sans')
             content['nav_bg_color'] = request.form.get('nav_bg_color', '#ffffff')
@@ -274,6 +274,17 @@ def edit_section(section_id):
                 'text': request.form.get('button_text_1', '').strip(),
                 'url': request.form.get('button_link_1', '').strip() or '#'
             }
+
+        # --- TERKINI: HANDLER UNTUK SECTION VISION_MISSION ---
+        elif section.type == 'vision_mission':
+            content['eyebrow'] = request.form.get('eyebrow', 'Arah & Tujuan').strip()
+            content['title'] = request.form.get('title', 'Visi & Misi').strip()
+            content['subtitle'] = request.form.get('subtitle', '').strip()
+            content['visi'] = request.form.get('visi', '').strip()
+
+            # Menangkap array poin-poin misi dari input dinamis misi[]
+            misi_items = request.form.getlist('misi[]')
+            content['misi'] = [m.strip() for m in misi_items if m.strip()]
 
         elif section.type == 'features':
             content['title'] = request.form.get('title', 'Keunggulan & Fasilitas Kami').strip()
@@ -473,18 +484,19 @@ def edit_section(section_id):
                 if key != "csrf_token" and not key.endswith("[]"):
                     content[key] = value
 
-            nav_id = content.get('nav_id')
-            if nav_id and 'title' in content:
-                navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
-                if navbar:
-                    nav_content = dict(navbar.content or {})
-                    nav_items = nav_content.get('nav_items', [])
-                    for item in nav_items:
-                        if item.get('id') == nav_id or item.get('url') == f"#{nav_id}":
-                            item['text'] = content['title']
-                    nav_content['nav_items'] = nav_items
-                    navbar.content = nav_content
-                    flag_modified(navbar, "content")
+        # SINKRONISASI UPDATE JUDUL SECTION KE NAVBAR LINK AUTOMATIS
+        nav_id = content.get('nav_id')
+        if nav_id and 'title' in content:
+            navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
+            if navbar:
+                nav_content = dict(navbar.content or {})
+                nav_items = nav_content.get('nav_items', [])
+                for item in nav_items:
+                    if item.get('id') == nav_id or item.get('url') == f"#{nav_id}":
+                        item['text'] = content['title']
+                nav_content['nav_items'] = nav_items
+                navbar.content = nav_content
+                flag_modified(navbar, "content")
 
         # --- UNIVERSAL FILE UPLOADER ---
         excluded_file_keys = ['gallery_files[]', 'hero_bg_files[]', 'image_file', 'logo_file', 'logo', 'qris_file']

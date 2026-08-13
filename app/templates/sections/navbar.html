@@ -37,19 +37,23 @@
 <!-- TOP NAVBAR (DESKTOP & HEADER MOBILE) -->
 <nav class="w-full z-40 top-0 sticky m-0 p-0 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 items-center">
+        <!-- TINGGI NAVBAR DITINGKATKAN DARI h-16 MENJADI h-20 md:h-24 -->
+        <div class="flex justify-between h-20 md:h-24 items-center">
 
-            <!-- Brand / Logo -->
-            <a href="/" class="flex-shrink-0 flex items-center gap-2.5 text-decoration-none group">
+            <!-- Brand / Logo (UKURAN LOGO DIPERBESAR TAMPIL DOMINAN) -->
+            <a href="/" class="flex-shrink-0 flex items-center gap-3 text-decoration-none group py-2">
                 {% if section.content.get('logo_url') %}
-                    <img class="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
+                    <!-- GAMBAR LOGO DIPERBESAR DARI h-8 MENJADI h-12 md:h-16 -->
+                    <img class="h-12 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
                 <span class="flex flex-col leading-tight">
-                    <span class="font-bold text-xl tracking-tight {{ brand_text_class }}">
+                    <!-- TEKS NAMA YAYASAN DIBESARKAN KE text-xl md:text-2xl -->
+                    <span class="font-bold text-xl md:text-2xl tracking-tight {{ brand_text_class }}">
                         {{ section.content.get('brand_name', 'Yayasan') }}
                     </span>
                     {% if section.content.get('brand_subtitle') %}
-                        <span class="text-[11px] leading-none font-medium {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
+                        <!-- SUBTITLE DIBESARKAN KE text-xs -->
+                        <span class="text-xs leading-none font-medium mt-0.5 {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
                             {{ section.content.get('brand_subtitle') }}
                         </span>
                     {% endif %}
@@ -107,7 +111,7 @@
 
                 <!-- CTA Button Desktop -->
                 {% if section.content.get('button_text_1') %}
-                    <a href="{{ section.content.get('button_link_1', '#') }}" onclick="handleNavClick(event, '{{ section.content.get('button_link_1', '#') }}')" class="px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-decoration-none ms-3" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
+                    <a href="{{ section.content.get('button_link_1', '#') }}" onclick="handleNavClick(event, '{{ section.content.get('button_link_1', '#') }}')" class="px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-decoration-none ms-3" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
                         {{ section.content.get('button_text_1') }}
                     </a>
                 {% endif %}
@@ -265,7 +269,7 @@
                 closeAllMobileSubmenus();
 
                 // Smooth Scroll dengan offset header agar tidak tertutup navbar sticky
-                const navbarOffset = 70;
+                const navbarOffset = 90; // Penyesuaian offset untuk navbar yang lebih tinggi
                 const elementPosition = targetElement.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - navbarOffset;
 

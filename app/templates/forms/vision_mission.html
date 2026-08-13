@@ -1,0 +1,133 @@
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" class="needs-validation" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- Eyebrow / Label Kecil di Atas Judul -->
+    <div class="mb-3">
+        <label for="eyebrow" class="form-label small fw-semibold">Label Atas (Eyebrow)</label>
+        <input type="text" class="form-control form-control-sm" id="eyebrow" name="eyebrow"
+               value="{{ section.content.get('eyebrow', 'Arah & Tujuan') }}"
+               placeholder="Contoh: ARAH & TUJUAN">
+    </div>
+
+    <!-- Judul Section -->
+    <div class="mb-3">
+        <label for="title" class="form-label small fw-semibold">Judul Section <span class="text-danger">*</span></label>
+        <input type="text" class="form-control form-control-sm" id="title" name="title"
+               value="{{ section.content.get('title', 'Visi & Misi') }}" required
+               placeholder="Contoh: Visi & Misi Yayasan">
+    </div>
+
+    <!-- Subtitle / Deskripsi Singkat -->
+    <div class="mb-3">
+        <label for="subtitle" class="form-label small fw-semibold">Deskripsi Singkat (Subtitle)</label>
+        <textarea class="form-control form-control-sm" id="subtitle" name="subtitle" rows="2"
+                  placeholder="Deskripsi singkat mengenai visi misi...">{{ section.content.get('subtitle', '') }}</textarea>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Konten Visi -->
+    <div class="mb-4">
+        <label for="visi" class="form-label small fw-semibold text-primary">
+            <i class="bi bi-eye-fill me-1"></i> Visi Utama <span class="text-danger">*</span>
+        </label>
+        <textarea class="form-control form-control-sm" id="visi" name="visi" rows="3" required
+                  placeholder="Tuliskan pernyataan Visi utama di sini...">{{ section.content.get('visi', '') }}</textarea>
+    </div>
+
+    <!-- Konten Misi (Dinamis Poin demi Poin) -->
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label small fw-semibold text-success mb-0">
+                <i class="bi bi-list-check me-1"></i> Poin-Poin Misi <span class="text-danger">*</span>
+            </label>
+            <button type="button" class="btn btn-xs btn-outline-success fw-semibold" id="btn-add-misi">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Poin Misi
+            </button>
+        </div>
+
+        <div id="misi-container" class="d-flex flex-column gap-2">
+            {% set misi_data = section.content.get('misi', []) %}
+
+            {% if misi_data is string %}
+                {% set misi_list = misi_data.split('\n') %}
+            {% else %}
+                {% set misi_list = misi_data %}
+            {% endif %}
+
+            {% for item in misi_list %}
+                {% if item and item.strip() %}
+                <div class="input-group input-group-sm misi-item">
+                    <span class="input-group-text bg-light text-muted fw-bold index-num">{{ loop.index }}</span>
+                    <input type="text" name="misi[]" class="form-control form-control-sm"
+                           value="{{ item.strip() }}" placeholder="Tuliskan poin misi di sini..." required>
+                    <button type="button" class="btn btn-outline-danger remove-misi-btn" title="Hapus Poin">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="input-group input-group-sm misi-item">
+                    <span class="input-group-text bg-light text-muted fw-bold index-num">1</span>
+                    <input type="text" name="misi[]" class="form-control form-control-sm"
+                           placeholder="Tuliskan poin misi di sini..." required>
+                    <button type="button" class="btn btn-outline-danger remove-misi-btn" title="Hapus Poin">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Tombol Simpan -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-sm btn-light border">Batal</a>
+        <button type="submit" class="btn btn-sm btn-primary">
+            <i class="bi bi-save me-1"></i> Simpan Perubahan
+        </button>
+    </div>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("misi-container");
+    const addBtn = document.getElementById("btn-add-misi");
+
+    function updateIndexes() {
+        const items = container.querySelectorAll(".misi-item");
+        items.forEach((item, index) => {
+            const numSpan = item.querySelector(".index-num");
+            if (numSpan) numSpan.textContent = index + 1;
+        });
+    }
+
+    if (addBtn && container) {
+        addBtn.addEventListener("click", function () {
+            const totalItems = container.querySelectorAll(".misi-item").length;
+            const newItem = document.createElement("div");
+            newItem.className = "input-group input-group-sm misi-item";
+            newItem.innerHTML = `
+                <span class="input-group-text bg-light text-muted fw-bold index-num">${totalItems + 1}</span>
+                <input type="text" name="misi[]" class="form-control form-control-sm" placeholder="Tuliskan poin misi di sini..." required>
+                <button type="button" class="btn btn-outline-danger remove-misi-btn" title="Hapus Poin">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(newItem);
+            updateIndexes();
+        });
+
+        container.addEventListener("click", function (e) {
+            if (e.target.closest(".remove-misi-btn")) {
+                const items = container.querySelectorAll(".misi-item");
+                if (items.length > 1) {
+                    e.target.closest(".misi-item").remove();
+                    updateIndexes();
+                } else {
+                    alert("Minimal harus ada 1 poin misi!");
+                }
+            }
+        });
+    }
+});
+</script>

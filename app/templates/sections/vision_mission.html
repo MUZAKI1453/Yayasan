@@ -1,0 +1,83 @@
+{# Mengambil ID unik section #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+{% set eyebrow = section.content.get('eyebrow', 'ARAH & STRATEGI INSTITUSI') %}
+{% set title = section.content.get('title', 'Visi & Misi Yayasan') %}
+{% set subtitle = section.content.get('subtitle') %}
+{% set visi_text = section.content.get('visi') %}
+{% set misi_data = section.content.get('misi', []) %}
+
+{# Normalisasi Data Misi #}
+{% if misi_data is string %}
+    {% set misi_list = misi_data.split('\n') %}
+{% else %}
+    {% set misi_list = misi_data %}
+{% endif %}
+
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b-2 border-black">
+    <div class="max-w-6xl mx-auto">
+
+        {# Header Polos & Tegas #}
+        <div class="mb-16 border-b-2 border-black pb-8">
+            {% if eyebrow %}
+                <span class="text-xs font-black tracking-widest text-neutral-400 uppercase block mb-2">
+                    {{ eyebrow }}
+                </span>
+            {% endif %}
+
+            <h2 class="text-3xl sm:text-5xl font-black text-black uppercase tracking-tight">
+                {{ title }}
+            </h2>
+
+            {% if subtitle %}
+                <p class="mt-4 text-neutral-700 text-base sm:text-lg font-medium max-w-3xl">
+                    {{ subtitle }}
+                </p>
+            {% endif %}
+        </div>
+
+        {# Grid 2 Kolom Bergaris Tegas #}
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+
+            {# KOLOM VISI #}
+            <div class="md:col-span-5 border-l-4 border-black pl-6 py-1">
+                <span class="text-xs font-black uppercase tracking-widest text-neutral-400 block mb-2">
+                    [ 01 ] VISI
+                </span>
+                <h3 class="text-xl font-black text-black uppercase mb-4 tracking-wide">
+                    Visi Utama
+                </h3>
+                <p class="text-black text-lg sm:text-xl font-bold leading-relaxed">
+                    {{ visi_text if visi_text else 'Menjadi lembaga pendidikan Islam unggul yang menghasilkan lulusan berakhlaq mulia, berilmu, dan berdaya saing.' }}
+                </p>
+            </div>
+
+            {# KOLOM MISI #}
+            <div class="md:col-span-7 border-l-4 border-black pl-6 py-1">
+                <span class="text-xs font-black uppercase tracking-widest text-neutral-400 block mb-2">
+                    [ 02 ] MISI
+                </span>
+                <h3 class="text-xl font-black text-black uppercase mb-6 tracking-wide">
+                    Misi Strategis
+                </h3>
+
+                <div class="space-y-4">
+                    {% set count = namespace(val=1) %}
+                    {% for item in misi_list %}
+                        {% if item and item.strip() %}
+                            <div class="flex items-start gap-4 pb-4 border-b border-neutral-200 last:border-0 last:pb-0">
+                                <span class="text-sm font-black text-black pt-0.5">
+                                    {{ "%02d." % count.val }}
+                                </span>
+                                <p class="text-black text-base font-bold leading-relaxed">
+                                    {{ item.strip() }}
+                                </p>
+                            </div>
+                            {% set count.val = count.val + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
