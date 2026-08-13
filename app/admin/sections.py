@@ -93,7 +93,13 @@ def edit_section(section_id):
             content['brand_subtitle'] = request.form.get('brand_subtitle',
                                                          content.get('brand_subtitle', 'Official Portal')).strip()
             content['button_text_1'] = request.form.get('button_text_1', content.get('button_text_1', '')).strip()
-            content['button_link_1'] = request.form.get('button_link_1', content.get('button_link_1', '')).strip()
+
+            # --- HYBRID LINKING FOR CTA BUTTON ---
+            btn_link = request.form.get('button_link_1', content.get('button_link_1', '')).strip()
+            if btn_link and not (btn_link.startswith('#') or btn_link.startswith('/') or btn_link.startswith(
+                    'http://') or btn_link.startswith('https://')):
+                btn_link = f"#{btn_link}"
+            content['button_link_1'] = btn_link or '#'
 
             content['nav_font_family'] = request.form.get('nav_font_family', 'Plus Jakarta Sans')
             content['nav_bg_color'] = request.form.get('nav_bg_color', '#ffffff')
@@ -117,8 +123,9 @@ def edit_section(section_id):
                     p_text = SECTION_NAV_NAMES.get(p_text, p_text)
 
                     if p_text:
-                        if p_url and not (p_url.startswith('#') or p_url.startswith('http://') or p_url.startswith(
-                                'https://') or p_url.startswith('/')):
+                        # Helper penata URL Hybrid (Mendukung /halaman, http, dan #section)
+                        if p_url and not (p_url.startswith('#') or p_url.startswith('/') or p_url.startswith(
+                                'http://') or p_url.startswith('https://')):
                             p_url = f"#{p_url}"
                         elif not p_url:
                             p_url = "#"
@@ -146,19 +153,19 @@ def edit_section(section_id):
                             if c_text:
                                 pretty_c_text = SECTION_NAV_NAMES.get(c_text, c_text.replace('_', ' ').title())
 
-                                if c_url and not (
-                                        c_url.startswith('#') or c_url.startswith('http://') or c_url.startswith(
-                                        'https://') or c_url.startswith('/')):
+                                if c_url and not (c_url.startswith('#') or c_url.startswith('/') or c_url.startswith(
+                                        'http://') or c_url.startswith('https://')):
                                     c_url = f"#{c_url}"
                                 elif not c_url:
                                     c_url = "#"
+
                                 children.append({
                                     'text': pretty_c_text,
                                     'url': c_url
                                 })
 
                         parent_item = {
-                            'id': f"sec_{p_url.replace('#', '')}",
+                            'id': f"sec_{p_url.replace('#', '').replace('/', '_')}",
                             'text': p_text,
                             'url': p_url,
                             'children': children
@@ -175,15 +182,19 @@ def edit_section(section_id):
                     for i, text in enumerate(nav_texts):
                         t_clean = text.strip()
                         if t_clean:
-                            sec_url = nav_urls[i] if i < len(nav_urls) else '#'
+                            sec_url = nav_urls[i].strip() if i < len(nav_urls) else '#'
+                            if sec_url and not (
+                                    sec_url.startswith('#') or sec_url.startswith('/') or sec_url.startswith('http')):
+                                sec_url = f"#{sec_url}"
+
                             sec_id = nav_ids[i] if (i < len(nav_ids) and nav_ids[i].strip()) else sec_url.replace('#',
-                                                                                                                  '')
+                                                                                                                  '').replace(
+                                '/', '_')
 
                             updated_nav_items.append({
                                 'id': sec_id,
                                 'text': SECTION_NAV_NAMES.get(t_clean, t_clean),
-                                'url': sec_url if (
-                                            sec_url.startswith('#') or sec_url.startswith('http')) else f"#{sec_url}",
+                                'url': sec_url or '#',
                                 'children': []
                             })
                     content['nav_items'] = updated_nav_items
@@ -275,14 +286,12 @@ def edit_section(section_id):
                 'url': request.form.get('button_link_1', '').strip() or '#'
             }
 
-        # --- TERKINI: HANDLER UNTUK SECTION VISION_MISSION ---
         elif section.type == 'vision_mission':
             content['eyebrow'] = request.form.get('eyebrow', 'Arah & Tujuan').strip()
             content['title'] = request.form.get('title', 'Visi & Misi').strip()
             content['subtitle'] = request.form.get('subtitle', '').strip()
             content['visi'] = request.form.get('visi', '').strip()
 
-            # Menangkap array poin-poin misi dari input dinamis misi[]
             misi_items = request.form.getlist('misi[]')
             content['misi'] = [m.strip() for m in misi_items if m.strip()]
 
@@ -399,19 +408,16 @@ def edit_section(section_id):
             content['whatsapp_number'] = request.form.get('whatsapp', request.form.get('whatsapp_number', '')).strip()
             content['email'] = request.form.get('email', '').strip()
 
-            # --- SOSIAL MEDIA ---
             content['facebook_url'] = request.form.get('facebook_url', '').strip()
             content['instagram_url'] = request.form.get('instagram_url', '').strip()
             content['youtube_url'] = request.form.get('youtube_url', '').strip()
             content['tiktok_url'] = request.form.get('tiktok_url', '').strip()
 
-            # --- PETA & LOKASI ---
             content['maps_url'] = request.form.get('maps_url', request.form.get('google_maps_link', '')).strip()
             content['maps_embed_url'] = request.form.get('maps_embed_url', request.form.get('maps_embed', '')).strip()
 
             content['copyright'] = request.form.get('copyright', '').strip()
 
-            # --- UPLOAD LOGO FOOTER ---
             logo_file = request.files.get('logo_file') or request.files.get('logo')
             if logo_file and logo_file.filename != '':
                 saved_logo = save_uploaded_file(logo_file)
@@ -427,7 +433,6 @@ def edit_section(section_id):
             content['title'] = request.form.get('title', 'Program Donasi & Wakaf').strip()
             content['subtitle'] = request.form.get('subtitle', '').strip()
 
-            # Target & Capaian Nominal
             try:
                 content['target'] = float(request.form.get('target', 0) or 0)
             except (TypeError, ValueError):
@@ -438,7 +443,6 @@ def edit_section(section_id):
             except (TypeError, ValueError):
                 content['collected'] = 0
 
-            # --- MULTI REKENING BANK ---
             bank_accounts = request.form.getlist('bank_accounts[]')
             clean_banks = [b.strip() for b in bank_accounts if b.strip()]
 
@@ -449,7 +453,6 @@ def edit_section(section_id):
             content['bank_accounts'] = clean_banks
             content['bank_account'] = clean_banks[0] if clean_banks else ''
 
-            # --- INFORMASI KONFIRMASI & TELEPON ADMIN ---
             confirm_info = request.form.get('confirm_info', 'Konfirmasi transfer via Admin Keuangan:').strip()
             admin_phone = request.form.get('admin_phone', '').strip()
             button_text = request.form.get('button_text', 'Klik disini untuk konfirmasi').strip()
@@ -458,7 +461,6 @@ def edit_section(section_id):
             content['admin_phone'] = admin_phone
             content['button_text'] = button_text
 
-            # --- GENERATE LINK WHATSAPP ---
             clean_phone = ''.join(filter(str.isdigit, admin_phone))
             if clean_phone.startswith('0'):
                 clean_phone = '62' + clean_phone[1:]
@@ -470,7 +472,6 @@ def edit_section(section_id):
             else:
                 content['button_link'] = request.form.get('button_link', '#').strip()
 
-            # --- UPLOAD GAMBAR BARCODE QRIS ---
             qris_file = request.files.get('qris_file')
             if qris_file and qris_file.filename != '':
                 saved_qris = save_uploaded_file(qris_file)
