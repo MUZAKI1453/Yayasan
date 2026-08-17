@@ -1,185 +1,214 @@
-<!-- FORM KHUSUS NAVBAR (DROPDOWN & DYNAMIC HYBRID LINKING) -->
-<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data">
+<!-- FORM EDITOR NAVBAR (ULTRA COMPACT & RESPONSIVE UX) -->
+<form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data" class="editor-navbar-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- BRAND NAME, SUBTITLE & LOGO -->
-    <div class="p-3 border rounded-3 bg-light-subtle mb-4">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">
-                    Brand Name <span class="text-danger">*</span>
-                </label>
-                <input type="text" name="brand_name" class="form-control form-control-sm" value="{{ section.content.get('brand_name', '') }}" required placeholder="Masukkan Nama Brand / Lembaga">
-            </div>
-
-            <!-- FIELD BRAND SUBTITLE -->
-            <div class="col-md-6">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">
-                    Tagline
-                </label>
-                <input type="text" name="brand_subtitle" class="form-control form-control-sm" value="{{ section.content.get('brand_subtitle', 'Official Portal') }}" placeholder="Contoh: Official Portal / Sekolah Penggerak">
-            </div>
-
-            <div class="col-12">
-                <label class="form-label fw-semibold small text-slate-700 mb-1">Logo Brand</label>
-                <input type="file" name="logo_url_file" class="form-control form-control-sm mb-2" accept="image/*">
-
-                {% if section.content.get('logo_url') %}
-                    <div class="d-flex align-items-center gap-3 p-2 bg-white border rounded-2">
-                        <div class="p-1 border rounded bg-light d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
-                            <img src="{{ section.content.get('logo_url') }}" class="mw-100 mh-100 object-fit-contain" alt="Logo Preview">
-                        </div>
-                        <div class="lh-1">
-                            <span class="d-block text-dark fw-medium small mb-1">Logo Aktif Saat Ini</span>
-                            <span class="text-muted" style="font-size: 0.72rem;">Ditampilkan pada bagian header navbar</span>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+    <!-- SEGMENTED CONTROL TABS (SANGAT RINGKAS DI SIDEBAR) -->
+    <div class="bg-light p-1 rounded-3 border mb-3">
+        <ul class="nav nav-pills nav-fill gap-1" id="navTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active py-1.5 px-2 fw-medium border-0 rounded-2 text-truncate" id="tab-brand" data-bs-toggle="tab" data-bs-target="#panel-brand" type="button" role="tab" style="font-size: 0.78rem;">
+                    <i class="bi bi-building me-1"></i>Brand
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-1.5 px-2 fw-medium border-0 rounded-2 text-truncate" id="tab-menu" data-bs-toggle="tab" data-bs-target="#panel-menu" type="button" role="tab" style="font-size: 0.78rem;">
+                    <i class="bi bi-list-nested me-1"></i>Navigasi
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-1.5 px-2 fw-medium border-0 rounded-2 text-truncate" id="tab-theme" data-bs-toggle="tab" data-bs-target="#panel-theme" type="button" role="tab" style="font-size: 0.78rem;">
+                    <i class="bi bi-palette me-1"></i>Tema
+                </button>
+            </li>
+        </ul>
     </div>
 
-    <!-- PENGATURAN TEMA NAVBAR -->
-    <div class="border rounded-3 p-3 bg-white mb-4">
-        <div class="d-flex align-items-center gap-2 mb-3">
-            <i class="bi bi-palette text-primary"></i>
-            <span class="fw-bold text-dark small">TEMA & TAMPILAN NAVBAR</span>
-        </div>
-
-        <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label small text-muted mb-1">Jenis Font Navbar</label>
-                <select name="nav_font_family" class="form-select form-select-sm">
-                    <option value="Plus Jakarta Sans" {% if section.content.get('nav_font_family') == 'Plus Jakarta Sans' or not section.content.get('nav_font_family') %}selected{% endif %}>Plus Jakarta Sans (Clean & Modern)</option>
-                    <option value="Poppins" {% if section.content.get('nav_font_family') == 'Poppins' %}selected{% endif %}>Poppins (Geometric)</option>
-                    <option value="Inter" {% if section.content.get('nav_font_family') == 'Inter' %}selected{% endif %}>Inter (Minimalist UI)</option>
-                    <option value="Outfit" {% if section.content.get('nav_font_family') == 'Outfit' %}selected{% endif %}>Outfit (Tech / Modern)</option>
-                    <option value="Roboto" {% if section.content.get('nav_font_family') == 'Roboto' %}selected{% endif %}>Roboto (Professional)</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Background Navbar</label>
-                <div class="input-group input-group-sm">
-                    <input type="color" id="bg_picker" class="form-control form-control-color p-1" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_hex').value = this.value">
-                    <input type="text" id="bg_hex" name="nav_bg_color" class="form-control" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_picker').value = this.value">
+    <div class="tab-content" id="navTabContent">
+        <!-- ================= TAB 1: BRAND & LOGO ================= -->
+        <div class="tab-pane fade show active" id="panel-brand" role="tabpanel">
+            <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
+                <div class="mb-2.5">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size: 0.75rem;">Nama Brand <span class="text-danger">*</span></label>
+                    <input type="text" name="brand_name" class="form-control form-control-sm" value="{{ section.content.get('brand_name', '') }}" required placeholder="SDIP Baitussalam">
                 </div>
-            </div>
 
-            <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Warna Teks Menu</label>
-                <select name="nav_text_color" class="form-select form-select-sm">
-                    <option value="dark" {% if section.content.get('nav_text_color') == 'dark' or not section.content.get('nav_text_color') %}selected{% endif %}>Teks Gelap (#1e293b)</option>
-                    <option value="light" {% if section.content.get('nav_text_color') == 'light' %}selected{% endif %}>Teks Terang/Putih (#ffffff)</option>
-                </select>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Background Tombol CTA</label>
-                <div class="input-group input-group-sm">
-                    <input type="color" id="btn_bg_picker" class="form-control form-control-color p-1" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_hex').value = this.value">
-                    <input type="text" id="btn_bg_hex" name="button_bg_color" class="form-control" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_picker').value = this.value">
+                <div class="mb-2.5">
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size: 0.75rem;">Tagline / Subtitle</label>
+                    <input type="text" name="brand_subtitle" class="form-control form-control-sm" value="{{ section.content.get('brand_subtitle', 'Official Portal') }}" placeholder="Official Portal">
                 </div>
-            </div>
 
-            <div class="col-md-6">
-                <label class="form-label small text-muted mb-1">Warna Teks Tombol CTA</label>
-                <div class="input-group input-group-sm">
-                    <input type="color" id="btn_txt_picker" class="form-control form-control-color p-1" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_hex').value = this.value">
-                    <input type="text" id="btn_txt_hex" name="button_text_color" class="form-control" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_picker').value = this.value">
+                <div>
+                    <label class="form-label fw-semibold text-dark mb-1" style="font-size: 0.75rem;">Logo Brand</label>
+                    <input type="file" name="logo_url_file" class="form-control form-control-sm mb-2" accept="image/*">
+
+                    {% if section.content.get('logo_url') %}
+                        <div class="d-flex align-items-center gap-2 p-1.5 bg-light border rounded-2">
+                            <div class="p-1 bg-white border rounded d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; flex-shrink: 0;">
+                                <img src="{{ section.content.get('logo_url') }}" class="mw-100 mh-100 object-fit-contain" alt="Logo">
+                            </div>
+                            <div class="lh-1 overflow-hidden">
+                                <span class="d-block text-dark fw-medium text-truncate" style="font-size: 0.75rem;">Logo Aktif</span>
+                                <span class="text-muted text-truncate" style="font-size: 0.68rem;">Header logo</span>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- DAFTAR LINK NAVIGASI & DROPDOWN HYBRID -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <div>
-                <span class="fw-bold text-dark small d-block">Struktur Menu Navigasi & Dropdown</span>
-                <span class="text-muted" style="font-size: 0.72rem;">Bisa dihubungkan ke Section Halaman (#) maupun Link Halaman Lain (/halaman)</span>
+        <!-- ================= TAB 2: MENU NAVIGASI (ACCORDION COMPACT) ================= -->
+        <div class="tab-pane fade" id="panel-menu" role="tabpanel">
+            <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded-3 border">
+                <span class="fw-bold text-dark" style="font-size: 0.78rem;">Daftar Menu Navigasi</span>
+                <button type="button" class="btn btn-primary btn-xs py-1 px-2 rounded-2 fw-medium d-flex align-items-center gap-1" style="font-size: 0.72rem;" onclick="addParentNavRow()">
+                    <i class="bi bi-plus-lg"></i><span>Tambah Menu</span>
+                </button>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addParentNavRow()">
-                <i class="bi bi-plus-lg me-1"></i>Tambah Menu Utama
-            </button>
-        </div>
 
-        <div id="nav-items-container" class="d-flex flex-column gap-3">
-            {% set nav_items = section.content.get('nav_items', []) %}
-            {% for item in nav_items %}
-                {% set outer_loop_index = loop.index0 %}
-                <div class="p-3 border rounded-3 bg-light-subtle parent-nav-card" data-index="{{ outer_loop_index }}">
-                    <!-- PARENT MENU INPUT -->
-                    <div class="row g-2 align-items-center mb-2">
-                        <div class="col-5">
-                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Nama Menu Utama</label>
-                            <input type="text" name="nav_parents[{{ outer_loop_index }}][text]" value="{{ item.text }}" class="form-control form-control-sm" placeholder="Misal: Profil">
-                        </div>
-                        <div class="col-5">
-                            <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Target Section / Link Halaman</label>
-                            <input type="text" list="section-urls-list" name="nav_parents[{{ outer_loop_index }}][url]" value="{{ item.url }}" class="form-control form-control-sm" placeholder="Pilih #section atau ketik /link..." onchange="previewTargetSection(this.value)">
-                        </div>
-                        <div class="col-2 text-end pt-3">
-                            <button type="button" class="btn btn-sm btn-outline-danger border w-100" onclick="this.closest('.parent-nav-card').remove()" title="Hapus Menu Ini">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
+            <!-- CONTAINER CARD ACCORDION -->
+            <div id="nav-items-container" class="d-flex flex-column gap-2 mb-3">
+                {% set nav_items = section.content.get('nav_items', []) %}
+                {% for item in nav_items %}
+                    {% set outer_loop_index = loop.index0 %}
+                    <div class="border rounded-3 bg-white shadow-sm parent-nav-card overflow-hidden" data-index="{{ outer_loop_index }}">
 
-                    <!-- SUB-MENU / DROPDOWN CONTAINER -->
-                    <div class="ps-3 border-start border-2 border-primary mt-2 ms-1">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-secondary fw-semibold" style="font-size: 0.75rem;">
-                                <i class="bi bi-arrow-return-right me-1"></i>Sub-Menu Dropdown
-                            </span>
-                            <button type="button" class="btn btn-xs btn-link text-decoration-none p-0 fw-semibold" onclick="addChildNavRow(this, {{ outer_loop_index }})">
-                                + Tambah Sub-item
-                            </button>
+                        <!-- BARIS HEADER SUMMARY (DAPAT DI-CLICK UNTUK COLLAPSE/EXPAND) -->
+                        <div class="p-2 bg-light d-flex align-items-center justify-content-between cursor-pointer border-bottom" onclick="toggleCardBody(this)">
+                            <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                <i class="bi bi-grip-vertical text-muted"></i>
+                                <span class="fw-semibold text-dark text-truncate menu-title-preview" style="font-size: 0.78rem;">
+                                    {{ item.text if item.text else 'Menu Tanpa Judul' }}
+                                </span>
+                                {% set children_count = (item.get('children') or item.get('sub_items') or [])|length %}
+                                {% if children_count > 0 %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.62rem;">
+                                        {{ children_count }} sub
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <button type="button" class="btn btn-xs btn-link text-danger p-0 border-0 me-1" onclick="event.stopPropagation(); this.closest('.parent-nav-card').remove();" title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <i class="bi bi-chevron-down text-muted chevron-icon" style="font-size: 0.7rem; transition: transform 0.2s;"></i>
+                            </div>
                         </div>
 
-                        <div class="children-container d-flex flex-column gap-2">
-                            {% set children = item.get('children') or item.get('sub_items') or [] %}
-                            {% for child in children %}
-                                <div class="row g-2 align-items-center child-nav-row">
-                                    <div class="col-5">
-                                        <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][text]" value="{{ child.text }}" class="form-control form-control-sm bg-white" placeholder="Nama Sub-Menu">
-                                    </div>
-                                    <div class="col-5">
-                                        <input type="text" list="section-urls-list" name="nav_parents[{{ outer_loop_index }}][children][][url]" value="{{ child.url }}" class="form-control form-control-sm bg-white" placeholder="Pilih #section atau ketik /link..." onchange="previewTargetSection(this.value)">
-                                    </div>
-                                    <div class="col-2 text-end">
-                                        <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.child-nav-row').remove()">
-                                            <i class="bi bi-x"></i>
-                                        </button>
-                                    </div>
+                        <!-- BODY CARD (DEFAULT COLLAPSED UNTUK MENJAGA KEBERSIHAN UI) -->
+                        <div class="card-body-content p-2" style="display: none;">
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <input type="text" name="nav_parents[{{ outer_loop_index }}][text]" value="{{ item.text }}" class="form-control form-control-sm" placeholder="Nama Menu" oninput="updateMenuTitlePreview(this)">
                                 </div>
-                            {% endfor %}
+                                <div class="col-6">
+                                    <input type="text" list="section-urls-list" name="nav_parents[{{ outer_loop_index }}][url]" value="{{ item.url }}" class="form-control form-control-sm" placeholder="Target #section" onchange="previewTargetSection(this.value)">
+                                </div>
+                            </div>
+
+                            <!-- SUB-MENU SECTION -->
+                            <div class="p-2 bg-light rounded-2 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                    <span class="text-muted fw-semibold" style="font-size: 0.68rem;">Sub-Menu Dropdown</span>
+                                    <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1.5 fw-medium" style="font-size: 0.65rem;" onclick="addChildNavRow(this, {{ outer_loop_index }})">
+                                        + Sub
+                                    </button>
+                                </div>
+
+                                <div class="children-container d-flex flex-column gap-1.5">
+                                    {% set children = item.get('children') or item.get('sub_items') or [] %}
+                                    {% for child in children %}
+                                        <div class="d-flex align-items-center gap-1 child-nav-row bg-white p-1.5 border rounded">
+                                            <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][text]" value="{{ child.text }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                                            <input type="text" list="section-urls-list" name="nav_parents[{{ outer_loop_index }}][children][][url]" value="{{ child.url }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Link #">
+                                            <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: TEMA & CTA ================= -->
+        <div class="tab-pane fade" id="panel-theme" role="tabpanel">
+            <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
+                <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Navbar</span>
+
+                <div class="mb-2.5">
+                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Font Family</label>
+                    <select name="nav_font_family" class="form-select form-select-sm">
+                        <option value="Plus Jakarta Sans" {% if section.content.get('nav_font_family') == 'Plus Jakarta Sans' or not section.content.get('nav_font_family') %}selected{% endif %}>Plus Jakarta Sans</option>
+                        <option value="Poppins" {% if section.content.get('nav_font_family') == 'Poppins' %}selected{% endif %}>Poppins</option>
+                        <option value="Inter" {% if section.content.get('nav_font_family') == 'Inter' %}selected{% endif %}>Inter</option>
+                        <option value="Outfit" {% if section.content.get('nav_font_family') == 'Outfit' %}selected{% endif %}>Outfit</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-2.5">
+                    <div class="col-6">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Background</label>
+                        <div class="input-group input-group-sm">
+                            <input type="color" id="bg_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_hex').value = this.value">
+                            <input type="text" id="bg_hex" name="nav_bg_color" class="form-control px-1" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_picker').value = this.value">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Warna Teks</label>
+                        <select name="nav_text_color" class="form-select form-select-sm">
+                            <option value="dark" {% if section.content.get('nav_text_color') == 'dark' or not section.content.get('nav_text_color') %}selected{% endif %}>Dark</option>
+                            <option value="light" {% if section.content.get('nav_text_color') == 'light' %}selected{% endif %}>Light</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="my-2.5">
+
+                <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Tombol Utama (CTA)</span>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}" placeholder="Teks Tombol">
+                    </div>
+                    <div class="col-6">
+                        <input type="text" list="section-urls-list" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '#') }}" placeholder="Target #">
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Bg Tombol</label>
+                        <div class="input-group input-group-sm">
+                            <input type="color" id="btn_bg_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_hex').value = this.value">
+                            <input type="text" id="btn_bg_hex" name="button_bg_color" class="form-control px-1" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_picker').value = this.value">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Teks Tombol</label>
+                        <div class="input-group input-group-sm">
+                            <input type="color" id="btn_txt_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_hex').value = this.value">
+                            <input type="text" id="btn_txt_hex" name="button_text_color" class="form-control px-1" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_picker').value = this.value">
                         </div>
                     </div>
                 </div>
-            {% endfor %}
+            </div>
         </div>
     </div>
 
-    <!-- ACTION BUTTON / CTA -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label class="form-label fw-medium small text-slate-700">Teks Tombol Aksi (CTA)</label>
-            <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}" placeholder="Contoh: Hubungi Kami">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label fw-medium small text-slate-700">Target Section / Link CTA</label>
-            <input type="text" list="section-urls-list" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '#') }}" placeholder="Pilih #section atau ketik /link..." onchange="previewTargetSection(this.value)">
-        </div>
-    </div>
-
-    <div class="d-flex gap-2 pt-3 border-top">
-        <button type="submit" class="btn btn-primary px-4 fw-medium">Simpan Perubahan Navbar</button>
-        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light border px-4 text-secondary">Batal</a>
+    <!-- STICKY ACTION BUTTON -->
+    <div class="p-2 border-top bg-white position-sticky bottom-0 mt-3 d-flex gap-2 z-3 shadow-lg rounded-top-3">
+        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold py-1.5" style="font-size: 0.8rem;">
+            <i class="bi bi-check2-circle me-1"></i>Simpan Navbar
+        </button>
+        <a href="{{ url_for('admin.manage_section', page_id=page.id) }}" class="btn btn-light btn-sm border text-secondary px-3 py-1.5" style="font-size: 0.8rem;">Batal</a>
     </div>
 </form>
 
-<!-- DATALIST SUGESTI UNTUK AUTOCOMPLETE LINK SECTION/HALAMAN -->
+<!-- DATALIST SUGESTI SUDAH DISIMPAN DI BAWAH -->
 <datalist id="section-urls-list">
     <option value="#"># (Dropdown Parent / No Link)</option>
     {% for sec in page.sections %}
@@ -200,36 +229,59 @@
         }
     }
 
+    function toggleCardBody(headerEl) {
+        const cardBody = headerEl.nextElementSibling;
+        const chevron = headerEl.querySelector('.chevron-icon');
+        if (cardBody.style.display === 'none' || !cardBody.style.display) {
+            cardBody.style.display = 'block';
+            if(chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+            cardBody.style.display = 'none';
+            if(chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    function updateMenuTitlePreview(inputEl) {
+        const card = inputEl.closest('.parent-nav-card');
+        const previewEl = card.querySelector('.menu-title-preview');
+        if (previewEl) {
+            previewEl.textContent = inputEl.value.trim() || 'Menu Tanpa Judul';
+        }
+    }
+
     function addParentNavRow() {
         const container = document.getElementById('nav-items-container');
         const idx = parentNavCounter++;
         const html = `
-            <div class="p-3 border rounded-3 bg-light-subtle parent-nav-card" data-index="${idx}">
-                <div class="row g-2 align-items-center mb-2">
-                    <div class="col-5">
-                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Nama Menu Utama</label>
-                        <input type="text" name="nav_parents[${idx}][text]" class="form-control form-control-sm" placeholder="Misal: Layanan">
+            <div class="border rounded-3 bg-white shadow-sm parent-nav-card overflow-hidden" data-index="${idx}">
+                <div class="p-2 bg-light d-flex align-items-center justify-content-between cursor-pointer border-bottom" onclick="toggleCardBody(this)">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
+                        <i class="bi bi-grip-vertical text-muted"></i>
+                        <span class="fw-semibold text-dark text-truncate menu-title-preview" style="font-size: 0.78rem;">Menu Baru</span>
                     </div>
-                    <div class="col-5">
-                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Target Section / Link Halaman</label>
-                        <input type="text" list="section-urls-list" name="nav_parents[${idx}][url]" class="form-control form-control-sm" placeholder="Pilih #section atau ketik /link..." onchange="previewTargetSection(this.value)">
-                    </div>
-                    <div class="col-2 text-end pt-3">
-                        <button type="button" class="btn btn-sm btn-outline-danger border w-100" onclick="this.closest('.parent-nav-card').remove()">
+                    <div class="d-flex align-items-center gap-1">
+                        <button type="button" class="btn btn-xs btn-link text-danger p-0 border-0 me-1" onclick="event.stopPropagation(); this.closest('.parent-nav-card').remove();">
                             <i class="bi bi-trash"></i>
                         </button>
+                        <i class="bi bi-chevron-down text-muted chevron-icon" style="font-size: 0.7rem; transform: rotate(180deg); transition: transform 0.2s;"></i>
                     </div>
                 </div>
-                <div class="ps-3 border-start border-2 border-primary mt-2 ms-1">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-secondary fw-semibold" style="font-size: 0.75rem;">
-                            <i class="bi bi-arrow-return-right me-1"></i>Sub-Menu Dropdown
-                        </span>
-                        <button type="button" class="btn btn-xs btn-link text-decoration-none p-0 fw-semibold" onclick="addChildNavRow(this, ${idx})">
-                            + Tambah Sub-item
-                        </button>
+                <div class="card-body-content p-2" style="display: block;">
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <input type="text" name="nav_parents[${idx}][text]" class="form-control form-control-sm" placeholder="Nama Menu" oninput="updateMenuTitlePreview(this)">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" list="section-urls-list" name="nav_parents[${idx}][url]" class="form-control form-control-sm" placeholder="Target #section" onchange="previewTargetSection(this.value)">
+                        </div>
                     </div>
-                    <div class="children-container d-flex flex-column gap-2"></div>
+                    <div class="p-2 bg-light rounded-2 border">
+                        <div class="d-flex justify-content-between align-items-center mb-1.5">
+                            <span class="text-muted fw-semibold" style="font-size: 0.68rem;">Sub-Menu Dropdown</span>
+                            <button type="button" class="btn btn-xs btn-outline-primary py-0 px-1.5 fw-medium" style="font-size: 0.65rem;" onclick="addChildNavRow(this, ${idx})">+ Sub</button>
+                        </div>
+                        <div class="children-container d-flex flex-column gap-1.5"></div>
+                    </div>
                 </div>
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
@@ -238,18 +290,12 @@
     function addChildNavRow(btn, parentIndex) {
         const container = btn.closest('.parent-nav-card').querySelector('.children-container');
         const html = `
-            <div class="row g-2 align-items-center child-nav-row">
-                <div class="col-5">
-                    <input type="text" name="nav_parents[${parentIndex}][children][][text]" class="form-control form-control-sm bg-white" placeholder="Nama Sub-Menu">
-                </div>
-                <div class="col-5">
-                    <input type="text" list="section-urls-list" name="nav_parents[${parentIndex}][children][][url]" class="form-control form-control-sm bg-white" placeholder="Pilih #section atau ketik /link..." onchange="previewTargetSection(this.value)">
-                </div>
-                <div class="col-2 text-end">
-                    <button type="button" class="btn btn-sm btn-light text-danger border w-100" onclick="this.closest('.child-nav-row').remove()">
-                        <i class="bi bi-x"></i>
-                    </button>
-                </div>
+            <div class="d-flex align-items-center gap-1 child-nav-row bg-white p-1.5 border rounded">
+                <input type="text" name="nav_parents[${parentIndex}][children][][text]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                <input type="text" list="section-urls-list" name="nav_parents[${parentIndex}][children][][url]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Link #">
+                <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
     }

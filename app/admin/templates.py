@@ -129,88 +129,125 @@ PRESET_TEMPLATES = {
 
 def generate_nav_items_for_page(page_id):
     """
-    Fungsi Reaktif & Hybrid: Membaca seluruh section yang ada di database untuk halaman tertentu,
-    lalu menghasilkan list nav_items (mengabaikan navbar & footer) lengkap dengan array children
-    untuk dukungan menu dropdown dan tautan halaman internal/eksternal.
+    Fungsi Reaktif: Membaca seluruh section yang ada di database untuk halaman tertentu,
+    dan mempertahankan struktur menu dropdown (Parent & Children) agar tidak terurai kembali.
     """
     sections = Section.query.filter_by(page_id=page_id).order_by(Section.order.asc()).all()
 
-    # Ambil navbar yang ada jika ada (untuk mempertahankan urutan & custom link yang dibuat user)
     navbar_sec = Section.query.filter_by(page_id=page_id, type="navbar").first()
     existing_items = navbar_sec.content.get("nav_items", []) if (navbar_sec and navbar_sec.content) else []
-    existing_map = {item.get("id"): item for item in existing_items if isinstance(item, dict) and item.get("id")}
 
-    nav_items = []
+    # Kumpulkan semua ID yang sudah ada di navbar (baik Top-Level maupun Child Submenu)
+    all_existing_ids = set()
+    for item in existing_items:
+        if isinstance(item, dict):
+            if item.get("id"):
+                all_existing_ids.add(item["id"])
+            for child in item.get("children", []):
+                if isinstance(child, dict) and child.get("id"):
+                    all_existing_ids.add(child["id"])
 
-    for sec in sections:
-        # PENGECUALIAN: Navbar & Footer tidak dibuatkan tombol menu utama tersendiri secara otomatis
-        if sec.type in ["navbar", "footer"]:
-            continue
+    # Jika navbar sudah ada, kita amankan struktur lama dan hanya tambahkan section baru jika ada
+    if existing_items:
+        new_items_to_add = []
+        for sec in sections:
+            if sec.type in ["navbar", "footer"]:
+                continue
 
-        content = sec.content or {}
-        nav_id = content.get("nav_id")
+            content = sec.content or {}
+            nav_id = content.get("nav_id")
 
-        # Jika section lama belum memiliki nav_id, generate secara otomatis
-        if not nav_id:
-            nav_id = f"sec_{uuid.uuid4().hex[:8]}"
-            content["nav_id"] = nav_id
-            sec.content = content
+            if not nav_id:
+                nav_id = f"sec_{uuid.uuid4().hex[:8]}"
+                content["nav_id"] = nav_id
+                sec.content = content
 
-        # Cek jika section ini sudah pernah diatur di navbar sebelumnya
-        if nav_id in existing_map:
-            item_data = existing_map[nav_id]
-            nav_items.append({
-                "id": nav_id,
-                "text": item_data.get("text", SECTION_NAV_NAMES.get(sec.type, sec.type.title())),
-                "url": item_data.get("url", f"#{nav_id}"),
-                "children": item_data.get("children", [])
-            })
-        else:
-            # Tentukan teks menu default (Prioritas: title dari content -> SECTION_NAV_NAMES -> format nama type)
-            raw_title = content.get("title") or SECTION_NAV_NAMES.get(sec.type, sec.type.replace('_', ' ').title())
-            nav_text = SECTION_NAV_NAMES.get(raw_title, raw_title)
+            # Jika section ini belum terdaftar di mana pun (baik top level maupun child dropdown)
+            if nav_id not in all_existing_ids:
+                raw_title = content.get("title") or SECTION_NAV_NAMES.get(sec.type, sec.type.replace('_', ' ').title())
+                nav_text = SECTION_NAV_NAMES.get(raw_title, raw_title)
+                new_items_to_add.append({
+                    "id": nav_id,
+                    "text": nav_text,
+                    "url": f"#{nav_id}",
+                    "children": []
+                })
 
-            nav_items.append({
-                "id": nav_id,
-                "text": nav_text,
-                "url": f"#{nav_id}",
-                "children": []
-            })
+        return existing_items + new_items_to_add
 
-    return nav_items
+    # Jika belum ada navbar, fallback panggil get_preset_sections
+    return []
 
 
 def get_preset_sections(preset_key):
     """
-    Menghasilkan list tuple (section_type, content_dict) saat awal pembuatan campaign baru.
+    SISTEM AUTO-GROUPING DROPDOWN:
+    Menghasilkan susunan section awal dengan pembagian menu yang ringkas:
+    - Top Level : Beranda (Hero), PPDB (CTA) / Donasi
+    - Sub-Menu  : Dikelompokkan ke Dropdown "Informasi" (Profil, Visi Misi, Keunggulan, Galeri, FAQ, dll)
     """
     section_types = PRESET_TEMPLATES.get(preset_key, PRESET_TEMPLATES["template_ppdb"])
 
     generated_sections = []
-    nav_items = []
     section_instances = []
+
+    # Tipe section yang berhak tampil langsung di Menu Utama (Top Level)
+    TOP_LEVEL_TYPES = ["hero", "cta", "donation_campaign"]
+
+    top_nav_items = []
+    info_children = []
 
     for sec_type in section_types:
         content = DEFAULT_SECTION_CONTENTS.get(sec_type, {}).copy()
 
-        # PENGECUALIAN: Footer & Navbar diabaikan dari daftar tombol menu otomatis
         if sec_type not in ["navbar", "footer"]:
             nav_id = f"sec_{uuid.uuid4().hex[:8]}"
             content["nav_id"] = nav_id
-
             nav_text = SECTION_NAV_NAMES.get(sec_type, sec_type.replace('_', ' ').title())
-            nav_items.append({
-                "id": nav_id,
-                "text": nav_text,
-                "url": f"#{nav_id}",
-                "children": []  # Menyiapkan struktur dropdown
-            })
+
+            if sec_type in TOP_LEVEL_TYPES:
+                top_nav_items.append({
+                    "id": nav_id,
+                    "text": nav_text,
+                    "url": f"#{nav_id}",
+                    "children": []
+                })
+            else:
+                # Section pendukung otomatis masuk ke Sub-Menu Dropdown "Informasi"
+                info_children.append({
+                    "id": nav_id,
+                    "text": nav_text,
+                    "url": f"#{nav_id}"
+                })
 
         section_instances.append((sec_type, content))
 
+    # Gabungkan menjadi struktur akhir Nav Items
+    final_nav_items = []
+
+    # 1. Masukkan "Beranda" / Hero dulu jika ada
+    hero_item = next((item for item in top_nav_items if item["text"] == "Beranda"), None)
+    if hero_item:
+        final_nav_items.append(hero_item)
+
+    # 2. Sisipkan Dropdown Parent "Informasi"
+    if info_children:
+        final_nav_items.append({
+            "id": f"sec_{uuid.uuid4().hex[:8]}",
+            "text": "Informasi",
+            "url": "#",
+            "children": info_children
+        })
+
+    # 3. Masukkan sisa menu top level lainnya (misal: PPDB / Donasi)
+    for item in top_nav_items:
+        if item != hero_item:
+            final_nav_items.append(item)
+
+    # Inject `final_nav_items` ke dalam section navbar
     for sec_type, content in section_instances:
         if sec_type == "navbar":
-            content["nav_items"] = nav_items
+            content["nav_items"] = final_nav_items
         generated_sections.append((sec_type, content))
 
     return generated_sections

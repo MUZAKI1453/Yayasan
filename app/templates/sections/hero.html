@@ -1,206 +1,297 @@
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-{% set slides = section.content.get('slides', []) %}
 
-{% if not slides %}
-    {% set legacy_image = section.content.get('bg_image') or section.content.get('image_url') %}
-    {% set legacy_cta_text = section.content.get('cta_primary_text') or section.content.get('button_text', '') %}
-    {% set legacy_cta_url = section.content.get('cta_primary_url') or section.content.get('button_link', '#') %}
-    {% if legacy_image or section.content.get('title') or section.content.get('subtitle') %}
-        {% set slides = [{
-            'image': legacy_image or '',
-            'eyebrow': section.content.get('eyebrow', ''),
-            'title': section.content.get('title', ''),
-            'subtitle': section.content.get('subtitle', ''),
-            'cta': {'text': legacy_cta_text, 'url': legacy_cta_url}
-        }] %}
-    {% endif %}
+{# PARSING KONFIGURASI BACKGROUND DARI DATABASE #}
+{% set bg_type = section.content.get('bg_type', 'color') %}
+{% set bg_color = section.content.get('bg_color', '#0f172a') %}
+{% set bg_image_url = section.content.get('bg_image_url', '') %}
+
+{# PARSING KONFIGURASI JUDUL UTAMA (TITLE) #}
+{% set title_text = section.content.get('title_text', 'Mulai Langkah Impian Anda Hari Ini') %}
+{% set title_color = section.content.get('title_color', '#ffffff') %}
+{% set title_size = section.content.get('title_size', '36')|int %}
+{% set title_font_family = section.content.get('title_font_family', 'font-sans') %}
+
+{# PARSING KONFIGURASI SUBTITLE #}
+{% set subtitle_text = section.content.get('subtitle_text', 'Solusi terbaik untuk mengembangkan bisnis Anda dengan platform yang fleksibel dan efisien.') %}
+{% set subtitle_color = section.content.get('subtitle_color', '#94a3b8') %}
+{% set subtitle_size = section.content.get('subtitle_size', '16')|int %}
+{% set subtitle_font_family = section.content.get('subtitle_font_family', 'font-sans') %}
+
+{# PARSING KONFIGURASI TOMBOL CTA #}
+{% set cta_text = section.content.get('cta_text', 'Jelajahi Sekarang') %}
+{% set cta_url = section.content.get('cta_url', '#') %}
+{% set cta_bg = section.content.get('cta_bg', '#2563eb') %}
+{% set cta_color = section.content.get('cta_color', '#ffffff') %}
+{% set cta_font_family = section.content.get('cta_font_family', 'font-sans') %}
+
+{# PARSING GAMBAR MAIN HERO (FALLBACK KE 'image' JIKA 'image_url' KOSONG) #}
+{% set image_url = section.content.get('image_url') or section.content.get('image') or '' %}
+
+{# KOORDINAT POSISI (X, Y, W) LAYAKNYA COREL / CANVA #}
+{% set pos_title_x = section.content.get('pos_title_x', '40')|int %}
+{% set pos_title_y = section.content.get('pos_title_y', '60')|int %}
+{% set pos_title_w = section.content.get('pos_title_w', '500')|int %}
+
+{% set pos_sub_x = section.content.get('pos_sub_x', '40')|int %}
+{% set pos_sub_y = section.content.get('pos_sub_y', '200')|int %}
+{% set pos_sub_w = section.content.get('pos_sub_w', '480')|int %}
+
+{% set pos_cta_x = section.content.get('pos_cta_x', '40')|int %}
+{% set pos_cta_y = section.content.get('pos_cta_y', '320')|int %}
+
+{% set pos_img_x = section.content.get('pos_img_x', '600')|int %}
+{% set pos_img_y = section.content.get('pos_img_y', '50')|int %}
+{% set pos_img_w = section.content.get('pos_img_w', '400')|int %}
+
+{# STYLES CONTAINER HERO #}
+{% set hero_styles = [] %}
+{% if bg_type == 'color' %}
+    {% set _ = hero_styles.append('background-color: ' ~ bg_color) %}
+{% elif bg_type == 'image' and bg_image_url %}
+    {% set _ = hero_styles.append("background-image: url('" ~ bg_image_url ~ "')") %}
+    {% set _ = hero_styles.append('background-size: cover') %}
+    {% set _ = hero_styles.append('background-position: center') %}
 {% endif %}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="relative w-full overflow-hidden bg-slate-900">
-    <div class="swiper heroSwiper w-full">
-        <div class="swiper-wrapper">
-            {% if slides %}
-                {% for slide in slides %}
-                    {% set cta = slide.get('cta', {}) %}
-                    <div class="swiper-slide relative w-full aspect-[16/9] overflow-hidden bg-slate-900 md:aspect-auto md:h-[calc(100svh-4.5rem)] md:min-h-[400px] lg:h-[calc(100svh-4.5rem)] lg:min-h-[calc(100svh-4.5rem)]">
-                        {% if slide.get('image') %}
-                            <img
-                                src="{{ slide.get('image') }}"
-                                class="absolute inset-0 w-full h-full object-cover"
-                                alt="{{ slide.get('title') or 'Hero' }}"
-                            >
-                        {% else %}
-                            <div class="absolute inset-0 bg-slate-800"></div>
-                        {% endif %}
-
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 sm:from-black/85 sm:via-black/35 sm:to-black/5"></div>
-
-                        <div class="absolute inset-x-0 bottom-0">
-                            <div class="mx-auto w-full max-w-7xl px-5 pb-8 sm:px-8 sm:pb-10 lg:px-10 lg:pb-14">
-                                <div class="max-w-2xl text-white">
-                                    {% if slide.get('eyebrow') %}
-                                        <div class="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 sm:text-xs">
-                                            {{ slide.get('eyebrow') }}
-                                        </div>
-                                    {% endif %}
-
-                                    {% if slide.get('title') %}
-                                        <h1 class="mb-1.5 text-lg font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.75)] sm:mb-2 sm:text-4xl lg:text-5xl">
-                                            {{ slide.get('title') }}
-                                        </h1>
-                                    {% endif %}
-
-                                    {% if slide.get('subtitle') %}
-                                        <p class="mb-3 max-w-xl text-[11px] leading-snug text-white/90 sm:mb-4 sm:text-sm lg:text-base">
-                                            {{ slide.get('subtitle') }}
-                                        </p>
-                                    {% endif %}
-
-                                    {% if cta.get('text') and cta.get('url') and cta.get('url') != '#' %}
-                                        <a
-                                            href="{{ cta.get('url') }}"
-                                            onclick="if(typeof handleNavClick === 'function') handleNavClick(event, '{{ cta.get('url') }}')"
-                                            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-[11px] font-semibold text-white no-underline shadow-lg transition hover:bg-blue-700 sm:gap-2 sm:px-5 sm:py-3 sm:text-sm"
-                                        >
-                                            {{ cta.get('text') }}
-                                            <i class="bi bi-arrow-right"></i>
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="swiper-slide relative flex w-full aspect-[16/9] items-center justify-center bg-slate-800 text-sm text-white/60 md:aspect-auto md:h-[calc(100svh-4.5rem)] md:min-h-[400px]">
-                    Belum ada slide Hero.
-                </div>
-            {% endif %}
-        </div>
-
-        {% if slides|length > 1 %}
-            <div class="swiper-button-next !right-0 !top-1/2 !mt-0 !h-14 !w-7 !-translate-y-1/2 !rounded-l-md !rounded-r-none !border !border-r-0 !border-white/25 !bg-black/15 !text-white/90 !backdrop-blur-md !transition-all !duration-300 hover:!bg-black/35 hover:!text-white after:!text-[10px] sm:!h-16 sm:!w-8 sm:after:!text-[11px]"></div>
-            <div class="swiper-button-prev !left-0 !top-1/2 !mt-0 !h-14 !w-7 !-translate-y-1/2 !rounded-r-md !rounded-l-none !border !border-l-0 !border-white/25 !bg-black/15 !text-white/90 !backdrop-blur-md !transition-all !duration-300 hover:!bg-black/35 hover:!text-white after:!text-[10px] sm:!h-16 sm:!w-8 sm:after:!text-[11px]"></div>
-            <div class="swiper-pagination !bottom-4 sm:!bottom-6"></div>
-        {% endif %}
-    </div>
-</section>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Swiper === 'undefined') return;
-
-        const section = document.getElementById('{{ section_anchor_id }}');
-        const el = section ? section.querySelector('.heroSwiper') : null;
-
-        if (!el || el.dataset.initialized === 'true') return;
-
-        const nextButton = section.querySelector('.swiper-button-next');
-        const prevButton = section.querySelector('.swiper-button-prev');
-        const pagination = section.querySelector('.swiper-pagination');
-
-        el.dataset.initialized = 'true';
-
-        const swiper = new Swiper(el, {
-            loop: {{ 'true' if slides|length > 1 else 'false' }},
-
-            autoplay: {{ '{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: false }' if slides|length > 1 else 'false' }},
-
-            navigation: {{ '{ nextEl: nextButton, prevEl: prevButton }' if slides|length > 1 else 'false' }},
-
-            pagination: {{ '{ el: pagination, clickable: true }' if slides|length > 1 else 'false' }},
-
-            speed: 700,
-
-            allowTouchMove: {{ 'true' if slides|length > 1 else 'false' }},
-            simulateTouch: {{ 'true' if slides|length > 1 else 'false' }},
-            grabCursor: {{ 'true' if slides|length > 1 else 'false' }},
-
-            preventClicks: false,
-            preventClicksPropagation: false,
-            touchStartPreventDefault: false
-        });
-
-        {% if slides|length > 1 %}
-        if (swiper.autoplay) {
-            swiper.autoplay.start();
-        }
-
-        [nextButton, prevButton].forEach(function (button) {
-            if (!button) return;
-
-            button.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            });
-        });
-
-        let moved = false;
-
-        swiper.on('touchMove', function () {
-            moved = true;
-        });
-
-        swiper.on('touchEnd', function () {
-            window.setTimeout(function () {
-                moved = false;
-            }, 0);
-        });
-
-        section.querySelectorAll('a').forEach(function (link) {
-            link.addEventListener('click', function (event) {
-                if (moved) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            });
-        });
-
-        {% endif %}
-    });
-</script>
-
 <style>
-    #{{ section_anchor_id }} .swiper-pagination {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
+    /* UTILITY FONT CLASSES */
+    .font-sans { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
+    .font-serif { font-family: Georgia, Cambria, "Times New Roman", Times, serif !important; }
+    .font-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important; }
+
+    /* UTILITY STYLES UNTUK KONTROL CANVAS LAYAKNYA COREL */
+    .hero-editor-canvas {
+        position: relative;
+        width: 100%;
+        min-height: 520px;
+        overflow: hidden;
+        user-select: none;
     }
-
-    #{{ section_anchor_id }} .swiper-pagination-bullet {
-        width: 22px;
-        height: 2px;
-        margin: 0 !important;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.45);
-        opacity: 1;
-        transition:
-            width 0.35s ease,
-            background-color 0.35s ease,
-            opacity 0.35s ease;
+    .draggable-box {
+        position: absolute;
+        cursor: move;
+        border: 1px solid transparent;
+        transition: border-color 0.15s ease;
+        padding: 4px;
+        box-sizing: border-box;
     }
-
-    #{{ section_anchor_id }} .swiper-pagination-bullet-active {
-        width: 38px;
-        background: rgba(255, 255, 255, 0.95);
+    .draggable-box:hover, .draggable-box.active-selected {
+        border: 1px dashed #3b82f6 !important;
+        background-color: rgba(59, 130, 246, 0.05);
     }
-
-    @media (max-width: 639px) {
-        #{{ section_anchor_id }} .swiper-pagination {
-            gap: 4px;
-        }
-
-        #{{ section_anchor_id }} .swiper-pagination-bullet {
-            width: 16px;
-            height: 2px;
-        }
-
-        #{{ section_anchor_id }} .swiper-pagination-bullet-active {
-            width: 28px;
-        }
+    .resize-handle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #2563eb;
+        border: 1px solid #ffffff;
+        right: -5px;
+        bottom: -5px;
+        cursor: se-resize;
+        display: none;
+    }
+    .draggable-box:hover .resize-handle, .draggable-box.active-selected .resize-handle {
+        display: block;
     }
 </style>
+
+<section
+    id="{{ section_anchor_id }}"
+    class="hero-editor-canvas"
+    style="{{ hero_styles|join('; ') }}"
+>
+    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
+    <div
+        id="box-title"
+        class="draggable-box"
+        data-target-x="pos_title_x"
+        data-target-y="pos_title_y"
+        data-target-w="pos_title_w"
+        style="transform: translate({{ pos_title_x }}px, {{ pos_title_y }}px); width: {{ pos_title_w }}px;"
+    >
+        <h1
+            id="render-title"
+            class="{{ title_font_family }}"
+            style="color: {{ title_color }}; font-size: {{ title_size }}px; font-weight: 800; line-height: 1.2; margin: 0;"
+        >
+            {{ title_text }}
+        </h1>
+        <div class="resize-handle"></div>
+    </div>
+
+    <!-- 2. ELEMEN SUBTITLE -->
+    <div
+        id="box-subtitle"
+        class="draggable-box"
+        data-target-x="pos_sub_x"
+        data-target-y="pos_sub_y"
+        data-target-w="pos_sub_w"
+        style="transform: translate({{ pos_sub_x }}px, {{ pos_sub_y }}px); width: {{ pos_sub_w }}px;"
+    >
+        <p
+            id="render-subtitle"
+            class="{{ subtitle_font_family }}"
+            style="color: {{ subtitle_color }}; font-size: {{ subtitle_size }}px; line-height: 1.6; margin: 0;"
+        >
+            {{ subtitle_text }}
+        </p>
+        <div class="resize-handle"></div>
+    </div>
+
+    <!-- 3. ELEMEN TOMBOL CTA -->
+    <div
+        id="box-cta"
+        class="draggable-box"
+        data-target-x="pos_cta_x"
+        data-target-y="pos_cta_y"
+        style="transform: translate({{ pos_cta_x }}px, {{ pos_cta_y }}px);"
+    >
+        <a
+            id="render-cta"
+            href="{{ cta_url }}"
+            class="{{ cta_font_family }}"
+            style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15);"
+        >
+            {{ cta_text }}
+        </a>
+    </div>
+
+    <!-- 4. ELEMEN GAMBAR MAIN HERO -->
+    {% if image_url %}
+    <div
+        id="box-image"
+        class="draggable-box"
+        data-target-x="pos_img_x"
+        data-target-y="pos_img_y"
+        data-target-w="pos_img_w"
+        style="transform: translate({{ pos_img_x }}px, {{ pos_img_y }}px); width: {{ pos_img_w }}px;"
+    >
+        <img
+            id="render-image"
+            src="{{ image_url }}"
+            style="width: 100%; height: auto; pointer-events: none; display: block;"
+            alt="Hero Image"
+        >
+        <div class="resize-handle"></div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- ENGINE INTERAKTIF (DRAG, RESIZE, & SYNC DENGAN FORM) -->
+<script>
+(function() {
+    // SINKRONISASI INTERAKSI DRAG & RESIZE SEPERTI COREL
+    const boxes = document.querySelectorAll(".draggable-box");
+
+    boxes.forEach(box => {
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, initialX = 0, initialY = 0, initialWidth = 0;
+
+        // Ambil nilai posisi awal dari inline style
+        const transformMatch = box.style.transform.match(/translate\((.*?)px,\s*(.*?)px\)/);
+        if (transformMatch) {
+            initialX = parseInt(transformMatch[1]) || 0;
+            initialY = parseInt(transformMatch[2]) || 0;
+        }
+
+        const resizeHandle = box.querySelector(".resize-handle");
+
+        // EVENT HANDLE FOR RESIZING
+        if (resizeHandle) {
+            resizeHandle.addEventListener("pointerdown", function(e) {
+                e.stopPropagation();
+                isResizing = true;
+                startX = e.clientX;
+                initialWidth = box.offsetWidth;
+                box.setPointerCapture(e.pointerId);
+            });
+        }
+
+        // EVENT HANDLE FOR DRAGGING
+        box.addEventListener("pointerdown", function(e) {
+            if (isResizing) return;
+            isDragging = true;
+            startX = e.clientX - initialX;
+            startY = e.clientY - initialY;
+            box.setPointerCapture(e.pointerId);
+
+            boxes.forEach(b => b.classList.remove("active-selected"));
+            box.classList.add("active-selected");
+        });
+
+        box.addEventListener("pointermove", function(e) {
+            if (isResizing) {
+                const newWidth = Math.max(100, initialWidth + (e.clientX - startX));
+                box.style.width = newWidth + "px";
+
+                const targetW = box.getAttribute("data-target-w");
+                if (targetW) emitToForm(targetW, newWidth);
+                return;
+            }
+
+            if (!isDragging) return;
+
+            initialX = e.clientX - startX;
+            initialY = e.clientY - startY;
+
+            box.style.transform = `translate(${initialX}px, ${initialY}px)`;
+
+            const targetX = box.getAttribute("data-target-x");
+            const targetY = box.getAttribute("data-target-y");
+
+            if (targetX) emitToForm(targetX, Math.round(initialX));
+            if (targetY) emitToForm(targetY, Math.round(initialY));
+        });
+
+        function stopAction(e) {
+            isDragging = false;
+            isResizing = false;
+            try { box.releasePointerCapture(e.pointerId); } catch(err) {}
+        }
+
+        box.addEventListener("pointerup", stopAction);
+        box.addEventListener("pointercancel", stopAction);
+    });
+
+    // KIRIM KOORDINAT KE FORM EDITOR
+    function emitToForm(fieldKey, fieldValue) {
+        const payload = { type: 'CANVAS_ELEMENT_MOVED', key: fieldKey, value: fieldValue };
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage(payload, "*");
+        }
+        window.dispatchEvent(new CustomEvent('canvas_element_moved', { detail: payload }));
+    }
+
+    // MENERIMA UPDATE COLOR, FONT & TEXT DARI FORM SECARA REAL-TIME
+    window.addEventListener("message", function(event) {
+        if (!event.data) return;
+
+        // A. Perubahan Style Biasa (Warna, Teks, Ukuran)
+        if (event.data.type === 'CANVAS_STYLE_UPDATE') {
+            const { targetId, property, value } = event.data;
+            const el = document.getElementById(targetId);
+            if (el) {
+                if (property === 'innerText') {
+                    el.innerText = value;
+                } else if (property === 'src') {
+                    el.src = value;
+                } else if (property === 'fontFamily') {
+                    // Update font family melalui style
+                    el.style.fontFamily = value;
+                } else {
+                    el.style[property] = value;
+                }
+            }
+        }
+
+        // B. Perubahan Background Canvas
+        if (event.data.type === 'CANVAS_BG_UPDATE') {
+            const canvas = document.querySelector('.hero-editor-canvas');
+            if (canvas && event.data.bgColor) {
+                canvas.style.backgroundColor = event.data.bgColor;
+            }
+        }
+    });
+})();
+</script>
