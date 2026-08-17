@@ -24,10 +24,20 @@
 {% set cta_color = section.content.get('cta_color', '#ffffff') %}
 {% set cta_font_family = section.content.get('cta_font_family', 'font-sans') %}
 
-{# PARSING GAMBAR MAIN HERO (FALLBACK KE 'image' JIKA 'image_url' KOSONG) #}
-{% set image_url = section.content.get('image_url') or section.content.get('image') or '' %}
+{# PARSING MULTI-IMAGE HERO LIST (FALLBACK KE 'image_url' / 'image' JIKA 'images' KOSONG) #}
+{% set raw_images = section.content.get('images') or section.content.get('images_list') %}
+{% if raw_images and raw_images is iterable and raw_images is not string %}
+    {% set hero_images = raw_images %}
+{% else %}
+    {% set single_img = section.content.get('image_url') or section.content.get('image') %}
+    {% if single_img %}
+        {% set hero_images = [single_img] %}
+    {% else %}
+        {% set hero_images = [] %}
+    {% endif %}
+{% endif %}
 
-{# KOORDINAT POSISI (X, Y, W) LAYAKNYA COREL / CANVA #}
+{# KOORDINAT POSISI TEKS & CTA #}
 {% set pos_title_x = section.content.get('pos_title_x', '40')|int %}
 {% set pos_title_y = section.content.get('pos_title_y', '60')|int %}
 {% set pos_title_w = section.content.get('pos_title_w', '500')|int %}
@@ -38,10 +48,6 @@
 
 {% set pos_cta_x = section.content.get('pos_cta_x', '40')|int %}
 {% set pos_cta_y = section.content.get('pos_cta_y', '320')|int %}
-
-{% set pos_img_x = section.content.get('pos_img_x', '600')|int %}
-{% set pos_img_y = section.content.get('pos_img_y', '50')|int %}
-{% set pos_img_w = section.content.get('pos_img_w', '400')|int %}
 
 {# STYLES CONTAINER HERO #}
 {% set hero_styles = [] %}
@@ -156,31 +162,45 @@
         </a>
     </div>
 
-    <!-- 4. ELEMEN GAMBAR MAIN HERO -->
-    {% if image_url %}
-    <div
-        id="box-image"
-        class="draggable-box"
-        data-target-x="pos_img_x"
-        data-target-y="pos_img_y"
-        data-target-w="pos_img_w"
-        style="transform: translate({{ pos_img_x }}px, {{ pos_img_y }}px); width: {{ pos_img_w }}px;"
-    >
-        <img
-            id="render-image"
-            src="{{ image_url }}"
-            style="width: 100%; height: auto; pointer-events: none; display: block;"
-            alt="Hero Image"
+    <!-- 4. MULTI-IMAGE LAYER HERO (LOOPING SETIAP GAMBAR) -->
+    {% for img_src in hero_images %}
+        {% set idx = loop.index0 %}
+
+        {# PEMBACAAN KOORDINAT INDIVIDUAL DENGAN FALLBACK KE GAMBAR PERTAMA #}
+        {% if idx == 0 %}
+            {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
+            {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}
+            {% set img_w = section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400'))|int %}
+        {% else %}
+            {% set default_offset_x = 600 + (idx * 30) %}
+            {% set default_offset_y = 50 + (idx * 30) %}
+            {% set img_x = section.content.get('pos_img_' ~ idx ~ '_x', default_offset_x)|int %}
+            {% set img_y = section.content.get('pos_img_' ~ idx ~ '_y', default_offset_y)|int %}
+            {% set img_w = section.content.get('pos_img_' ~ idx ~ '_w', '300')|int %}
+        {% endif %}
+
+        <div
+            id="box-image-{{ idx }}"
+            class="draggable-box"
+            data-target-x="pos_img_{{ idx }}_x"
+            data-target-y="pos_img_{{ idx }}_y"
+            data-target-w="pos_img_{{ idx }}_w"
+            style="transform: translate({{ img_x }}px, {{ img_y }}px); width: {{ img_w }}px; z-index: {{ 10 + idx }};"
         >
-        <div class="resize-handle"></div>
-    </div>
-    {% endif %}
+            <img
+                id="render-image-{{ idx }}"
+                src="{{ img_src }}"
+                style="width: 100%; height: auto; pointer-events: none; display: block;"
+                alt="Hero Image {{ idx + 1 }}"
+            >
+            <div class="resize-handle"></div>
+        </div>
+    {% endfor %}
 </section>
 
 <!-- ENGINE INTERAKTIF (DRAG, RESIZE, & SYNC DENGAN FORM) -->
 <script>
 (function() {
-    // SINKRONISASI INTERAKSI DRAG & RESIZE SEPERTI COREL
     const boxes = document.querySelectorAll(".draggable-box");
 
     boxes.forEach(box => {
@@ -188,7 +208,6 @@
         let isResizing = false;
         let startX, startY, initialX = 0, initialY = 0, initialWidth = 0;
 
-        // Ambil nilai posisi awal dari inline style
         const transformMatch = box.style.transform.match(/translate\((.*?)px,\s*(.*?)px\)/);
         if (transformMatch) {
             initialX = parseInt(transformMatch[1]) || 0;
@@ -197,7 +216,6 @@
 
         const resizeHandle = box.querySelector(".resize-handle");
 
-        // EVENT HANDLE FOR RESIZING
         if (resizeHandle) {
             resizeHandle.addEventListener("pointerdown", function(e) {
                 e.stopPropagation();
@@ -208,7 +226,6 @@
             });
         }
 
-        // EVENT HANDLE FOR DRAGGING
         box.addEventListener("pointerdown", function(e) {
             if (isResizing) return;
             isDragging = true;
@@ -222,7 +239,7 @@
 
         box.addEventListener("pointermove", function(e) {
             if (isResizing) {
-                const newWidth = Math.max(100, initialWidth + (e.clientX - startX));
+                const newWidth = Math.max(50, initialWidth + (e.clientX - startX));
                 box.style.width = newWidth + "px";
 
                 const targetW = box.getAttribute("data-target-w");
@@ -254,7 +271,6 @@
         box.addEventListener("pointercancel", stopAction);
     });
 
-    // KIRIM KOORDINAT KE FORM EDITOR
     function emitToForm(fieldKey, fieldValue) {
         const payload = { type: 'CANVAS_ELEMENT_MOVED', key: fieldKey, value: fieldValue };
         if (window.parent && window.parent !== window) {
@@ -263,11 +279,9 @@
         window.dispatchEvent(new CustomEvent('canvas_element_moved', { detail: payload }));
     }
 
-    // MENERIMA UPDATE COLOR, FONT & TEXT DARI FORM SECARA REAL-TIME
     window.addEventListener("message", function(event) {
         if (!event.data) return;
 
-        // A. Perubahan Style Biasa (Warna, Teks, Ukuran)
         if (event.data.type === 'CANVAS_STYLE_UPDATE') {
             const { targetId, property, value } = event.data;
             const el = document.getElementById(targetId);
@@ -277,7 +291,6 @@
                 } else if (property === 'src') {
                     el.src = value;
                 } else if (property === 'fontFamily') {
-                    // Update font family melalui style
                     el.style.fontFamily = value;
                 } else {
                     el.style[property] = value;
@@ -285,7 +298,6 @@
             }
         }
 
-        // B. Perubahan Background Canvas
         if (event.data.type === 'CANVAS_BG_UPDATE') {
             const canvas = document.querySelector('.hero-editor-canvas');
             if (canvas && event.data.bgColor) {
