@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, abort, request
+from flask_login import current_user
 from app.models import Page, VisitorLog
 from app.extensions import db
 
@@ -27,7 +28,8 @@ def index():
     page = Page.query.filter_by(is_published=True).order_by(Page.updated_at.desc()).first()
     if not page:
         return render_template("public/empty.html")
-    return render_template("public/page.html", page=page)
+    editor_section_id = request.args.get("editor_section", type=int) if current_user.is_authenticated else None
+    return render_template("public/page.html", page=page, editor_section_id=editor_section_id)
 
 
 @public_bp.route("/<slug>")
@@ -37,4 +39,5 @@ def show_page(slug):
     # Catat statistik kunjungan untuk halaman slug spesifik
     log_visitor()
 
-    return render_template("public/page.html", page=page)
+    editor_section_id = request.args.get("editor_section", type=int) if current_user.is_authenticated else None
+    return render_template("public/page.html", page=page, editor_section_id=editor_section_id)

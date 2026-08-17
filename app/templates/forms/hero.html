@@ -17,6 +17,12 @@
     <input type="hidden" name="content.pos_img_x" id="input_pos_img_x" value="{{ section.content.get('pos_img_x', '600') }}">
     <input type="hidden" name="content.pos_img_y" id="input_pos_img_y" value="{{ section.content.get('pos_img_y', '50') }}">
     <input type="hidden" name="content.pos_img_w" id="input_pos_img_w" value="{{ section.content.get('pos_img_w', '400') }}">
+    {% set hero_form_images = section.content.get('images') or ([section.content.get('image_url') or section.content.get('image')] if (section.content.get('image_url') or section.content.get('image')) else []) %}
+    {% for img_idx in range(hero_form_images|length) %}
+        <input type="hidden" name="content.pos_img_{{ img_idx }}_x" id="input_pos_img_{{ img_idx }}_x" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_x', section.content.get('pos_img_x', '600')) }}">
+        <input type="hidden" name="content.pos_img_{{ img_idx }}_y" id="input_pos_img_{{ img_idx }}_y" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_y', section.content.get('pos_img_y', '50')) }}">
+        <input type="hidden" name="content.pos_img_{{ img_idx }}_w" id="input_pos_img_{{ img_idx }}_w" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_w', section.content.get('pos_img_w', '400')) }}">
+    {% endfor %}
 
     <!-- PANEL 1: KHUSUS BACKGROUND SECTION HERO -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
@@ -113,10 +119,14 @@
             <i class="bi bi-menu-button-wide text-primary"></i> Edit Tombol CTA
         </div>
         <div class="card-body p-3 bg-white space-y-2">
-            <div class="row g-2">
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" name="cta_enabled" value="1" id="cta_enabled" {% if section.content.get('cta_enabled', (section.content.get('cta_text') or '') != '') %}checked{% endif %}>
+                <label class="form-check-label small fw-semibold" for="cta_enabled">Tampilkan tombol aksi</label>
+            </div>
+            <div id="hero-cta-fields" class="row g-2" style="display: {% if section.content.get('cta_enabled', (section.content.get('cta_text') or '') != '') %}flex{% else %}none{% endif %};">
                 <div class="col-6">
                     <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Teks Tombol</label>
-                    <input type="text" name="content.cta_text" value="{{ section.content.get('cta_text', 'Jelajahi Sekarang') }}" class="form-control form-control-sm" style="font-size: 0.75rem;" oninput="updateLivePreview('render-cta', 'innerText', this.value)">
+                    <input type="text" name="content.cta_text" value="{{ section.content.get('cta_text', '') }}" class="form-control form-control-sm" style="font-size: 0.75rem;" oninput="updateLivePreview('render-cta', 'innerText', this.value)">
                 </div>
                 <div class="col-6">
                     <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Link URL</label>
@@ -133,11 +143,11 @@
             </div>
             <div class="row g-2">
                 <div class="col-6">
-                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Background Tombol</label>
+                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Tombol</label>
                     <input type="color" name="content.cta_bg" value="{{ section.content.get('cta_bg', '#2563eb') }}" class="form-control form-control-color w-100 py-0" style="height: 31px;" oninput="updateLivePreview('render-cta', 'backgroundColor', this.value)">
                 </div>
                 <div class="col-6">
-                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Teks Tombol</label>
+                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Teks</label>
                     <input type="color" name="content.cta_color" value="{{ section.content.get('cta_color', '#ffffff') }}" class="form-control form-control-color w-100 py-0" style="height: 31px;" oninput="updateLivePreview('render-cta', 'color', this.value)">
                 </div>
             </div>

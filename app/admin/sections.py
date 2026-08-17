@@ -54,23 +54,6 @@ def add_section(page_id):
     )
     db.session.add(new_section)
 
-    if section_type not in ['navbar', 'footer']:
-        navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
-        if navbar:
-            nav_content = dict(navbar.content or {})
-            nav_items = nav_content.get('nav_items', [])
-
-            nav_items.append({
-                'id': sec_id_key,
-                'text': initial_content.get("title", nav_text_default),
-                'url': f"#{sec_id_key}",
-                'children': [],
-                'type': section_type
-            })
-            nav_content['nav_items'] = nav_items
-            navbar.content = nav_content
-            flag_modified(navbar, "content")
-
     db.session.commit()
     flash(f"Section '{section_type}' berhasil ditambahkan!", "success")
     return redirect(url_for("admin.manage_section", page_id=page.id))
@@ -99,7 +82,62 @@ def edit_section(section_id):
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', '')).strip()
 
+            # Navbar dikelola sepenuhnya manual. Target menu disimpan sebagai ID Section,
+            # bukan URL #sec_xxx yang harus diketahui admin.
+            def parse_nav_items(prefix='nav_parents'):
+                import re as _re
+                parents = {}
+                pattern = _re.compile(rf'^{_re.escape(prefix)}\[(\d+)\]\[(.+?)\]$')
+                for key, value in request.form.items():
+                    m = pattern.match(key)
+                    if not m:
+                        continue
+                    idx, field = int(m.group(1)), m.group(2)
+                    parents.setdefault(idx, {})[field] = value.strip() if isinstance(value, str) else value
+
+                items = []
+                for idx in sorted(parents):
+                    raw = parents[idx]
+                    text = raw.get('text', '').strip()
+                    target_id = raw.get('target_section_id', '').strip()
+                    item = {
+                        'id': raw.get('id') or f'nav_{uuid.uuid4().hex[:8]}',
+                        'text': text,
+                        'target_section_id': int(target_id) if target_id.isdigit() else None,
+                        'target_type': (Section.query.get(int(target_id)).type if target_id.isdigit() and Section.query.get(int(target_id)) else None),
+                        'children': []
+                    }
+                    # Parent boleh menjadi dropdown tanpa target.
+                    child_pattern = _re.compile(r'^children\[\]\[(text|target_section_id)\]$')
+                    # Browser mengirim pasangan [] secara berurutan; ambil langsung dari form list.
+                    child_texts = request.form.getlist(f'{prefix}[{idx}][children][][text]')
+                    child_targets = request.form.getlist(f'{prefix}[{idx}][children][][target_section_id]')
+                    for cidx, child_text in enumerate(child_texts):
+                        child_text = child_text.strip()
+                        if not child_text:
+                            continue
+                        child_target = child_targets[cidx].strip() if cidx < len(child_targets) else ''
+                        item['children'].append({
+                            'id': f'nav_{uuid.uuid4().hex[:8]}',
+                            'text': child_text,
+                            'target_section_id': int(child_target) if child_target.isdigit() else None,
+                            'target_type': (Section.query.get(int(child_target)).type if child_target.isdigit() and Section.query.get(int(child_target)) else None)
+                        })
+                    if text:
+                        items.append(item)
+                return items
+
+            content['nav_items'] = parse_nav_items()
+            content['button_enabled'] = '1' in request.form.getlist('button_enabled')
+            content['button_text_1'] = request.form.get('button_text_1', '').strip()
+            target = request.form.get('button_target_section_id', '').strip()
+            content['button_target_section_id'] = int(target) if target.isdigit() else None
+            content['button_link_1'] = request.form.get('button_link_1', '').strip()
+            content['button_bg_color'] = request.form.get('button_bg_color', content.get('button_bg_color', '#2563eb'))
+            content['button_text_color'] = request.form.get('button_text_color', content.get('button_text_color', '#ffffff'))
+
         elif section.type == 'hero':
+            content['cta_enabled'] = request.form.get('cta_enabled', '0') == '1'
             # A. PERTAHANKAN LIST GAMBAR YANG SUDAH ADA DARI FORM ATAU DATABASE
             existing_images = request.form.getlist('content.existing_images') or request.form.getlist('existing_images[]')
             existing_single_img = request.form.get('content.image_url') or request.form.get('content.existing_image') or content.get('image_url') or content.get('image')
@@ -181,21 +219,6 @@ def edit_section(section_id):
         elif section.type == 'gallery':
             pass
 
-        # --- 3. SINKRONISASI KE MENU NAVBAR (JIKA TITLE BERUBAH) ---
-        nav_id = content.get('nav_id')
-        title_val = content.get('title') or content.get('title_text')
-        if nav_id and title_val:
-            navbar = Section.query.filter_by(page_id=page.id, type='navbar').first()
-            if navbar:
-                nav_content = dict(navbar.content or {})
-                nav_items = nav_content.get('nav_items', [])
-                for item in nav_items:
-                    if item.get('id') == nav_id or item.get('url') == f"#{nav_id}":
-                        item['text'] = title_val
-                nav_content['nav_items'] = nav_items
-                navbar.content = nav_content
-                flag_modified(navbar, "content")
-
         # --- 4. UNIVERSAL FILE UPLOADER ---
         excluded_file_keys = [
             'gallery_files[]', 'image_file', 'logo_file', 'logo',
@@ -230,22 +253,9 @@ def delete_section(section_id):
     """HAPUS SECTION DAN MENU TERHUBUNG"""
     section = Section.query.get_or_404(section_id)
     page_id = section.page_id
-    nav_id = section.content.get('nav_id') if section.content else None
-
+    # Section dan Navbar sengaja independent. Menghapus Section tidak menghapus
+    # menu Navbar; menu yang targetnya sudah tidak ada akan dirender sebagai link kosong.
     db.session.delete(section)
-
-    if nav_id:
-        navbar = Section.query.filter_by(page_id=page_id, type='navbar').first()
-        if navbar:
-            nav_content = dict(navbar.content or {})
-            nav_items = nav_content.get('nav_items', [])
-            nav_content['nav_items'] = [
-                item for item in nav_items
-                if item.get('id') != nav_id and item.get('url') != f"#{nav_id}"
-            ]
-            navbar.content = nav_content
-            flag_modified(navbar, "content")
-
     db.session.commit()
 
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':

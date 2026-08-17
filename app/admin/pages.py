@@ -6,6 +6,7 @@ from app.admin import admin_bp
 from app.admin.templates import get_preset_sections  # <-- REVISI: Gunakan helper get_preset_sections
 from app.models import Page, Section
 from app.extensions import db
+from sqlalchemy.orm.attributes import flag_modified
 
 
 @admin_bp.route('/pages')
@@ -43,20 +44,47 @@ def new_page():
         # yang sudah dilengkapi nav_id unik & nav_items otomatis di Navbar
         chosen_template = get_preset_sections(template_id)
 
+        created_sections = []
         for idx, (s_type, s_content) in enumerate(chosen_template, start=1):
             content_copy = dict(s_content)
 
-            # Tetap pertahankan kustomisasi judul pada section hero
             if s_type == "hero" and "title" in content_copy:
                 content_copy["title"] = title
 
-            sec = Section(
-                page_id=page.id,
-                type=s_type,
-                order=idx,
-                content=content_copy
-            )
+            sec = Section(page_id=page.id, type=s_type, order=idx, content=content_copy)
             db.session.add(sec)
+            created_sections.append((sec, content_copy.get('nav_id')))
+
+        db.session.flush()
+
+        # Konversi preset lama (nav_id/URL #sec_xxx) ke target Section yang stabil.
+        navbar = next((sec for sec, _ in created_sections if sec.type == 'navbar'), None)
+        if navbar:
+            nav_items = (navbar.content or {}).get('nav_items', [])
+            legacy_map = {old_id: sec.id for sec, old_id in created_sections if old_id}
+            def migrate_items(items):
+                result = []
+                for item in items or []:
+                    item = dict(item)
+                    legacy_id = item.get('id')
+                    url = str(item.get('url') or '')
+                    target = legacy_map.get(legacy_id) or legacy_map.get(url.lstrip('#'))
+                    item['target_section_id'] = target
+                    target_sec = next((sec for sec, _ in created_sections if sec.id == target), None)
+                    item['target_type'] = target_sec.type if target_sec else None
+                    item.pop('url', None)
+                    item.pop('type', None)
+                    item['children'] = migrate_items(item.get('children') or item.get('sub_items') or [])
+                    item.pop('sub_items', None)
+                    result.append(item)
+                return result
+            new_content = dict(navbar.content or {})
+            new_content['nav_items'] = migrate_items(nav_items)
+            new_content['button_enabled'] = bool(new_content.get('button_text_1'))
+            button_link = str(new_content.get('button_link_1') or '')
+            new_content['button_target_section_id'] = legacy_map.get(button_link.lstrip('#'))
+            navbar.content = new_content
+            flag_modified(navbar, 'content')
 
         db.session.commit()
 

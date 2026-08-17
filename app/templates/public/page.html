@@ -104,8 +104,9 @@
         <!-- RENDER NORMAL JIKA SECTION SUDAH TERSEDIA -->
         <main class="w-full">
             {% for section in page.sections|sort(attribute='order') %}
-                <!-- DIBERIKAN ATRIBUT ID & DATA UNTUK AUTO SCROLL LIVE EDITOR -->
-                <div id="section-{{ section.type }}" 
+                {% set public_anchor = section.type ~ "-" ~ section.id %}
+                {% set editor_mode = editor_section_id is not none and editor_section_id == section.id %}
+                <div id="{{ public_anchor }}"
                      data-section-type="{{ section.type }}" 
                      data-section-id="{{ section.id }}" 
                      class="section-wrapper{% if section.type == 'progress' %} section-progress{% else %} {{ section.type }}{% endif %}">

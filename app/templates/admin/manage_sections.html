@@ -274,7 +274,7 @@
                 </div>
             </div>
 
-            <iframe id="preview-frame" src="/{{ page.slug }}" class="mode-desktop"></iframe>
+            <iframe id="preview-frame" src="/{{ page.slug }}{% if section %}?editor_section={{ section.id }}{% endif %}" class="mode-desktop"></iframe>
         </div>
     </div>
 
@@ -317,10 +317,9 @@
             const frameDoc = frame.contentWindow.document;
             const cleanNavId = sectionNavId ? sectionNavId.replace('#', '') : '';
 
-            // Cari elemen berdasarkan urutan kepastian
-            let targetEl = (cleanNavId ? frameDoc.getElementById(cleanNavId) : null) ||
-                           (cleanNavId ? frameDoc.querySelector(`[data-nav-id="${cleanNavId}"]`) : null) ||
-                           (sectionDbId ? frameDoc.getElementById(`sec_${sectionDbId}`) : null) ||
+            // Target publik sekarang stabil dan tidak memakai #sec_xxx.
+            let targetEl = (sectionDbId ? frameDoc.getElementById(`${sectionType}-${sectionDbId}`) : null) ||
+                           (cleanNavId ? frameDoc.getElementById(cleanNavId) : null) ||
                            (sectionDbId ? frameDoc.getElementById(`section-${sectionDbId}`) : null) ||
                            frameDoc.getElementById(`section-${sectionType}`) ||
                            frameDoc.getElementById(sectionType) ||

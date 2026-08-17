@@ -1,4 +1,6 @@
-{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+{% set section_anchor_id = section.type ~ '-' ~ section.id %}
+{% set hero_editor_mode = editor_section_id is not none and editor_section_id == section.id %}
+{% set cta_enabled = section.content.get('cta_enabled', (section.content.get('cta_text') or '') != '') %}
 
 {# PARSING KONFIGURASI BACKGROUND DARI DATABASE #}
 {% set bg_type = section.content.get('bg_type', 'color') %}
@@ -18,7 +20,7 @@
 {% set subtitle_font_family = section.content.get('subtitle_font_family', 'font-sans') %}
 
 {# PARSING KONFIGURASI TOMBOL CTA #}
-{% set cta_text = section.content.get('cta_text', 'Jelajahi Sekarang') %}
+{% set cta_text = section.content.get('cta_text', '') %}
 {% set cta_url = section.content.get('cta_url', '#') %}
 {% set cta_bg = section.content.get('cta_bg', '#2563eb') %}
 {% set cta_color = section.content.get('cta_color', '#ffffff') %}
@@ -75,13 +77,13 @@
     }
     .draggable-box {
         position: absolute;
-        cursor: move;
+        cursor: {% if hero_editor_mode %}move{% else %}default{% endif %};
         border: 1px solid transparent;
         transition: border-color 0.15s ease;
         padding: 4px;
         box-sizing: border-box;
     }
-    .draggable-box:hover, .draggable-box.active-selected {
+    {% if hero_editor_mode %}.draggable-box:hover, .draggable-box.active-selected {
         border: 1px dashed #3b82f6 !important;
         background-color: rgba(59, 130, 246, 0.05);
     }
@@ -99,10 +101,10 @@
     .draggable-box:hover .resize-handle, .draggable-box.active-selected .resize-handle {
         display: block;
     }
+{% else %}.draggable-box { pointer-events: none; } .draggable-box a { pointer-events: auto; }{% endif %}
 </style>
 
 <section
-    id="{{ section_anchor_id }}"
     class="hero-editor-canvas"
     style="{{ hero_styles|join('; ') }}"
 >
@@ -145,6 +147,7 @@
     </div>
 
     <!-- 3. ELEMEN TOMBOL CTA -->
+    {% if cta_enabled and cta_text %}
     <div
         id="box-cta"
         class="draggable-box"
@@ -161,6 +164,7 @@
             {{ cta_text }}
         </a>
     </div>
+    {% endif %}
 
     <!-- 4. MULTI-IMAGE LAYER HERO (LOOPING SETIAP GAMBAR) -->
     {% for img_src in hero_images %}
@@ -201,6 +205,8 @@
 <!-- ENGINE INTERAKTIF (DRAG, RESIZE, & SYNC DENGAN FORM) -->
 <script>
 (function() {
+    const EDITOR_MODE = {{ 'true' if hero_editor_mode else 'false' }};
+    if (!EDITOR_MODE) return;
     const boxes = document.querySelectorAll(".draggable-box");
 
     boxes.forEach(box => {
