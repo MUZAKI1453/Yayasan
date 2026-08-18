@@ -2,7 +2,7 @@
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data" class="editor-navbar-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    <!-- SEGMENTED CONTROL TABS (SANGAT RINGKAS DI SIDEBAR) -->
+    <!-- SEGMENTED CONTROL TABS -->
     <div class="bg-light p-1 rounded-3 border mb-3">
         <ul class="nav nav-pills nav-fill gap-1" id="navTab" role="tablist">
             <li class="nav-item" role="presentation">
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 2: MENU NAVIGASI (ACCORDION COMPACT) ================= -->
+        <!-- ================= TAB 2: MENU NAVIGASI ================= -->
         <div class="tab-pane fade" id="panel-menu" role="tabpanel">
             <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded-3 border">
                 <span class="fw-bold text-dark" style="font-size: 0.78rem;">Daftar Menu Navigasi</span>
@@ -65,7 +65,6 @@
                 </button>
             </div>
 
-            <!-- CONTAINER CARD ACCORDION -->
             <div id="nav-items-container" class="d-flex flex-column gap-2 mb-3">
                 {% set nav_items = section.content.get('nav_items', []) %}
                 {% for item in nav_items %}
@@ -73,7 +72,6 @@
                     <div class="border rounded-3 bg-white shadow-sm parent-nav-card overflow-hidden" data-index="{{ outer_loop_index }}">
                         <input type="hidden" name="nav_parents[{{ outer_loop_index }}][id]" value="{{ item.get('id', '') }}">
 
-                        <!-- BARIS HEADER SUMMARY (DAPAT DI-CLICK UNTUK COLLAPSE/EXPAND) -->
                         <div class="p-2 bg-light d-flex align-items-center justify-content-between cursor-pointer border-bottom" onclick="toggleCardBody(this)">
                             <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
                                 <i class="bi bi-grip-vertical text-muted"></i>
@@ -97,7 +95,6 @@
                             </div>
                         </div>
 
-                        <!-- BODY CARD (DEFAULT COLLAPSED UNTUK MENJAGA KEBERSIHAN UI) -->
                         <div class="card-body-content p-2" style="display: none;">
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
@@ -105,15 +102,17 @@
                                 </div>
                                 <div class="col-6">
                                     <select name="nav_parents[{{ outer_loop_index }}][target_section_id]" class="form-select form-select-sm" onchange="previewTargetSectionId(this.value)">
-                                        <option value="">Tidak ada tujuan</option>
+                                        <option value="">Tidak ada tujuan (section)</option>
                                         {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
                                             <option value="{{ sec.id }}" {% if legacy_target.id == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <div class="col-12">
+                                    <input type="text" name="nav_parents[{{ outer_loop_index }}][url]" value="{{ item.get('url', '') }}" class="form-control form-control-sm" placeholder="URL eksternal / halaman lain (contoh: /ppdb atau https://google.com)">
+                                </div>
                             </div>
 
-                            <!-- SUB-MENU SECTION -->
                             <div class="p-2 bg-light rounded-2 border">
                                 <div class="d-flex justify-content-between align-items-center mb-1.5">
                                     <span class="text-muted fw-semibold" style="font-size: 0.68rem;">Sub-Menu Dropdown</span>
@@ -127,21 +126,23 @@
                                     {% for child in children %}
                                         {% set child_target = namespace(id=child.get('target_section_id')) %}
                                         {% if not child_target.id and child.get('url') %}{% for sec in page.sections if sec.content.get('nav_id') == child.get('url').lstrip('#') %}{% set child_target.id = sec.id %}{% endfor %}{% endif %}
-                                        <div class="d-flex align-items-center gap-1 child-nav-row bg-white p-1.5 border rounded">
-                                            <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][text]" value="{{ child.text }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
-                                            <select name="nav_parents[{{ outer_loop_index }}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
-                                                <option value="">Tidak ada tujuan</option>
-                                                {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}" {% if child_target.id == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
-                                            </select>
-                                            <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
-                                                <i class="bi bi-x-circle-fill"></i>
-                                            </button>
+                                        <div class="d-flex flex-column gap-1 child-nav-row bg-white p-1.5 border rounded">
+                                            <div class="d-flex align-items-center gap-1">
+                                                <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][text]" value="{{ child.text }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                                                <select name="nav_parents[{{ outer_loop_index }}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
+                                                    <option value="">Tidak ada tujuan</option>
+                                                    {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}" {% if child_target.id == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                                                </select>
+                                                <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
+                                                    <i class="bi bi-x-circle-fill"></i>
+                                                </button>
+                                            </div>
+                                            <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][url]" value="{{ child.get('url', '') }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
                                         </div>
                                     {% endfor %}
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 {% endfor %}
             </div>
@@ -188,15 +189,24 @@
                     <input class="form-check-input" type="checkbox" name="button_enabled" value="1" id="button_enabled" {% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') %}checked{% endif %}>
                     <label class="form-check-label small fw-semibold" for="button_enabled">Tampilkan tombol aksi</label>
                 </div>
+
                 <div id="navbar-cta-fields" class="row g-2 mb-2" style="display:{% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') %}flex{% else %}none{% endif %};">
                     <div class="col-6">
                         <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}" placeholder="Teks Tombol">
                     </div>
                     <div class="col-6">
                         <select name="button_target_section_id" class="form-select form-select-sm">
-                            <option value="">Pilih tujuan</option>
-                            {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}" {% if section.content.get('button_target_section_id') == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                            <option value="">Pilih section</option>
+                            {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
+                                <option value="{{ sec.id }}" {% if section.content.get('button_target_section_id') == sec.id %}selected{% endif %}>
+                                    {{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}
+                                </option>
+                            {% endfor %}
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <input type="text" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '') }}" placeholder="URL eksternal / halaman lain (contoh: /ppdb atau https://google.com)">
+                        <small class="text-muted" style="font-size: 0.65rem;">Isi ini akan lebih diprioritaskan daripada section di atas</small>
                     </div>
                 </div>
 
@@ -229,13 +239,13 @@
     </div>
 </form>
 
-
-
 <script>
     let parentNavCounter = {{ section.content.get('nav_items', [])|length }};
 
     function previewTargetSectionId(targetUrl) {
-        if (typeof scrollToSectionInPreview === 'function' && targetUrl) { scrollToSectionInPreview('', '', parseInt(targetUrl)); }
+        if (typeof scrollToSectionInPreview === 'function' && targetUrl) {
+            scrollToSectionInPreview('', '', parseInt(targetUrl));
+        }
     }
 
     function toggleCardBody(headerEl) {
@@ -243,10 +253,10 @@
         const chevron = headerEl.querySelector('.chevron-icon');
         if (cardBody.style.display === 'none' || !cardBody.style.display) {
             cardBody.style.display = 'block';
-            if(chevron) chevron.style.transform = 'rotate(180deg)';
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
         } else {
             cardBody.style.display = 'none';
-            if(chevron) chevron.style.transform = 'rotate(0deg)';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
         }
     }
 
@@ -283,9 +293,12 @@
                         </div>
                         <div class="col-6">
                             <select name="nav_parents[${idx}][target_section_id]" class="form-select form-select-sm" onchange="previewTargetSectionId(this.value)">
-                                <option value="">Tidak ada tujuan</option>
+                                <option value="">Tidak ada tujuan (section)</option>
                                 {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
                             </select>
+                        </div>
+                        <div class="col-12">
+                            <input type="text" name="nav_parents[${idx}][url]" class="form-control form-control-sm" placeholder="URL eksternal / halaman lain (contoh: /ppdb atau https://google.com)">
                         </div>
                     </div>
                     <div class="p-2 bg-light rounded-2 border">
@@ -303,16 +316,25 @@
     function addChildNavRow(btn, parentIndex) {
         const container = btn.closest('.parent-nav-card').querySelector('.children-container');
         const html = `
-            <div class="d-flex align-items-center gap-1 child-nav-row bg-white p-1.5 border rounded">
-                <input type="text" name="nav_parents[${parentIndex}][children][][text]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
-                <select name="nav_parents[${parentIndex}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
-                    <option value="">Tidak ada tujuan</option>
-                    {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
-                </select>
-                <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
-                    <i class="bi bi-x-circle-fill"></i>
-                </button>
+            <div class="d-flex flex-column gap-1 child-nav-row bg-white p-1.5 border rounded">
+                <div class="d-flex align-items-center gap-1">
+                    <input type="text" name="nav_parents[${parentIndex}][children][][text]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                    <select name="nav_parents[${parentIndex}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
+                        <option value="">Tidak ada tujuan</option>
+                        {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                </div>
+                <input type="text" name="nav_parents[${parentIndex}][children][][url]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
     }
+
+    // Toggle tampilan field CTA
+    document.getElementById('button_enabled')?.addEventListener('change', function () {
+        const fields = document.getElementById('navbar-cta-fields');
+        if (fields) fields.style.display = this.checked ? 'flex' : 'none';
+    });
 </script>

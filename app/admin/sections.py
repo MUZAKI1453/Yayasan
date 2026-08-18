@@ -85,6 +85,7 @@ def edit_section(section_id):
         # --- 2. PENANGANAN SPESIFIK BERDASARKAN TIPE SECTION ---
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', '')).strip()
+            content['brand_subtitle'] = request.form.get('brand_subtitle', content.get('brand_subtitle', '')).strip()
 
             def parse_nav_items(prefix='nav_parents'):
                 parents = {}
@@ -101,64 +102,76 @@ def edit_section(section_id):
                     raw = parents[idx]
                     text = raw.get('text', '').strip()
                     target_id = raw.get('target_section_id', '').strip()
+                    external_url = raw.get('url', '').strip()
+
                     item = {
                         'id': raw.get('id') or f'nav_{uuid.uuid4().hex[:8]}',
                         'text': text,
                         'target_section_id': int(target_id) if target_id.isdigit() else None,
                         'target_type': (
-                            Section.query.get(int(target_id)).type if target_id.isdigit() and Section.query.get(
-                                int(target_id)) else None),
+                            Section.query.get(int(target_id)).type
+                            if target_id.isdigit() and Section.query.get(int(target_id)) else None
+                        ),
+                        'url': external_url if external_url else None,
                         'children': []
                     }
+
                     child_texts = request.form.getlist(f'{prefix}[{idx}][children][][text]')
                     child_targets = request.form.getlist(f'{prefix}[{idx}][children][][target_section_id]')
+                    child_urls = request.form.getlist(f'{prefix}[{idx}][children][][url]')
+
                     for cidx, child_text in enumerate(child_texts):
                         child_text = child_text.strip()
                         if not child_text:
                             continue
                         child_target = child_targets[cidx].strip() if cidx < len(child_targets) else ''
+                        child_url = child_urls[cidx].strip() if cidx < len(child_urls) else ''
+
                         item['children'].append({
                             'id': f'nav_{uuid.uuid4().hex[:8]}',
                             'text': child_text,
                             'target_section_id': int(child_target) if child_target.isdigit() else None,
-                            'target_type': (Section.query.get(
-                                int(child_target)).type if child_target.isdigit() and Section.query.get(
-                                int(child_target)) else None)
+                            'target_type': (
+                                Section.query.get(int(child_target)).type
+                                if child_target.isdigit() and Section.query.get(int(child_target)) else None
+                            ),
+                            'url': child_url if child_url else None
                         })
                     if text:
                         items.append(item)
                 return items
 
             content['nav_items'] = parse_nav_items()
+
+            # CTA Button
             content['button_enabled'] = '1' in request.form.getlist('button_enabled')
             content['button_text_1'] = request.form.get('button_text_1', '').strip()
             target = request.form.get('button_target_section_id', '').strip()
             content['button_target_section_id'] = int(target) if target.isdigit() else None
-            content['button_link_1'] = request.form.get('button_link_1', '').strip()
+            content['button_link_1'] = request.form.get('button_link_1', '').strip()  # penting!
             content['button_bg_color'] = request.form.get('button_bg_color', content.get('button_bg_color', '#2563eb'))
-            content['button_text_color'] = request.form.get('button_text_color',
-                                                            content.get('button_text_color', '#ffffff'))
+            content['button_text_color'] = request.form.get('button_text_color', content.get('button_text_color', '#ffffff'))
+
+            # Styling
+            content['nav_font_family'] = request.form.get('nav_font_family', content.get('nav_font_family', 'Plus Jakarta Sans'))
+            content['nav_bg_color'] = request.form.get('nav_bg_color', content.get('nav_bg_color', '#ffffff'))
+            content['nav_text_color'] = request.form.get('nav_text_color', content.get('nav_text_color', 'dark'))
 
         elif section.type == 'hero':
             content['cta_enabled'] = request.form.get('cta_enabled', '0') == '1'
 
-            # A. BACA LIST GAMBAR LAMA
             raw_images = request.form.getlist('content.images') or request.form.getlist('existing_images[]')
             if not raw_images:
                 single_img = request.form.get('content.image_url') or content.get('image_url') or content.get('image')
                 raw_images = [single_img] if single_img else []
 
-            # PERBAIKAN BANYAK GAMBAR: PROSES HAPUS DAN GANTI GAMBAR TERDAPAT
             processed_images = []
             for idx, img_url in enumerate(raw_images):
-                # Cek apakah checkbox hapus dicentang untuk indeks ini
                 is_deleted = request.form.get(f'delete_image_{idx}') == '1'
-
-                # Cek apakah ada file pengganti yang diupload untuk indeks ini
                 replacement_file = request.files.get(f'hero_image_{idx}')
 
                 if is_deleted:
-                    continue  # Abaikan / hapus dari array
+                    continue
                 elif replacement_file and replacement_file.filename != '':
                     new_url = save_uploaded_file(replacement_file)
                     if new_url:
@@ -166,14 +179,12 @@ def edit_section(section_id):
                 elif img_url and img_url.strip() != '':
                     processed_images.append(img_url.strip())
 
-            # B. UPLOAD GAMBAR BARU (JIKA ADA DARI FIELD TAMBAH GAMBAR BARU)
             add_image_file = request.files.get('add_hero_image')
             if add_image_file and add_image_file.filename != '':
                 new_add_url = save_uploaded_file(add_image_file)
                 if new_add_url:
                     processed_images.append(new_add_url)
 
-            # SINKRONISASI HASIL AKHIR PADA CONTENT
             content['images'] = processed_images
             if processed_images:
                 content['image_url'] = processed_images[0]
@@ -182,7 +193,6 @@ def edit_section(section_id):
                 content['image_url'] = ''
                 content['image'] = ''
 
-            # BACKGROUND IMAGE HANDLING
             existing_bg_image = request.form.get('content.bg_image_url') or content.get('bg_image_url')
             if existing_bg_image:
                 content['bg_image_url'] = existing_bg_image
@@ -207,7 +217,6 @@ def edit_section(section_id):
             'hero_images', 'images', 'hero_images[]', 'content.images', 'content.image_url',
             'add_hero_image'
         ]
-        # Filter juga kunci file hero_image_{idx} agar tidak menimpa otomatis
         for key, file in request.files.items():
             if key not in excluded_file_keys and not key.startswith('hero_image_') and not key.startswith(
                     'slides[') and file and file.filename != '':
