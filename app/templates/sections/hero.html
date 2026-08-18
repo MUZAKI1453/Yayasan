@@ -7,14 +7,14 @@
 {% set bg_color = section.content.get('bg_color', '#0f172a') %}
 {% set bg_image_url = section.content.get('bg_image_url', '') %}
 
-{# PARSING KONFIGURASI JUDUL UTAMA (TITLE) #}
-{% set title_text = section.content.get('title_text', 'Mulai Langkah Impian Anda Hari Ini') %}
+{# PERBAIKAN: PARSING KONFIGURASI JUDUL UTAMA (TITLE) DARI DATABASE (BIARKAN KOSONG JIKA DIHAPUS) #}
+{% set title_text = section.content.get('title') if section.content.get('title') is not none else section.content.get('title_text', '') %}
 {% set title_color = section.content.get('title_color', '#ffffff') %}
 {% set title_size = section.content.get('title_size', '36')|int %}
 {% set title_font_family = section.content.get('title_font_family', 'font-sans') %}
 
 {# PARSING KONFIGURASI SUBTITLE #}
-{% set subtitle_text = section.content.get('subtitle_text', 'Solusi terbaik untuk mengembangkan bisnis Anda dengan platform yang fleksibel dan efisien.') %}
+{% set subtitle_text = section.content.get('subtitle_text', '') %}
 {% set subtitle_color = section.content.get('subtitle_color', '#94a3b8') %}
 {% set subtitle_size = section.content.get('subtitle_size', '16')|int %}
 {% set subtitle_font_family = section.content.get('subtitle_font_family', 'font-sans') %}
@@ -67,7 +67,7 @@
     .font-serif { font-family: Georgia, Cambria, "Times New Roman", Times, serif !important; }
     .font-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important; }
 
-    /* UTILITY STYLES UNTUK KONTROL CANVAS LAYAKNYA COREL */
+    /* UTILITY STYLES UNTUK KONTROL CANVAS */
     .hero-editor-canvas {
         position: relative;
         width: 100%;
@@ -83,7 +83,8 @@
         padding: 4px;
         box-sizing: border-box;
     }
-    {% if hero_editor_mode %}.draggable-box:hover, .draggable-box.active-selected {
+    {% if hero_editor_mode %}
+    .draggable-box:hover, .draggable-box.active-selected {
         border: 1px dashed #3b82f6 !important;
         background-color: rgba(59, 130, 246, 0.05);
     }
@@ -101,14 +102,83 @@
     .draggable-box:hover .resize-handle, .draggable-box.active-selected .resize-handle {
         display: block;
     }
-{% else %}.draggable-box { pointer-events: none; } .draggable-box a { pointer-events: auto; }{% endif %}
+    {% else %}
+    .draggable-box { pointer-events: none; }
+    .draggable-box a { pointer-events: auto; }
+    {% endif %}
+
+    /* PREVENT TEXT OVERFLOW GLOBALLY */
+    .hero-editor-canvas h1,
+    .hero-editor-canvas p {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
+    }
+
+    /* RESPONSIVE LAYOUT UNTUK MOBILE & TABLET (< 768px) */
+    @media (max-width: 768px) {
+        .hero-editor-canvas {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            padding: 3rem 1.5rem 2.5rem 1.5rem !important;
+            min-height: auto !important;
+            height: auto !important;
+            box-sizing: border-box !important;
+        }
+
+        /* OVERRIDE POSISI DRAG-AND-DROP DI MOBILE */
+        .hero-editor-canvas .draggable-box {
+            position: relative !important;
+            transform: none !important;
+            top: auto !important;
+            left: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 1.25rem !important;
+        }
+
+        .hero-editor-canvas .draggable-box:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        /* UKURAN FONT KUSTOM RESPONSIF */
+        .hero-editor-canvas #render-title {
+            font-size: clamp(1.5rem, 6vw, 2.25rem) !important;
+            line-height: 1.25 !important;
+        }
+
+        .hero-editor-canvas #render-subtitle {
+            font-size: clamp(0.875rem, 3.5vw, 1rem) !important;
+            line-height: 1.5 !important;
+        }
+
+        .hero-editor-canvas #render-cta {
+            width: auto !important;
+            display: inline-block !important;
+            text-align: center;
+        }
+
+        .hero-editor-canvas img {
+            max-width: 100% !important;
+            height: auto !important;
+            margin: 0 auto !important;
+        }
+
+        /* SEMBUNYIKAN HANDLE RESIZE DI LAYAR KECIL */
+        .resize-handle {
+            display: none !important;
+        }
+    }
 </style>
 
 <section
     class="hero-editor-canvas"
     style="{{ hero_styles|join('; ') }}"
 >
-    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
+    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) - DITAMPILKAN HANYA JIKA TITLE KANAN TIDAK KOSONG -->
+    {% if title_text %}
     <div
         id="box-title"
         class="draggable-box"
@@ -126,8 +196,10 @@
         </h1>
         <div class="resize-handle"></div>
     </div>
+    {% endif %}
 
     <!-- 2. ELEMEN SUBTITLE -->
+    {% if subtitle_text %}
     <div
         id="box-subtitle"
         class="draggable-box"
@@ -145,6 +217,7 @@
         </p>
         <div class="resize-handle"></div>
     </div>
+    {% endif %}
 
     <!-- 3. ELEMEN TOMBOL CTA -->
     {% if cta_enabled and cta_text %}
@@ -166,11 +239,10 @@
     </div>
     {% endif %}
 
-    <!-- 4. MULTI-IMAGE LAYER HERO (LOOPING SETIAP GAMBAR) -->
+    <!-- 4. MULTI-IMAGE LAYER HERO -->
     {% for img_src in hero_images %}
         {% set idx = loop.index0 %}
 
-        {# PEMBACAAN KOORDINAT INDIVIDUAL DENGAN FALLBACK KE GAMBAR PERTAMA #}
         {% if idx == 0 %}
             {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
             {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}

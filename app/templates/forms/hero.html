@@ -51,15 +51,15 @@
         </div>
     </div>
 
-    <!-- PANEL 2: EDIT JUDUL UTAMA (TITLE) -->
+    <!-- PANEL DITAMBAHKAN: EDIT JUDUL UTAMA (TITLE) -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-type-h1 text-primary"></i> Edit Judul Utama (Title)
         </div>
         <div class="card-body p-3 bg-white space-y-2">
             <div>
-                <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Teks Judul</label>
-                <input type="text" name="content.title_text" value="{{ section.content.get('title_text', 'Mulai Langkah Impian Anda Hari Ini') }}" class="form-control form-control-sm" style="font-size: 0.75rem;" oninput="updateLivePreview('render-title', 'innerText', this.value)">
+                <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Teks Judul (Kosongkan jika ingin dihapus)</label>
+                <textarea name="content.title" class="form-control form-control-sm" rows="2" style="font-size: 0.75rem;" placeholder="Masukkan judul utama..." oninput="updateLivePreview('render-title', 'innerText', this.value)">{{ section.content.get('title', '') }}</textarea>
             </div>
             <div>
                 <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Font Family Judul</label>
@@ -71,7 +71,7 @@
             </div>
             <div class="row g-2">
                 <div class="col-6">
-                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Teks</label>
+                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Warna Judul</label>
                     <input type="color" name="content.title_color" value="{{ section.content.get('title_color', '#ffffff') }}" class="form-control form-control-color w-100 py-0" style="height: 31px;" oninput="updateLivePreview('render-title', 'color', this.value)">
                 </div>
                 <div class="col-6">
@@ -82,7 +82,7 @@
         </div>
     </div>
 
-    <!-- PANEL 3: EDIT SUBTITLE -->
+    <!-- PANEL 2: EDIT SUBTITLE -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-justify-left text-primary"></i> Edit Subtitle
@@ -113,7 +113,7 @@
         </div>
     </div>
 
-    <!-- PANEL 4: EDIT TOMBOL CTA -->
+    <!-- PANEL 3: EDIT TOMBOL CTA -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-menu-button-wide text-primary"></i> Edit Tombol CTA
@@ -154,7 +154,7 @@
         </div>
     </div>
 
-    <!-- PANEL 5: GAMBAR UTAMA HERO -->
+    <!-- PANEL 4: GAMBAR UTAMA HERO -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-image text-primary"></i> Upload Gambar Utama Hero
@@ -173,7 +173,7 @@
     </div>
 </form>
 
-<!-- SCRIPT UNTUK SINKRONISASI REALTME KE PREVIEW -->
+<!-- SCRIPT UNTUK SINKRONISASI REALTIME KE PREVIEW -->
 <script>
     // 1. Terima Koordinat dari Canvas Drag & Resize lalu Masukkan ke Hidden Input
     function handleCoordinateUpdate(key, value) {

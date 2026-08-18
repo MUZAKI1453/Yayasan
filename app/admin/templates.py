@@ -34,18 +34,32 @@ DEFAULT_SECTION_CONTENTS = {
         "nav_items": []
     },
     "hero": {
-        "slides": [
-            {
-                "image": "",
-                "eyebrow": "",
-                "title": "",
-                "subtitle": "",
-                "cta": {
-                    "text": "",
-                    "url": "#"
-                }
-            }
-        ]
+        "title": "Mulai Langkah Impian Anda Hari Ini",
+        "bg_type": "color",
+        "bg_color": "#0f172a",
+        "bg_image_url": "",
+        "subtitle_text": "Solusi terbaik untuk mengembangkan bisnis Anda dengan platform yang fleksibel dan efisien.",
+        "subtitle_color": "#94a3b8",
+        "subtitle_size": "16",
+        "subtitle_font_family": "font-sans",
+        "cta_enabled": True,
+        "cta_text": "Selengkapnya",
+        "cta_url": "#",
+        "cta_bg": "#2563eb",
+        "cta_color": "#ffffff",
+        "cta_font_family": "font-sans",
+        "images": [],
+        "pos_title_x": "40",
+        "pos_title_y": "60",
+        "pos_title_w": "500",
+        "pos_sub_x": "40",
+        "pos_sub_y": "200",
+        "pos_sub_w": "480",
+        "pos_cta_x": "40",
+        "pos_cta_y": "320",
+        "pos_img_x": "600",
+        "pos_img_y": "50",
+        "pos_img_w": "400"
     },
     "about": {
         "eyebrow": "Profil",
@@ -164,8 +178,7 @@ def generate_nav_items_for_page(page_id):
 
             # Jika section ini belum terdaftar di mana pun (baik top level maupun child dropdown)
             if nav_id not in all_existing_ids:
-                raw_title = content.get("title") or SECTION_NAV_NAMES.get(sec.type, sec.type.replace('_', ' ').title())
-                nav_text = SECTION_NAV_NAMES.get(raw_title, raw_title)
+                nav_text = SECTION_NAV_NAMES.get(sec.type, sec.type.replace('_', ' ').title())
                 new_items_to_add.append({
                     "id": nav_id,
                     "text": nav_text,

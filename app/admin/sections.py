@@ -72,18 +72,20 @@ def edit_section(section_id):
     if request.method == "POST":
         content = dict(section.content or {})
 
-        # --- 1. PROSES FORM DENGAN PREFIX 'content.' (TERMASUK KOORDINAT INDIVIDUAL POS_IMG_0_X, POS_IMG_1_X, DLL.) ---
+        # --- 1. PROSES FORM DENGAN PREFIX 'content.' (TERMASUK TITLE, KOORDINAT, DLL.) ---
         for key, value in request.form.items():
             if key.startswith('content.'):
                 content_key = key.replace('content.', '')
                 content[content_key] = value.strip() if isinstance(value, str) else value
 
+        # Fallback: Jika input title dikirim langsung sebagai 'title' (tanpa prefix 'content.')
+        if 'title' in request.form:
+            content['title'] = request.form.get('title', '').strip()
+
         # --- 2. PENANGANAN SPESIFIK BERDASARKAN TIPE SECTION ---
         if section.type == 'navbar':
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', '')).strip()
 
-            # Navbar dikelola sepenuhnya manual. Target menu disimpan sebagai ID Section,
-            # bukan URL #sec_xxx yang harus diketahui admin.
             def parse_nav_items(prefix='nav_parents'):
                 import re as _re
                 parents = {}
@@ -107,9 +109,6 @@ def edit_section(section_id):
                         'target_type': (Section.query.get(int(target_id)).type if target_id.isdigit() and Section.query.get(int(target_id)) else None),
                         'children': []
                     }
-                    # Parent boleh menjadi dropdown tanpa target.
-                    child_pattern = _re.compile(r'^children\[\]\[(text|target_section_id)\]$')
-                    # Browser mengirim pasangan [] secara berurutan; ambil langsung dari form list.
                     child_texts = request.form.getlist(f'{prefix}[{idx}][children][][text]')
                     child_targets = request.form.getlist(f'{prefix}[{idx}][children][][target_section_id]')
                     for cidx, child_text in enumerate(child_texts):
@@ -168,7 +167,6 @@ def edit_section(section_id):
                 request.files.getlist('content.images')
             )
 
-            # Fallback jika hanya 1 file diunggah via input file biasa
             if not hero_files or all(f.filename == '' for f in hero_files):
                 single_file = (
                     request.files.get('hero_image') or
@@ -179,7 +177,6 @@ def edit_section(section_id):
                 if single_file and single_file.filename != '':
                     hero_files = [single_file]
 
-            # Simpan file gambar baru yang diunggah
             uploaded_urls = []
             for file in hero_files:
                 if file and file.filename != '':
@@ -187,7 +184,6 @@ def edit_section(section_id):
                     if file_url:
                         uploaded_urls.append(file_url)
 
-            # Jika ada gambar baru, tambahkan ke list 'images'
             if uploaded_urls:
                 current_images = content.get('images', [])
                 if not isinstance(current_images, list):
@@ -196,11 +192,9 @@ def edit_section(section_id):
                 updated_images = current_images + uploaded_urls
                 content['images'] = updated_images
 
-                # Sinkronisasi gambar pertama untuk kompatibilitas template lama
                 content['image_url'] = updated_images[0]
                 content['image'] = updated_images[0]
 
-            # Sinkronisasi koordinat gambar index 0 ke pos_img_x/y/w utama
             if 'images' in content and isinstance(content['images'], list) and len(content['images']) > 0:
                 if 'pos_img_0_x' not in content and 'pos_img_x' in content:
                     content['pos_img_0_x'] = content['pos_img_x']
@@ -209,7 +203,6 @@ def edit_section(section_id):
                 if 'pos_img_0_w' not in content and 'pos_img_w' in content:
                     content['pos_img_0_w'] = content['pos_img_w']
 
-            # D. UPLOAD GAMBAR BACKGROUND HERO
             bg_file = request.files.get('bg_image') or request.files.get('content.bg_image')
             if bg_file and bg_file.filename != '':
                 uploaded_bg_url = save_uploaded_file(bg_file)
@@ -253,8 +246,6 @@ def delete_section(section_id):
     """HAPUS SECTION DAN MENU TERHUBUNG"""
     section = Section.query.get_or_404(section_id)
     page_id = section.page_id
-    # Section dan Navbar sengaja independent. Menghapus Section tidak menghapus
-    # menu Navbar; menu yang targetnya sudah tidak ada akan dirender sebagai link kosong.
     db.session.delete(section)
     db.session.commit()
 
