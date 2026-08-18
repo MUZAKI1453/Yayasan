@@ -2,7 +2,7 @@
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data" class="editor-hero-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
 
-    {# ALL HIDDEN INPUTS UNTUK MENYIMPAN KOORDINAT POSISI & UKURAN LEBAR (DRAG & RESIZE) #}
+    {# ALL HIDDEN INPUTS UNTUK MENYIMPAN KOORDINAT POSISI & UKURAN LEBAR #}
     <input type="hidden" name="content.pos_title_x" id="input_pos_title_x" value="{{ section.content.get('pos_title_x', '40') }}">
     <input type="hidden" name="content.pos_title_y" id="input_pos_title_y" value="{{ section.content.get('pos_title_y', '60') }}">
     <input type="hidden" name="content.pos_title_w" id="input_pos_title_w" value="{{ section.content.get('pos_title_w', '500') }}">
@@ -14,17 +14,28 @@
     <input type="hidden" name="content.pos_cta_x" id="input_pos_cta_x" value="{{ section.content.get('pos_cta_x', '40') }}">
     <input type="hidden" name="content.pos_cta_y" id="input_pos_cta_y" value="{{ section.content.get('pos_cta_y', '320') }}">
 
-    <input type="hidden" name="content.pos_img_x" id="input_pos_img_x" value="{{ section.content.get('pos_img_x', '600') }}">
-    <input type="hidden" name="content.pos_img_y" id="input_pos_img_y" value="{{ section.content.get('pos_img_y', '50') }}">
-    <input type="hidden" name="content.pos_img_w" id="input_pos_img_w" value="{{ section.content.get('pos_img_w', '400') }}">
-    {% set hero_form_images = section.content.get('images') or ([section.content.get('image_url') or section.content.get('image')] if (section.content.get('image_url') or section.content.get('image')) else []) %}
-    {% for img_idx in range(hero_form_images|length) %}
-        <input type="hidden" name="content.pos_img_{{ img_idx }}_x" id="input_pos_img_{{ img_idx }}_x" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_x', section.content.get('pos_img_x', '600')) }}">
-        <input type="hidden" name="content.pos_img_{{ img_idx }}_y" id="input_pos_img_{{ img_idx }}_y" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_y', section.content.get('pos_img_y', '50')) }}">
-        <input type="hidden" name="content.pos_img_{{ img_idx }}_w" id="input_pos_img_{{ img_idx }}_w" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_w', section.content.get('pos_img_w', '400')) }}">
-    {% endfor %}
+    {# HIDDEN INPUT KOORDINAT KHUSUS ELEMEN GAMBAR #}
+    {% set raw_form_images = section.content.get('images') %}
+    {% if raw_form_images and raw_form_images is iterable and raw_form_images is not string %}
+        {% set hero_form_images = raw_form_images %}
+    {% else %}
+        {% set single_f_img = section.content.get('image_url') or section.content.get('image') %}
+        {% set hero_form_images = [single_f_img] if single_f_img else [] %}
+    {% endif %}
 
-    <!-- PANEL 1: KHUSUS BACKGROUND SECTION HERO -->
+    {% if hero_form_images|length == 0 %}
+        <input type="hidden" name="content.pos_img_0_x" id="input_pos_img_0_x" value="{{ section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600')) }}">
+        <input type="hidden" name="content.pos_img_0_y" id="input_pos_img_0_y" value="{{ section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50')) }}">
+        <input type="hidden" name="content.pos_img_0_w" id="input_pos_img_0_w" value="{{ section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400')) }}">
+    {% else %}
+        {% for img_idx in range(hero_form_images|length) %}
+            <input type="hidden" name="content.pos_img_{{ img_idx }}_x" id="input_pos_img_{{ img_idx }}_x" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_x', section.content.get('pos_img_x', '600')) }}">
+            <input type="hidden" name="content.pos_img_{{ img_idx }}_y" id="input_pos_img_{{ img_idx }}_y" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_y', section.content.get('pos_img_y', '50')) }}">
+            <input type="hidden" name="content.pos_img_{{ img_idx }}_w" id="input_pos_img_{{ img_idx }}_w" value="{{ section.content.get('pos_img_' ~ img_idx ~ '_w', section.content.get('pos_img_w', '400')) }}">
+        {% endfor %}
+    {% endif %}
+
+    <!-- PANEL 1: BACKGROUND SECTION HERO -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-palette text-primary"></i> Pengaturan Background Section
@@ -51,7 +62,7 @@
         </div>
     </div>
 
-    <!-- PANEL DITAMBAHKAN: EDIT JUDUL UTAMA (TITLE) -->
+    <!-- PANEL 2: EDIT JUDUL UTAMA (TITLE) -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-type-h1 text-primary"></i> Edit Judul Utama (Title)
@@ -82,7 +93,7 @@
         </div>
     </div>
 
-    <!-- PANEL 2: EDIT SUBTITLE -->
+    <!-- PANEL 3: EDIT SUBTITLE -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-justify-left text-primary"></i> Edit Subtitle
@@ -113,7 +124,7 @@
         </div>
     </div>
 
-    <!-- PANEL 3: EDIT TOMBOL CTA -->
+    <!-- PANEL 4: EDIT TOMBOL CTA -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
             <i class="bi bi-menu-button-wide text-primary"></i> Edit Tombol CTA
@@ -154,18 +165,49 @@
         </div>
     </div>
 
-    <!-- PANEL 4: GAMBAR UTAMA HERO -->
+    <!-- PANEL 5: KELOLA GAMBAR HERO -->
     <div class="card border rounded-3 mb-3 shadow-sm overflow-hidden">
         <div class="card-header bg-light py-2 px-3 fw-bold text-dark d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
-            <i class="bi bi-image text-primary"></i> Upload Gambar Utama Hero
+            <i class="bi bi-image text-primary"></i> Kelola Gambar Hero
         </div>
         <div class="card-body p-3 bg-white">
-            <input type="hidden" name="content.image_url" value="{{ section.content.get('image_url', '') }}">
-            <input type="file" name="hero_image" class="form-control form-control-sm" style="font-size: 0.75rem;" accept="image/*">
+            {% if hero_form_images|length > 0 %}
+                {% for img in hero_form_images %}
+                <div class="border rounded p-2 mb-2 bg-light" id="img_wrapper_{{ loop.index0 }}">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fw-semibold text-muted" style="font-size: 0.75rem;">Gambar #{{ loop.index }}</span>
+                        {% if img %}
+                        <div class="form-check form-switch m-0">
+                            <input class="form-check-input" type="checkbox" name="delete_image_{{ loop.index0 }}" value="1" id="del_img_{{ loop.index0 }}" onchange="toggleDeleteImage({{ loop.index0 }}, this.checked)">
+                            <label class="form-check-label text-danger fw-semibold" for="del_img_{{ loop.index0 }}" style="font-size: 0.7rem;">Hapus</label>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <input type="hidden" name="content.images" value="{{ img }}" id="hidden_img_url_{{ loop.index0 }}">
+
+                    {% if img %}
+                    <div class="mb-2 text-center bg-white p-1 rounded border">
+                        <img src="{{ img }}" alt="Hero Image {{ loop.index }}" style="max-height: 80px; object-fit: contain;">
+                    </div>
+                    {% endif %}
+
+                    <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">
+                        {{ 'Ganti Gambar' if img else 'Upload Gambar' }}
+                    </label>
+                    <input type="file" name="hero_image_{{ loop.index0 }}" class="form-control form-control-sm" style="font-size: 0.75rem;" accept="image/*">
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="mt-2 pt-2 border-top">
+                <label class="form-label text-muted fw-semibold mb-1" style="font-size: 0.7rem;">Tambah Gambar Baru</label>
+                <input type="file" name="add_hero_image" class="form-control form-control-sm" style="font-size: 0.75rem;" accept="image/*">
+            </div>
         </div>
     </div>
 
-    <!-- TOMBOL SIMPAN SINKRONISASI -->
+    <!-- TOMBOL SIMPAN -->
     <div class="p-2 border-top bg-white position-sticky bottom-0 mt-3 shadow-lg rounded-top-3 z-3">
         <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold py-2">
             <i class="bi bi-save me-1"></i> Simpan Desain Hero
@@ -173,9 +215,8 @@
     </div>
 </form>
 
-<!-- SCRIPT UNTUK SINKRONISASI REALTIME KE PREVIEW -->
+<!-- SCRIPT SINKRONISASI REALTIME -->
 <script>
-    // 1. Terima Koordinat dari Canvas Drag & Resize lalu Masukkan ke Hidden Input
     function handleCoordinateUpdate(key, value) {
         const targetInput = document.getElementById("input_" + key);
         if (targetInput) targetInput.value = value;
@@ -193,7 +234,6 @@
         }
     });
 
-    // 2. Kirim Style / Teks / Warna Terbaru ke Canvas Preview Secara Instant
     function updateLivePreview(targetId, property, value) {
         const payload = { type: 'CANVAS_STYLE_UPDATE', targetId, property, value };
         const iframe = document.querySelector("iframe");
@@ -204,12 +244,21 @@
         }
     }
 
-    // 3. Kirim Perubahan Font Family Secara Spesifik
     function updateLivePreviewFont(targetId, fontFamilyClass) {
         let fontValue = "sans-serif";
         if (fontFamilyClass === "font-serif") fontValue = "serif";
         if (fontFamilyClass === "font-mono") fontValue = "monospace";
 
         updateLivePreview(targetId, 'fontFamily', fontValue);
+    }
+
+    function toggleDeleteImage(index, isChecked) {
+        const targetImgId = "render-image-" + index;
+        const hiddenInput = document.getElementById("hidden_img_url_" + index);
+
+        if (isChecked) {
+            if (hiddenInput) hiddenInput.value = "";
+            updateLivePreview(targetImgId, 'src', '');
+        }
     }
 </script>

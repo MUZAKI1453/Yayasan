@@ -7,7 +7,7 @@
 {% set bg_color = section.content.get('bg_color', '#0f172a') %}
 {% set bg_image_url = section.content.get('bg_image_url', '') %}
 
-{# PERBAIKAN: PARSING KONFIGURASI JUDUL UTAMA (TITLE) DARI DATABASE (BIARKAN KOSONG JIKA DIHAPUS) #}
+{# PARSING KONFIGURASI JUDUL UTAMA (TITLE) #}
 {% set title_text = section.content.get('title') if section.content.get('title') is not none else section.content.get('title_text', '') %}
 {% set title_color = section.content.get('title_color', '#ffffff') %}
 {% set title_size = section.content.get('title_size', '36')|int %}
@@ -26,8 +26,8 @@
 {% set cta_color = section.content.get('cta_color', '#ffffff') %}
 {% set cta_font_family = section.content.get('cta_font_family', 'font-sans') %}
 
-{# PARSING MULTI-IMAGE HERO LIST (FALLBACK KE 'image_url' / 'image' JIKA 'images' KOSONG) #}
-{% set raw_images = section.content.get('images') or section.content.get('images_list') %}
+{# PARSING MULTI-IMAGE HERO LIST #}
+{% set raw_images = section.content.get('images') %}
 {% if raw_images and raw_images is iterable and raw_images is not string %}
     {% set hero_images = raw_images %}
 {% else %}
@@ -53,12 +53,12 @@
 
 {# STYLES CONTAINER HERO #}
 {% set hero_styles = [] %}
-{% if bg_type == 'color' %}
-    {% set _ = hero_styles.append('background-color: ' ~ bg_color) %}
-{% elif bg_type == 'image' and bg_image_url %}
+{% if bg_type == 'image' and bg_image_url %}
     {% set _ = hero_styles.append("background-image: url('" ~ bg_image_url ~ "')") %}
     {% set _ = hero_styles.append('background-size: cover') %}
     {% set _ = hero_styles.append('background-position: center') %}
+{% else %}
+    {% set _ = hero_styles.append('background-color: ' ~ bg_color) %}
 {% endif %}
 
 <style>
@@ -107,7 +107,6 @@
     .draggable-box a { pointer-events: auto; }
     {% endif %}
 
-    /* PREVENT TEXT OVERFLOW GLOBALLY */
     .hero-editor-canvas h1,
     .hero-editor-canvas p {
         word-wrap: break-word !important;
@@ -115,20 +114,20 @@
         white-space: normal !important;
     }
 
-    /* RESPONSIVE LAYOUT UNTUK MOBILE & TABLET (< 768px) */
+    /* RESPONSIVE LAYOUT MOBILE & TABLET (< 768px) */
     @media (max-width: 768px) {
         .hero-editor-canvas {
             display: flex !important;
             flex-direction: column !important;
-            justify-content: center !important;
-            align-items: flex-start !important;
-            padding: 3rem 1.5rem 2.5rem 1.5rem !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            padding: 2.5rem 1.25rem !important;
             min-height: auto !important;
             height: auto !important;
             box-sizing: border-box !important;
+            text-align: center !important;
         }
 
-        /* OVERRIDE POSISI DRAG-AND-DROP DI MOBILE */
         .hero-editor-canvas .draggable-box {
             position: relative !important;
             transform: none !important;
@@ -137,36 +136,49 @@
             width: 100% !important;
             max-width: 100% !important;
             margin-bottom: 1.25rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }
 
         .hero-editor-canvas .draggable-box:last-child {
             margin-bottom: 0 !important;
         }
 
-        /* UKURAN FONT KUSTOM RESPONSIF */
         .hero-editor-canvas #render-title {
-            font-size: clamp(1.5rem, 6vw, 2.25rem) !important;
+            font-size: clamp(1.5rem, 5vw, 2rem) !important;
             line-height: 1.25 !important;
+            text-align: center !important;
         }
 
         .hero-editor-canvas #render-subtitle {
             font-size: clamp(0.875rem, 3.5vw, 1rem) !important;
             line-height: 1.5 !important;
+            text-align: center !important;
         }
 
         .hero-editor-canvas #render-cta {
-            width: auto !important;
+            width: 100% !important;
+            max-width: 220px !important;
             display: inline-block !important;
-            text-align: center;
+            text-align: center !important;
         }
 
-        .hero-editor-canvas img {
+        .hero-editor-canvas [id^="box-image-"] {
+            width: 100% !important;
+            max-width: 280px !important;
+            margin: 0.5rem auto !important;
+        }
+
+        .hero-editor-canvas [id^="box-image-"] img {
+            width: 100% !important;
             max-width: 100% !important;
             height: auto !important;
+            object-fit: contain !important;
+            display: block !important;
             margin: 0 auto !important;
         }
 
-        /* SEMBUNYIKAN HANDLE RESIZE DI LAYAR KECIL */
         .resize-handle {
             display: none !important;
         }
@@ -177,7 +189,7 @@
     class="hero-editor-canvas"
     style="{{ hero_styles|join('; ') }}"
 >
-    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) - DITAMPILKAN HANYA JIKA TITLE KANAN TIDAK KOSONG -->
+    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
     {% if title_text %}
     <div
         id="box-title"
@@ -241,36 +253,38 @@
 
     <!-- 4. MULTI-IMAGE LAYER HERO -->
     {% for img_src in hero_images %}
-        {% set idx = loop.index0 %}
+        {% if img_src and img_src.strip() != '' %}
+            {% set idx = loop.index0 %}
 
-        {% if idx == 0 %}
-            {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
-            {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}
-            {% set img_w = section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400'))|int %}
-        {% else %}
-            {% set default_offset_x = 600 + (idx * 30) %}
-            {% set default_offset_y = 50 + (idx * 30) %}
-            {% set img_x = section.content.get('pos_img_' ~ idx ~ '_x', default_offset_x)|int %}
-            {% set img_y = section.content.get('pos_img_' ~ idx ~ '_y', default_offset_y)|int %}
-            {% set img_w = section.content.get('pos_img_' ~ idx ~ '_w', '300')|int %}
-        {% endif %}
+            {% if idx == 0 %}
+                {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
+                {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}
+                {% set img_w = section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400'))|int %}
+            {% else %}
+                {% set default_offset_x = 600 + (idx * 30) %}
+                {% set default_offset_y = 50 + (idx * 30) %}
+                {% set img_x = section.content.get('pos_img_' ~ idx ~ '_x', default_offset_x)|int %}
+                {% set img_y = section.content.get('pos_img_' ~ idx ~ '_y', default_offset_y)|int %}
+                {% set img_w = section.content.get('pos_img_' ~ idx ~ '_w', '300')|int %}
+            {% endif %}
 
-        <div
-            id="box-image-{{ idx }}"
-            class="draggable-box"
-            data-target-x="pos_img_{{ idx }}_x"
-            data-target-y="pos_img_{{ idx }}_y"
-            data-target-w="pos_img_{{ idx }}_w"
-            style="transform: translate({{ img_x }}px, {{ img_y }}px); width: {{ img_w }}px; z-index: {{ 10 + idx }};"
-        >
-            <img
-                id="render-image-{{ idx }}"
-                src="{{ img_src }}"
-                style="width: 100%; height: auto; pointer-events: none; display: block;"
-                alt="Hero Image {{ idx + 1 }}"
+            <div
+                id="box-image-{{ idx }}"
+                class="draggable-box"
+                data-target-x="pos_img_{{ idx }}_x"
+                data-target-y="pos_img_{{ idx }}_y"
+                data-target-w="pos_img_{{ idx }}_w"
+                style="transform: translate({{ img_x }}px, {{ img_y }}px); width: {{ img_w }}px; z-index: {{ 10 + idx }};"
             >
-            <div class="resize-handle"></div>
-        </div>
+                <img
+                    id="render-image-{{ idx }}"
+                    src="{{ img_src }}"
+                    style="width: 100%; height: auto; pointer-events: none; display: block;"
+                    alt="Hero Image {{ idx + 1 }}"
+                >
+                <div class="resize-handle"></div>
+            </div>
+        {% endif %}
     {% endfor %}
 </section>
 
@@ -368,6 +382,10 @@
                     el.innerText = value;
                 } else if (property === 'src') {
                     el.src = value;
+                    const parentBox = el.closest('.draggable-box');
+                    if (parentBox) {
+                        parentBox.style.display = (value && value.trim() !== '') ? 'block' : 'none';
+                    }
                 } else if (property === 'fontFamily') {
                     el.style.fontFamily = value;
                 } else {

@@ -72,13 +72,13 @@ def edit_section(section_id):
     if request.method == "POST":
         content = dict(section.content or {})
 
-        # --- 1. PROSES FORM DENGAN PREFIX 'content.' (TERMASUK TITLE, KOORDINAT, DLL.) ---
+        # --- 1. PROSES FORM DENGAN PREFIX 'content.' ---
         for key, value in request.form.items():
             if key.startswith('content.'):
                 content_key = key.replace('content.', '')
                 content[content_key] = value.strip() if isinstance(value, str) else value
 
-        # Fallback: Jika input title dikirim langsung sebagai 'title' (tanpa prefix 'content.')
+        # Fallback title
         if 'title' in request.form:
             content['title'] = request.form.get('title', '').strip()
 
@@ -87,9 +87,8 @@ def edit_section(section_id):
             content['brand_name'] = request.form.get('brand_name', content.get('brand_name', '')).strip()
 
             def parse_nav_items(prefix='nav_parents'):
-                import re as _re
                 parents = {}
-                pattern = _re.compile(rf'^{_re.escape(prefix)}\[(\d+)\]\[(.+?)\]$')
+                pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[(.+?)\]$')
                 for key, value in request.form.items():
                     m = pattern.match(key)
                     if not m:
@@ -106,7 +105,9 @@ def edit_section(section_id):
                         'id': raw.get('id') or f'nav_{uuid.uuid4().hex[:8]}',
                         'text': text,
                         'target_section_id': int(target_id) if target_id.isdigit() else None,
-                        'target_type': (Section.query.get(int(target_id)).type if target_id.isdigit() and Section.query.get(int(target_id)) else None),
+                        'target_type': (
+                            Section.query.get(int(target_id)).type if target_id.isdigit() and Section.query.get(
+                                int(target_id)) else None),
                         'children': []
                     }
                     child_texts = request.form.getlist(f'{prefix}[{idx}][children][][text]')
@@ -120,7 +121,9 @@ def edit_section(section_id):
                             'id': f'nav_{uuid.uuid4().hex[:8]}',
                             'text': child_text,
                             'target_section_id': int(child_target) if child_target.isdigit() else None,
-                            'target_type': (Section.query.get(int(child_target)).type if child_target.isdigit() and Section.query.get(int(child_target)) else None)
+                            'target_type': (Section.query.get(
+                                int(child_target)).type if child_target.isdigit() and Section.query.get(
+                                int(child_target)) else None)
                         })
                     if text:
                         items.append(item)
@@ -133,75 +136,60 @@ def edit_section(section_id):
             content['button_target_section_id'] = int(target) if target.isdigit() else None
             content['button_link_1'] = request.form.get('button_link_1', '').strip()
             content['button_bg_color'] = request.form.get('button_bg_color', content.get('button_bg_color', '#2563eb'))
-            content['button_text_color'] = request.form.get('button_text_color', content.get('button_text_color', '#ffffff'))
+            content['button_text_color'] = request.form.get('button_text_color',
+                                                            content.get('button_text_color', '#ffffff'))
 
         elif section.type == 'hero':
             content['cta_enabled'] = request.form.get('cta_enabled', '0') == '1'
-            # A. PERTAHANKAN LIST GAMBAR YANG SUDAH ADA DARI FORM ATAU DATABASE
-            existing_images = request.form.getlist('content.existing_images') or request.form.getlist('existing_images[]')
-            existing_single_img = request.form.get('content.image_url') or request.form.get('content.existing_image') or content.get('image_url') or content.get('image')
 
-            if existing_images:
-                content['images'] = existing_images
-            elif existing_single_img and 'images' not in content:
-                content['images'] = [existing_single_img]
+            # A. BACA LIST GAMBAR LAMA
+            raw_images = request.form.getlist('content.images') or request.form.getlist('existing_images[]')
+            if not raw_images:
+                single_img = request.form.get('content.image_url') or content.get('image_url') or content.get('image')
+                raw_images = [single_img] if single_img else []
 
-            if existing_single_img:
-                content['image_url'] = existing_single_img
-                content['image'] = existing_single_img
+            # PERBAIKAN BANYAK GAMBAR: PROSES HAPUS DAN GANTI GAMBAR TERDAPAT
+            processed_images = []
+            for idx, img_url in enumerate(raw_images):
+                # Cek apakah checkbox hapus dicentang untuk indeks ini
+                is_deleted = request.form.get(f'delete_image_{idx}') == '1'
 
-            existing_bg_image = request.form.get('content.bg_image_url') or request.form.get('content.existing_bg_image') or content.get('bg_image_url')
+                # Cek apakah ada file pengganti yang diupload untuk indeks ini
+                replacement_file = request.files.get(f'hero_image_{idx}')
+
+                if is_deleted:
+                    continue  # Abaikan / hapus dari array
+                elif replacement_file and replacement_file.filename != '':
+                    new_url = save_uploaded_file(replacement_file)
+                    if new_url:
+                        processed_images.append(new_url)
+                elif img_url and img_url.strip() != '':
+                    processed_images.append(img_url.strip())
+
+            # B. UPLOAD GAMBAR BARU (JIKA ADA DARI FIELD TAMBAH GAMBAR BARU)
+            add_image_file = request.files.get('add_hero_image')
+            if add_image_file and add_image_file.filename != '':
+                new_add_url = save_uploaded_file(add_image_file)
+                if new_add_url:
+                    processed_images.append(new_add_url)
+
+            # SINKRONISASI HASIL AKHIR PADA CONTENT
+            content['images'] = processed_images
+            if processed_images:
+                content['image_url'] = processed_images[0]
+                content['image'] = processed_images[0]
+            else:
+                content['image_url'] = ''
+                content['image'] = ''
+
+            # BACKGROUND IMAGE HANDLING
+            existing_bg_image = request.form.get('content.bg_image_url') or content.get('bg_image_url')
             if existing_bg_image:
                 content['bg_image_url'] = existing_bg_image
 
-            # B. PRESET TEKSTUR BACKGROUND
             bg_image_preset = request.form.get('content.bg_image_preset')
             if bg_image_preset:
                 content['bg_image_url'] = bg_image_preset
-
-            # C. UPLOAD MULTIPLE GAMBAR HERO INDEPENDEN
-            hero_files = (
-                request.files.getlist('hero_images') or
-                request.files.getlist('images') or
-                request.files.getlist('hero_images[]') or
-                request.files.getlist('content.images')
-            )
-
-            if not hero_files or all(f.filename == '' for f in hero_files):
-                single_file = (
-                    request.files.get('hero_image') or
-                    request.files.get('image') or
-                    request.files.get('content.image') or
-                    request.files.get('content.image_url')
-                )
-                if single_file and single_file.filename != '':
-                    hero_files = [single_file]
-
-            uploaded_urls = []
-            for file in hero_files:
-                if file and file.filename != '':
-                    file_url = save_uploaded_file(file)
-                    if file_url:
-                        uploaded_urls.append(file_url)
-
-            if uploaded_urls:
-                current_images = content.get('images', [])
-                if not isinstance(current_images, list):
-                    current_images = [current_images] if current_images else []
-
-                updated_images = current_images + uploaded_urls
-                content['images'] = updated_images
-
-                content['image_url'] = updated_images[0]
-                content['image'] = updated_images[0]
-
-            if 'images' in content and isinstance(content['images'], list) and len(content['images']) > 0:
-                if 'pos_img_0_x' not in content and 'pos_img_x' in content:
-                    content['pos_img_0_x'] = content['pos_img_x']
-                if 'pos_img_0_y' not in content and 'pos_img_y' in content:
-                    content['pos_img_0_y'] = content['pos_img_y']
-                if 'pos_img_0_w' not in content and 'pos_img_w' in content:
-                    content['pos_img_0_w'] = content['pos_img_w']
 
             bg_file = request.files.get('bg_image') or request.files.get('content.bg_image')
             if bg_file and bg_file.filename != '':
@@ -216,10 +204,13 @@ def edit_section(section_id):
         excluded_file_keys = [
             'gallery_files[]', 'image_file', 'logo_file', 'logo',
             'qris_file', 'image', 'content.image', 'bg_image', 'hero_image',
-            'hero_images', 'images', 'hero_images[]', 'content.images', 'content.image_url'
+            'hero_images', 'images', 'hero_images[]', 'content.images', 'content.image_url',
+            'add_hero_image'
         ]
+        # Filter juga kunci file hero_image_{idx} agar tidak menimpa otomatis
         for key, file in request.files.items():
-            if key not in excluded_file_keys and not key.startswith('slides[') and file and file.filename != '':
+            if key not in excluded_file_keys and not key.startswith('hero_image_') and not key.startswith(
+                    'slides[') and file and file.filename != '':
                 file_url = save_uploaded_file(file)
                 if file_url:
                     field_key = key.replace('_file', '').replace('content.', '')
@@ -234,7 +225,7 @@ def edit_section(section_id):
 
         db.session.commit()
 
-        flash("Perubahan tata letak dan konten berhasil disimpan!", "success")
+        flash("Perubahan berhasil disimpan!", "success")
         return redirect(url_for("admin.manage_section", page_id=page.id, section_id=section.id))
 
     return render_template("admin/manage_sections.html", section=section, page=page)
