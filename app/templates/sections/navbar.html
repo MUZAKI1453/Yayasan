@@ -20,7 +20,12 @@
     {%- if item.get('url') -%}
         {{ item.get('url') }}
     {%- elif item.get('target_section_id') -%}
-        #{{ item.get('target_type', 'section') }}-{{ item.get('target_section_id') }}
+        {%- set target_sec = (sections | selectattr('id', 'equalto', item.get('target_section_id')) | first) -%}
+        {%- if target_sec -%}
+            #{{ target_sec.type }}_{{ target_sec.id }}
+        {%- else -%}
+            #sec_{{ item.get('target_section_id') }}
+        {%- endif -%}
     {%- else -%}#{%- endif -%}
 {%- endmacro %}
 
@@ -37,6 +42,23 @@
             }) %}
         {% endif %}
     {% endfor %}
+{% endif %}
+
+{# LOGIKA TOMBOL CTA: Pengecekan button_enabled (True/1/'1'/'true') #}
+{% set raw_enabled = section.content.get('button_enabled') %}
+{% set is_btn_enabled = raw_enabled in [true, 1, '1', 'true'] or (raw_enabled is not defined and section.content.get('button_text_1')) %}
+
+{# Penentuan URL CTA #}
+{% set button_target_url = '#' %}
+{% if section.content.get('button_link_1') %}
+    {% set button_target_url = section.content.get('button_link_1') %}
+{% elif section.content.get('button_target_section_id') %}
+    {% set target_btn_sec = (page.sections | selectattr('id', 'equalto', section.content.get('button_target_section_id')) | first) %}
+    {% if target_btn_sec %}
+        {% set button_target_url = '#' ~ target_btn_sec.type ~ '_' ~ target_btn_sec.id %}
+    {% else %}
+        {% set button_target_url = '#sec_' ~ section.content.get('button_target_section_id') %}
+    {% endif %}
 {% endif %}
 
 <!-- TOP NAVBAR -->
@@ -103,16 +125,12 @@
                     {% endif %}
                 {% endfor %}
 
-                {% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') and section.content.get('button_text_1') %}
-                    {% set button_target = namespace(url='#') %}
-                    {% if section.content.get('button_link_1') %}
-                        {% set button_target.url = section.content.get('button_link_1') %}
-                    {% elif section.content.get('button_target_section_id') %}
-                        {% for sec in page.sections if sec.id == section.content.get('button_target_section_id') %}
-                            {% set button_target.url = '#' ~ sec.type ~ '-' ~ sec.id %}
-                        {% endfor %}
-                    {% endif %}
-                    <a href="{{ button_target.url }}" onclick="handleNavClick(event, '{{ button_target.url }}')" class="px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-decoration-none ms-3" style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
+                {# === TOMBOL CTA DESKTOP (hanya tampil jika is_btn_enabled = true) === #}
+                {% if is_btn_enabled and section.content.get('button_text_1') %}
+                    <a href="{{ button_target_url }}"
+                       onclick="handleNavClick(event, '{{ button_target_url }}')"
+                       class="px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-decoration-none ms-3"
+                       style="background-color: {{ btn_bg }}; color: {{ btn_txt }};">
                         {{ section.content.get('button_text_1') }}
                     </a>
                 {% endif %}
@@ -176,16 +194,12 @@
             {% endif %}
         {% endfor %}
 
-        {% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') and section.content.get('button_text_1') %}
-            {% set button_target = namespace(url='#') %}
-            {% if section.content.get('button_link_1') %}
-                {% set button_target.url = section.content.get('button_link_1') %}
-            {% elif section.content.get('button_target_section_id') %}
-                {% for sec in page.sections if sec.id == section.content.get('button_target_section_id') %}
-                    {% set button_target.url = '#' ~ sec.type ~ '-' ~ sec.id %}
-                {% endfor %}
-            {% endif %}
-            <a href="{{ button_target.url }}" onclick="handleNavClick(event, '{{ button_target.url }}')" class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px] text-decoration-none" style="color: {{ btn_bg }};">
+        {# === TOMBOL CTA MOBILE (hanya tampil jika is_btn_enabled = true) === #}
+        {% if is_btn_enabled and section.content.get('button_text_1') %}
+            <a href="{{ button_target_url }}"
+               onclick="handleNavClick(event, '{{ button_target_url }}')"
+               class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px] text-decoration-none"
+               style="color: {{ btn_bg }};">
                 <i class="bi bi-box-arrow-in-right text-lg leading-none mb-0.5"></i>
                 <span class="truncate max-w-[70px]">{{ section.content.get('button_text_1') }}</span>
             </a>
@@ -239,7 +253,7 @@
                 window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         }
-        // Kalau URL eksternal / halaman lain → biarkan browser navigate normal
+        // URL eksternal / halaman lain → biarkan browser navigate normal
     }
 
     function toggleDesktopDropdown(event, index) {

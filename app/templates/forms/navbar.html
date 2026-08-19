@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 2: MENU NAVIGASI ================= -->
+        <!-- ================= TAB 2: MENU NAVIGASI & CTA ================= -->
         <div class="tab-pane fade" id="panel-menu" role="tabpanel">
             <div class="d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded-3 border">
                 <span class="fw-bold text-dark" style="font-size: 0.78rem;">Daftar Menu Navigasi</span>
@@ -79,8 +79,6 @@
                                     {{ item.text if item.text else 'Menu Tanpa Judul' }}
                                 </span>
                                 {% set children_count = (item.get('children') or item.get('sub_items') or [])|length %}
-                                {% set legacy_target = namespace(id=item.get('target_section_id')) %}
-                                {% if not legacy_target.id and item.get('url') %}{% for sec in page.sections if sec.content.get('nav_id') == item.get('url').lstrip('#') %}{% set legacy_target.id = sec.id %}{% endfor %}{% endif %}
                                 {% if children_count > 0 %}
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.62rem;">
                                         {{ children_count }} sub
@@ -101,10 +99,12 @@
                                     <input type="text" name="nav_parents[{{ outer_loop_index }}][text]" value="{{ item.text }}" class="form-control form-control-sm" placeholder="Nama Menu" oninput="updateMenuTitlePreview(this)">
                                 </div>
                                 <div class="col-6">
-                                    <select name="nav_parents[{{ outer_loop_index }}][target_section_id]" class="form-select form-select-sm" onchange="previewTargetSectionId(this.value)">
+                                    <select name="nav_parents[{{ outer_loop_index }}][target_section_id]" class="form-select form-select-sm">
                                         <option value="">Tidak ada tujuan (section)</option>
                                         {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
-                                            <option value="{{ sec.id }}" {% if legacy_target.id == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>
+                                            <option value="{{ sec.id }}" {% if item.get('target_section_id') == sec.id %}selected{% endif %}>
+                                                {{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}
+                                            </option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -124,20 +124,23 @@
                                 <div class="children-container d-flex flex-column gap-1.5">
                                     {% set children = item.get('children') or item.get('sub_items') or [] %}
                                     {% for child in children %}
-                                        {% set child_target = namespace(id=child.get('target_section_id')) %}
-                                        {% if not child_target.id and child.get('url') %}{% for sec in page.sections if sec.content.get('nav_id') == child.get('url').lstrip('#') %}{% set child_target.id = sec.id %}{% endfor %}{% endif %}
+                                        {% set child_loop_index = loop.index0 %}
                                         <div class="d-flex flex-column gap-1 child-nav-row bg-white p-1.5 border rounded">
                                             <div class="d-flex align-items-center gap-1">
-                                                <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][text]" value="{{ child.text }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
-                                                <select name="nav_parents[{{ outer_loop_index }}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
+                                                <input type="text" name="nav_parents[{{ outer_loop_index }}][children][{{ child_loop_index }}][text]" value="{{ child.text }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                                                <select name="nav_parents[{{ outer_loop_index }}][children][{{ child_loop_index }}][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
                                                     <option value="">Tidak ada tujuan</option>
-                                                    {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}" {% if child_target.id == sec.id %}selected{% endif %}>{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                                                    {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
+                                                        <option value="{{ sec.id }}" {% if child.get('target_section_id') == sec.id %}selected{% endif %}>
+                                                            {{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}
+                                                        </option>
+                                                    {% endfor %}
                                                 </select>
                                                 <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
                                                     <i class="bi bi-x-circle-fill"></i>
                                                 </button>
                                             </div>
-                                            <input type="text" name="nav_parents[{{ outer_loop_index }}][children][][url]" value="{{ child.get('url', '') }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
+                                            <input type="text" name="nav_parents[{{ outer_loop_index }}][children][{{ child_loop_index }}][url]" value="{{ child.get('url', '') }}" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -146,9 +149,61 @@
                     </div>
                 {% endfor %}
             </div>
+
+            <!-- === TOMBOL UTAMA (CTA) DIPINDAHKAN KE TAB NAVIGASI === -->
+            <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
+                <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">
+                    <i class="bi bi-box-arrow-in-right me-1 text-primary"></i>Tombol Utama (CTA)
+                </span>
+
+                {% set raw_enabled = section.content.get('button_enabled') %}
+                {% set is_cta_on = raw_enabled in [true, 1, '1', 'true'] or (raw_enabled is not defined and (section.content.get('button_text_1') or '') != '') %}
+
+                <!-- Switch Aktif / Nonaktif -->
+                <div class="form-check form-switch mb-2.5">
+                    <input type="hidden" name="button_enabled" value="0">
+                    <input class="form-check-input" type="checkbox" name="button_enabled" value="1" id="button_enabled"
+                           {% if is_cta_on %}checked{% endif %}>
+                    <label class="form-check-label small fw-semibold" for="button_enabled">
+                        Tampilkan tombol aksi
+                    </label>
+                </div>
+
+                <div id="navbar-cta-fields" class="row g-2" style="display: {% if is_cta_on %}flex{% else %}none{% endif %};">
+                    <div class="col-12">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Teks Tombol</label>
+                        <input type="text" name="button_text_1" class="form-control form-control-sm"
+                               value="{{ section.content.get('button_text_1', 'Daftar PPDB') }}"
+                               placeholder="Contoh: Daftar Sekarang">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Tujuan Section (internal)</label>
+                        <select name="button_target_section_id" class="form-select form-select-sm">
+                            <option value="">-- Pilih section --</option>
+                            {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
+                                <option value="{{ sec.id }}"
+                                    {% if section.content.get('button_target_section_id') == sec.id %}selected{% endif %}>
+                                    {{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">URL Eksternal / Halaman Lain</label>
+                        <input type="text" name="button_link_1" class="form-control form-control-sm"
+                               value="{{ section.content.get('button_link_1', '') }}"
+                               placeholder="Contoh: /ppdb  atau  https://google.com">
+                        <small class="text-muted d-block mt-0.5" style="font-size: 0.65rem;">
+                            Isi URL ini akan lebih diprioritaskan daripada section di atas
+                        </small>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- ================= TAB 3: TEMA & CTA ================= -->
+        <!-- ================= TAB 3: TEMA & STYLING ================= -->
         <div class="tab-pane fade" id="panel-theme" role="tabpanel">
             <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
                 <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Navbar</span>
@@ -182,47 +237,29 @@
 
                 <hr class="my-2.5">
 
-                <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Tombol Utama (CTA)</span>
-
-                <div class="form-check form-switch mb-2">
-                    <input type="hidden" name="button_enabled" value="0">
-                    <input class="form-check-input" type="checkbox" name="button_enabled" value="1" id="button_enabled" {% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') %}checked{% endif %}>
-                    <label class="form-check-label small fw-semibold" for="button_enabled">Tampilkan tombol aksi</label>
-                </div>
-
-                <div id="navbar-cta-fields" class="row g-2 mb-2" style="display:{% if section.content.get('button_enabled', (section.content.get('button_text_1') or '') != '') %}flex{% else %}none{% endif %};">
-                    <div class="col-6">
-                        <input type="text" name="button_text_1" class="form-control form-control-sm" value="{{ section.content.get('button_text_1', '') }}" placeholder="Teks Tombol">
-                    </div>
-                    <div class="col-6">
-                        <select name="button_target_section_id" class="form-select form-select-sm">
-                            <option value="">Pilih section</option>
-                            {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
-                                <option value="{{ sec.id }}" {% if section.content.get('button_target_section_id') == sec.id %}selected{% endif %}>
-                                    {{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <input type="text" name="button_link_1" class="form-control form-control-sm" value="{{ section.content.get('button_link_1', '') }}" placeholder="URL eksternal / halaman lain (contoh: /ppdb atau https://google.com)">
-                        <small class="text-muted" style="font-size: 0.65rem;">Isi ini akan lebih diprioritaskan daripada section di atas</small>
-                    </div>
-                </div>
+                <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Tombol CTA</span>
 
                 <div class="row g-2">
                     <div class="col-6">
                         <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Bg Tombol</label>
                         <div class="input-group input-group-sm">
-                            <input type="color" id="btn_bg_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_hex').value = this.value">
-                            <input type="text" id="btn_bg_hex" name="button_bg_color" class="form-control px-1" value="{{ section.content.get('button_bg_color', '#2563eb') }}" onchange="document.getElementById('btn_bg_picker').value = this.value">
+                            <input type="color" id="btn_bg_picker" class="form-control form-control-color p-0.5"
+                                   value="{{ section.content.get('button_bg_color', '#2563eb') }}"
+                                   onchange="document.getElementById('btn_bg_hex').value = this.value">
+                            <input type="text" id="btn_bg_hex" name="button_bg_color" class="form-control px-1"
+                                   value="{{ section.content.get('button_bg_color', '#2563eb') }}"
+                                   onchange="document.getElementById('btn_bg_picker').value = this.value">
                         </div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Teks Tombol</label>
+                        <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Warna Teks Tombol</label>
                         <div class="input-group input-group-sm">
-                            <input type="color" id="btn_txt_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_hex').value = this.value">
-                            <input type="text" id="btn_txt_hex" name="button_text_color" class="form-control px-1" value="{{ section.content.get('button_text_color', '#ffffff') }}" onchange="document.getElementById('btn_txt_picker').value = this.value">
+                            <input type="color" id="btn_txt_picker" class="form-control form-control-color p-0.5"
+                                   value="{{ section.content.get('button_text_color', '#ffffff') }}"
+                                   onchange="document.getElementById('btn_txt_hex').value = this.value">
+                            <input type="text" id="btn_txt_hex" name="button_text_color" class="form-control px-1"
+                                   value="{{ section.content.get('button_text_color', '#ffffff') }}"
+                                   onchange="document.getElementById('btn_txt_picker').value = this.value">
                         </div>
                     </div>
                 </div>
@@ -241,12 +278,6 @@
 
 <script>
     let parentNavCounter = {{ section.content.get('nav_items', [])|length }};
-
-    function previewTargetSectionId(targetUrl) {
-        if (typeof scrollToSectionInPreview === 'function' && targetUrl) {
-            scrollToSectionInPreview('', '', parseInt(targetUrl));
-        }
-    }
 
     function toggleCardBody(headerEl) {
         const cardBody = headerEl.nextElementSibling;
@@ -292,13 +323,15 @@
                             <input type="text" name="nav_parents[${idx}][text]" class="form-control form-control-sm" placeholder="Nama Menu" oninput="updateMenuTitlePreview(this)">
                         </div>
                         <div class="col-6">
-                            <select name="nav_parents[${idx}][target_section_id]" class="form-select form-select-sm" onchange="previewTargetSectionId(this.value)">
+                            <select name="nav_parents[${idx}][target_section_id]" class="form-select form-select-sm">
                                 <option value="">Tidak ada tujuan (section)</option>
-                                {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                                {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
+                                    <option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-12">
-                            <input type="text" name="nav_parents[${idx}][url]" class="form-control form-control-sm" placeholder="URL eksternal / halaman lain (contoh: /ppdb atau https://google.com)">
+                            <input type="text" name="nav_parents[${idx}][url]" class="form-control form-control-sm" placeholder="URL eksternal / halaman lain">
                         </div>
                     </div>
                     <div class="p-2 bg-light rounded-2 border">
@@ -315,19 +348,22 @@
 
     function addChildNavRow(btn, parentIndex) {
         const container = btn.closest('.parent-nav-card').querySelector('.children-container');
+        const childIndex = container.children.length;
         const html = `
             <div class="d-flex flex-column gap-1 child-nav-row bg-white p-1.5 border rounded">
                 <div class="d-flex align-items-center gap-1">
-                    <input type="text" name="nav_parents[${parentIndex}][children][][text]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
-                    <select name="nav_parents[${parentIndex}][children][][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
+                    <input type="text" name="nav_parents[${parentIndex}][children][${childIndex}][text]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="Nama Sub">
+                    <select name="nav_parents[${parentIndex}][children][${childIndex}][target_section_id]" class="form-select form-select-sm py-0" style="font-size: 0.72rem;">
                         <option value="">Tidak ada tujuan</option>
-                        {% for sec in page.sections if sec.type not in ['navbar','footer'] %}<option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>{% endfor %}
+                        {% for sec in page.sections if sec.type not in ['navbar','footer'] %}
+                            <option value="{{ sec.id }}">{{ sec.content.get('title_text') or sec.content.get('title') or sec.type|replace('_',' ')|title }}</option>
+                        {% endfor %}
                     </select>
                     <button type="button" class="btn btn-xs text-danger p-0 border-0" onclick="this.closest('.child-nav-row').remove()">
                         <i class="bi bi-x-circle-fill"></i>
                     </button>
                 </div>
-                <input type="text" name="nav_parents[${parentIndex}][children][][url]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
+                <input type="text" name="nav_parents[${parentIndex}][children][${childIndex}][url]" class="form-control form-control-sm py-0" style="font-size: 0.72rem;" placeholder="URL eksternal (opsional)">
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
     }
@@ -335,6 +371,8 @@
     // Toggle tampilan field CTA
     document.getElementById('button_enabled')?.addEventListener('change', function () {
         const fields = document.getElementById('navbar-cta-fields');
-        if (fields) fields.style.display = this.checked ? 'flex' : 'none';
+        if (fields) {
+            fields.style.display = this.checked ? 'flex' : 'none';
+        }
     });
 </script>
