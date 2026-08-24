@@ -22,7 +22,7 @@
     {%- elif item.get('target_section_id') -%}
         {%- set target_sec = (sections | selectattr('id', 'equalto', item.get('target_section_id')) | first) -%}
         {%- if target_sec -%}
-            #{{ target_sec.type }}_{{ target_sec.id }}
+            #{{ target_sec.type }}-{{ target_sec.id }}
         {%- else -%}
             #sec_{{ item.get('target_section_id') }}
         {%- endif -%}
@@ -55,7 +55,7 @@
 {% elif section.content.get('button_target_section_id') %}
     {% set target_btn_sec = (page.sections | selectattr('id', 'equalto', section.content.get('button_target_section_id')) | first) %}
     {% if target_btn_sec %}
-        {% set button_target_url = '#' ~ target_btn_sec.type ~ '_' ~ target_btn_sec.id %}
+        {% set button_target_url = '#' ~ target_btn_sec.type ~ '-' ~ target_btn_sec.id %}
     {% else %}
         {% set button_target_url = '#sec_' ~ section.content.get('button_target_section_id') %}
     {% endif %}
@@ -239,6 +239,13 @@
             let targetElement = document.getElementById(rawId);
             if (!targetElement && !rawId.startsWith('sec_')) {
                 targetElement = document.getElementById(`sec_${rawId}`);
+            }
+            if (!targetElement) {
+                // Fallback tambahan: cocokkan lewat data-section-id (angka di akhir "type-123")
+                const idMatch = rawId.match(/(\d+)$/);
+                if (idMatch) {
+                    targetElement = document.querySelector(`[data-section-id="${idMatch[1]}"]`);
+                }
             }
 
             if (targetElement) {

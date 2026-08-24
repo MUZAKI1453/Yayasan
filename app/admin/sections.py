@@ -1,9 +1,11 @@
 import re
 import uuid
 from datetime import datetime
+
 from flask import render_template, redirect, url_for, request, jsonify, flash
 from flask_login import login_required
 from sqlalchemy.orm.attributes import flag_modified
+
 from app.admin import admin_bp
 from app.admin.templates import (
     DEFAULT_SECTION_CONTENTS,
@@ -36,8 +38,8 @@ def add_section(page_id):
         return redirect(url_for("admin.manage_section", page_id=page.id))
 
     last_order = db.session.query(db.func.max(Section.order)).filter_by(page_id=page.id).scalar() or 0
-    sec_id_key = f"sec_{uuid.uuid4().hex[:8]}"
 
+    sec_id_key = f"sec_{uuid.uuid4().hex[:8]}"
     initial_content = DEFAULT_SECTION_CONTENTS.get(section_type, {}).copy()
     nav_text_default = SECTION_NAV_NAMES.get(section_type, section_type.replace('_', ' ').title())
     initial_content.setdefault("title", nav_text_default)
@@ -53,8 +55,8 @@ def add_section(page_id):
         content=initial_content
     )
     db.session.add(new_section)
-
     db.session.commit()
+
     flash(f"Section '{section_type}' berhasil ditambahkan!", "success")
     return redirect(url_for("admin.manage_section", page_id=page.id))
 
@@ -88,14 +90,43 @@ def edit_section(section_id):
             content['brand_subtitle'] = request.form.get('brand_subtitle', content.get('brand_subtitle', '')).strip()
 
             def parse_nav_items(prefix='nav_parents'):
+                """
+                FIXED: parsing nav_items & sub-menu (children).
+
+                Sebelumnya fungsi ini membaca children lewat
+                request.form.getlist(f'{prefix}[{idx}][children][][text]')
+                yaitu format array flat (bracket kosong []).
+
+                Tapi form HTML (forms/navbar.html) mengirim field dengan format
+                terindeks: nav_parents[idx][children][c_idx][text]
+
+                Karena nama field tidak pernah cocok, children selalu terbaca
+                kosong -> dropdown/sub-menu hilang setiap kali navbar disimpan.
+
+                Sekarang di-parse pakai regex yang sesuai dengan struktur field
+                yang benar-benar dikirim oleh form.
+                """
                 parents = {}
-                pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[(.+?)\]$')
+                children_map = {}
+
+                # Pattern untuk field parent, contoh: nav_parents[0][text]
+                parent_pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[(\w+)\]$')
+                # Pattern untuk field child, contoh: nav_parents[0][children][2][text]
+                child_pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[children\]\[(\d+)\]\[(\w+)\]$')
+
                 for key, value in request.form.items():
-                    m = pattern.match(key)
-                    if not m:
+                    cm = child_pattern.match(key)
+                    if cm:
+                        p_idx, c_idx, field = int(cm.group(1)), int(cm.group(2)), cm.group(3)
+                        children_map.setdefault(p_idx, {}).setdefault(c_idx, {})[field] = (
+                            value.strip() if isinstance(value, str) else value
+                        )
                         continue
-                    idx, field = int(m.group(1)), m.group(2)
-                    parents.setdefault(idx, {})[field] = value.strip() if isinstance(value, str) else value
+
+                    pm = parent_pattern.match(key)
+                    if pm:
+                        idx, field = int(pm.group(1)), pm.group(2)
+                        parents.setdefault(idx, {})[field] = value.strip() if isinstance(value, str) else value
 
                 items = []
                 for idx in sorted(parents):
@@ -116,19 +147,16 @@ def edit_section(section_id):
                         'children': []
                     }
 
-                    child_texts = request.form.getlist(f'{prefix}[{idx}][children][][text]')
-                    child_targets = request.form.getlist(f'{prefix}[{idx}][children][][target_section_id]')
-                    child_urls = request.form.getlist(f'{prefix}[{idx}][children][][url]')
-
-                    for cidx, child_text in enumerate(child_texts):
-                        child_text = child_text.strip()
+                    child_rows = children_map.get(idx, {})
+                    for c_idx in sorted(child_rows):
+                        child_raw = child_rows[c_idx]
+                        child_text = child_raw.get('text', '').strip()
                         if not child_text:
                             continue
-                        child_target = child_targets[cidx].strip() if cidx < len(child_targets) else ''
-                        child_url = child_urls[cidx].strip() if cidx < len(child_urls) else ''
-
+                        child_target = child_raw.get('target_section_id', '').strip()
+                        child_url = child_raw.get('url', '').strip()
                         item['children'].append({
-                            'id': f'nav_{uuid.uuid4().hex[:8]}',
+                            'id': child_raw.get('id') or f'nav_{uuid.uuid4().hex[:8]}',
                             'text': child_text,
                             'target_section_id': int(child_target) if child_target.isdigit() else None,
                             'target_type': (
@@ -137,8 +165,10 @@ def edit_section(section_id):
                             ),
                             'url': child_url if child_url else None
                         })
+
                     if text:
                         items.append(item)
+
                 return items
 
             content['nav_items'] = parse_nav_items()
@@ -219,11 +249,12 @@ def edit_section(section_id):
         ]
         for key, file in request.files.items():
             if key not in excluded_file_keys and not key.startswith('hero_image_') and not key.startswith(
-                    'slides[') and file and file.filename != '':
-                file_url = save_uploaded_file(file)
-                if file_url:
-                    field_key = key.replace('_file', '').replace('content.', '')
-                    content[field_key] = file_url
+                    'slides['):
+                if file and file.filename != '':
+                    file_url = save_uploaded_file(file)
+                    if file_url:
+                        field_key = key.replace('_file', '').replace('content.', '')
+                        content[field_key] = file_url
 
         # --- 5. SIMPAN KE DATABASE ---
         section.content = content
@@ -231,7 +262,6 @@ def edit_section(section_id):
         section.updated_at = datetime.utcnow()
         if page:
             page.updated_at = datetime.utcnow()
-
         db.session.commit()
 
         flash("Perubahan berhasil disimpan!", "success")
@@ -262,11 +292,9 @@ def reorder_sections(page_id):
     """AJAX Drag & Drop Order"""
     page = Page.query.get_or_404(page_id)
     order_data = request.json.get("order", [])
-
     for item in order_data:
         section = Section.query.filter_by(id=item["id"], page_id=page.id).first()
         if section:
             section.order = item["order"]
-
     db.session.commit()
     return jsonify({"status": "ok", "message": "Urutan berhasil disimpan"})
