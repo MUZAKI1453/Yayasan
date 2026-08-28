@@ -1,43 +1,79 @@
-<section id="{{ section.content.get('nav_id', 'sec_gallery') }}" class="py-5 bg-white">
-    <div class="container py-4">
-        
-        <!-- Header Section -->
-        {% if section.content.get('title') or section.content.get('subtitle') %}
-        <div class="row justify-content-center text-center mb-5">
-            <div class="col-lg-8">
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<section data-nav-id="{{ section_anchor_id }}" class="py-12 sm:py-16 bg-white font-sans transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- HEADER SECTION -->
+        {% if section.content.get('title') or section.content.get('subtitle') or section.content.get('description') %}
+            <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-12 space-y-3">
                 {% if section.content.get('title') %}
-                <h2 class="fw-bold display-6 mb-3 text-dark">
-                    {{ section.content.get('title') }}
-                </h2>
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                        {{ section.content.get('title') }}
+                    </h2>
                 {% endif %}
-                {% if section.content.get('subtitle') %}
-                <p class="lead text-muted fs-5">
-                    {{ section.content.get('subtitle') }}
-                </p>
+
+                {% set subtitle_text = section.content.get('subtitle') or section.content.get('description') %}
+                {% if subtitle_text %}
+                    <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                        {{ subtitle_text }}
+                    </p>
                 {% endif %}
-                <div class="mx-auto mt-3 border-top border-primary border-3" style="width: 60px;"></div>
+
+                <div class="w-16 h-1 bg-emerald-500 mx-auto rounded-full mt-4"></div>
             </div>
-        </div>
         {% endif %}
 
-        <!-- Grid Foto -->
-        <div class="row g-4">
-            {% set photos = section.content.get('photos', []) %}
-            {% for photo in photos %}
-            <div class="col-sm-6 col-md-4 col-lg-3">
-                <div class="card h-100 border-0 shadow-sm overflow-hidden rounded-3 group-hover">
-                    <img src="{{ photo.get('url') }}" class="card-img-top object-fit-cover" style="height: 220px;" alt="{{ photo.get('caption', 'Galeri') }}">
-                    {% if photo.get('caption') %}
-                    <div class="card-body p-2 text-center bg-light">
-                        <small class="text-secondary fw-medium">{{ photo.get('caption') }}</small>
+        <!-- EKSTRAKSI DAFTAR FOTO (DENGAN FALLBACK KEY) -->
+        {% set raw_photos = section.content.get('photos') or section.content.get('items') or section.content.get('images') or [] %}
+
+        {# Memastikan tipe data berupa list/array #}
+        {% if raw_photos is string %}
+            {% set photos_list = [] %}
+        {% else %}
+            {% set photos_list = raw_photos %}
+        {% endif %}
+
+        <!-- GRID FOTO GALERI -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for photo in photos_list %}
+                {% set img_src = photo.get('url') or photo.get('image_url') or photo.get('image') or photo.get('src') %}
+                {% set img_caption = photo.get('caption') or photo.get('title') or photo.get('label') or photo.get('name') %}
+
+                {% if img_src %}
+                    <div class="group bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col h-full">
+
+                        <!-- WADAH GAMBAR MEWAH (ASPECT RATIO + HOVER ZOOM) -->
+                        <div class="relative w-full h-56 overflow-hidden bg-slate-200">
+                            <img
+                                src="{{ img_src }}"
+                                alt="{{ img_caption or 'Dokumentasi Galeri' }}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                                loading="lazy"
+                            >
+                            <!-- OVERLAY HOVER HALUS -->
+                            <div class="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                        </div>
+
+                        <!-- CAPTION FOTO (OPSIONAL) -->
+                        {% if img_caption %}
+                            <div class="p-3.5 bg-slate-50 border-t border-slate-100 text-center mt-auto">
+                                <span class="text-xs sm:text-sm font-medium text-slate-700 line-clamp-2 leading-snug">
+                                    {{ img_caption }}
+                                </span>
+                            </div>
+                        {% endif %}
+
                     </div>
-                    {% endif %}
-                </div>
-            </div>
+                {% endif %}
             {% else %}
-            <div class="col-12 text-center text-muted py-4">
-                <p class="mb-0">Belum ada foto yang diunggah ke galeri.</p>
-            </div>
+                <!-- TAMPILAN KOSONG (EMPTY STATE) -->
+                <div class="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-8 space-y-2">
+                    <i class="bi bi-images text-3xl text-slate-400 block mb-1"></i>
+                    <p class="text-sm font-medium text-slate-500 m-0">
+                        Belum ada foto yang diunggah ke galeri ini.
+                    </p>
+                </div>
             {% endfor %}
         </div>
 

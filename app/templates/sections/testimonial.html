@@ -1,32 +1,106 @@
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-gray-50/80 transition-all duration-300">
-    <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-12">
-            {% if section.content.get('eyebrow') %}
-                <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-2">{{ section.content.get('eyebrow') }}</span>
-            {% endif %}
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-                {{ section.content.get('title', 'Testimoni') }}
-            </h2>
-            {% if section.content.get('subtitle') %}
-                <p class="mt-3 text-gray-600 max-w-2xl mx-auto">{{ section.content.get('subtitle') }}</p>
-            {% endif %}
-        </div>
 
-        {% set testimonials = section.content.get('items', []) %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {% for item in testimonials %}
-                <article class="bg-white p-6 md:p-8 rounded-2xl shadow-xs border border-gray-100">
-                    <p class="text-gray-600 italic leading-relaxed mb-6 text-sm md:text-base">
-                        "{{ item.get('quote', '') }}"
-                    </p>
-                    <div class="pt-4 border-t border-gray-100">
-                        <h4 class="font-bold text-gray-900 text-sm md:text-base">
-                            {{ item.get('name', '') }}
-                        </h4>
+<section data-nav-id="{{ section_anchor_id }}" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-slate-50/80 text-slate-800 transition-all duration-300 font-sans">
+    <div class="max-w-6xl mx-auto space-y-10">
+
+        <!-- HEADER SECTION -->
+        {% if section.content.get('title') or section.content.get('subtitle') or section.content.get('eyebrow') %}
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+            {% if section.content.get('eyebrow') %}
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    {{ section.content.get('eyebrow') }}
+                </span>
+            {% endif %}
+
+            {% if section.content.get('title') %}
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                    {{ section.content.get('title', 'Testimoni & Kata Mereka') }}
+                </h2>
+            {% endif %}
+
+            {% set subtitle_text = section.content.get('subtitle') or section.content.get('description') %}
+            {% if subtitle_text %}
+                <p class="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+                    {{ subtitle_text }}
+                </p>
+            {% endif %}
+
+            <div class="w-12 h-1 bg-blue-600 mx-auto rounded-full mt-4"></div>
+        </div>
+        {% endif %}
+
+        <!-- EKSTRAKSI DAFTAR TESTIMONI (DENGAN FALLBACK KEY) -->
+        {% set raw_testimonials = section.content.get('items') or section.content.get('testimonials') or section.content.get('reviews') or section.content.get('list') or [] %}
+
+        {% if raw_testimonials is string %}
+            {% set testimonials_list = [] %}
+        {% else %}
+            {% set testimonials_list = raw_testimonials %}
+        {% endif %}
+
+        <!-- GRID TESTIMONIAL CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            {% for item in testimonials_list %}
+                {% set quote_text = item.get('quote') or item.get('testimonial') or item.get('desc') or item.get('content') or item.get('text') or '' %}
+                {% set author_name = item.get('name') or item.get('author') or item.get('user') or 'Wali Murid' %}
+                {% set author_role = item.get('role') or item.get('subtitle') or item.get('title') or item.get('relation') or '' %}
+                {% set avatar_img = item.get('avatar') or item.get('avatar_url') or item.get('photo') or item.get('image') %}
+                {% set rating_num = item.get('rating') or 5 %}
+
+                <article class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between relative group">
+
+                    <div>
+                        <!-- RATING BINTANG & IKON QUOTE -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-1 text-amber-400">
+                                {% for i in range(rating_num|int) %}
+                                    <i class="bi bi-star-fill text-xs"></i>
+                                {% endfor %}
+                            </div>
+                            <i class="bi bi-quote text-3xl text-slate-200 group-hover:text-blue-200 transition-colors"></i>
+                        </div>
+
+                        <!-- KUTIPAN TESTIMONI -->
+                        {% if quote_text %}
+                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed italic mb-6">
+                                "{{ quote_text }}"
+                            </p>
+                        {% endif %}
                     </div>
+
+                    <!-- PROFIL PENULIS (AVATAR, NAMA, ROLE) -->
+                    <div class="pt-4 border-t border-slate-100 flex items-center gap-3 mt-auto">
+                        {% if avatar_img %}
+                            <img src="{{ avatar_img }}" alt="{{ author_name }}" class="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0">
+                        {% else %}
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 font-bold text-sm flex items-center justify-center border border-blue-100 shrink-0">
+                                {{ author_name[:1]|upper }}
+                            </div>
+                        {% endif %}
+
+                        <div class="overflow-hidden">
+                            <h3 class="font-bold text-slate-900 text-sm truncate">
+                                {{ author_name }}
+                            </h3>
+                            {% if author_role %}
+                                <p class="text-slate-500 text-xs truncate">
+                                    {{ author_role }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
                 </article>
+            {% else %}
+                <!-- FALLBACK DATA KOSONG -->
+                <div class="col-span-full text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300 p-8 space-y-2">
+                    <i class="bi bi-chat-square-quote text-3xl text-slate-400 block mb-1"></i>
+                    <p class="text-sm text-slate-500 font-medium">Belum ada testimoni yang ditambahkan.</p>
+                </div>
             {% endfor %}
         </div>
+
     </div>
 </section>

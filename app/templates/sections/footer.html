@@ -1,4 +1,7 @@
-<footer id="{{ section.content.get('nav_id', 'kontak') }}" class="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800 font-sans">
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+
+<footer data-nav-id="{{ section_anchor_id }}" class="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800 font-sans transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- GRID UTAMA (RESPONSIF UNTUK HP, TABLET, & DESKTOP) -->
@@ -20,42 +23,44 @@
                 </div>
 
                 <!-- DESKRIPSI SINGKAT -->
-                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md">
-                    {{ section.content.get('description', 'Lembaga pendidikan Islam terpadu yang mencetak generasi bertakwa, cerdas, dan berakhlaqul karimah.') }}
-                </p>
+                {% if section.content.get('description') or section.content.get('subtitle') %}
+                    <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md">
+                        {{ section.content.get('description') or section.content.get('subtitle') }}
+                    </p>
+                {% endif %}
 
                 <!-- SOSIAL MEDIA -->
                 <div class="pt-2">
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-2.5">Media Sosial</span>
                     <div class="flex flex-wrap items-center gap-2.5">
                         {% if section.content.get('facebook_url') %}
-                            <a href="{{ section.content.get('facebook_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Facebook">
+                            <a href="{{ section.content.get('facebook_url') }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Facebook">
                                 <i class="bi bi-facebook text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('instagram_url') %}
-                            <a href="{{ section.content.get('instagram_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Instagram">
+                            <a href="{{ section.content.get('instagram_url') }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-gradient-to-tr hover:from-amber-500 hover:via-rose-500 hover:to-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="Instagram">
                                 <i class="bi bi-instagram text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('youtube_url') %}
-                            <a href="{{ section.content.get('youtube_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="YouTube">
+                            <a href="{{ section.content.get('youtube_url') }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-red-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="YouTube">
                                 <i class="bi bi-youtube text-base"></i>
                             </a>
                         {% endif %}
 
                         {% if section.content.get('tiktok_url') %}
-                            <a href="{{ section.content.get('tiktok_url') }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="TikTok">
+                            <a href="{{ section.content.get('tiktok_url') }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-black text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="TikTok">
                                 <i class="bi bi-tiktok text-base"></i>
                             </a>
                         {% endif %}
 
-                        {% if section.content.get('whatsapp_number') %}
-                            {% set wa_num = section.content.get('whatsapp_number') %}
-                            {% set wa_link = wa_num if wa_num.startswith('http') else 'https://wa.me/' ~ wa_num %}
-                            <a href="{{ wa_link }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="WhatsApp">
+                        {% if section.content.get('whatsapp_number') or section.content.get('whatsapp_url') %}
+                            {% set wa_val = section.content.get('whatsapp_url') or section.content.get('whatsapp_number') %}
+                            {% set wa_link = wa_val if wa_val.startswith('http') else 'https://wa.me/' ~ wa_val %}
+                            <a href="{{ wa_link }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-slate-800/80 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-all border border-slate-700/60 shadow-xs" title="WhatsApp">
                                 <i class="bi bi-whatsapp text-base"></i>
                             </a>
                         {% endif %}
@@ -79,7 +84,7 @@
                                 {# TOMBOL LINK KE GOOGLE MAPS #}
                                 {% set maps_link = section.content.get('maps_url') or section.content.get('google_maps_link') or section.content.get('maps_location_url') %}
                                 {% if maps_link %}
-                                    <a href="{{ maps_link }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors mt-0.5">
+                                    <a href="{{ maps_link }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors mt-0.5">
                                         <span>Buka Petunjuk Arah</span>
                                         <i class="bi bi-box-arrow-up-right text-[10px]"></i>
                                     </a>
@@ -132,11 +137,11 @@
                 {% else %}
                     <!-- TAMPILAN FALLBACK JIKA EMBED PETA BELUM DIISI -->
                     <div class="w-full p-4 rounded-xl border border-slate-800/80 bg-slate-800/40 text-center space-y-2">
-                        <i class="bi bi-map text-2xl text-slate-500 d-block"></i>
+                        <i class="bi bi-map text-2xl text-slate-500 block mb-1"></i>
                         <p class="text-xs text-slate-400">Peta lokasi interaktif belum dikonfigurasi.</p>
                         {% set direct_maps = section.content.get('maps_url') or section.content.get('google_maps_link') %}
                         {% if direct_maps %}
-                            <a href="{{ direct_maps }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all">
+                            <a href="{{ direct_maps }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all">
                                 <i class="bi bi-geo-alt-fill"></i>
                                 <span>Lihat Peta Google Maps</span>
                             </a>

@@ -1,68 +1,84 @@
-{# Mengambil ID unik section (Prioritas: nav_id dari DB -> sec_ID_Database) #}
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 
-<section id="{{ section_anchor_id }}"
-         data-nav-id="{{ section_anchor_id }}"
+<section data-nav-id="{{ section_anchor_id }}"
          data-section-type="progress"
-         class="py-16 px-6 bg-slate-50/80 transition-all duration-300">
-    <div class="max-w-4xl mx-auto text-center">
+         class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50/80 text-slate-800 transition-all duration-300 font-sans">
+    <div class="max-w-4xl mx-auto text-center space-y-8">
 
-        {# Eyebrow / Sub-judul Kecil (Opsional) #}
-        {% if section.content.get('eyebrow') %}
-            <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-2">
-                {{ section.content.get('eyebrow') }}
-            </span>
+        <!-- HEADER SECTION -->
+        {% if section.content.get('title') or section.content.get('subtitle') or section.content.get('eyebrow') %}
+        <div class="space-y-3 max-w-2xl mx-auto">
+            {% if section.content.get('eyebrow') %}
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    {{ section.content.get('eyebrow') }}
+                </span>
+            {% endif %}
+
+            {% if section.content.get('title') %}
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                    {{ section.content.get('title', 'Progress Kuota Pendaftaran') }}
+                </h2>
+            {% endif %}
+
+            {% if section.content.get('subtitle') or section.content.get('description') %}
+                <p class="text-slate-600 text-xs sm:text-sm md:text-base leading-relaxed">
+                    {{ section.content.get('subtitle') or section.content.get('description') }}
+                </p>
+            {% endif %}
+        </div>
         {% endif %}
 
-        {# Judul Utama Section #}
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            {{ section.content.get('title', 'Progress Kuota') }}
-        </h2>
-
-        {# Subtitle / Deskripsi Singkat (Opsional) #}
-        {% if section.content.get('subtitle') %}
-            <p class="text-gray-600 max-w-xl mx-auto mb-8 text-sm md:text-base leading-relaxed">
-                {{ section.content.get('subtitle') }}
-            </p>
-        {% endif %}
-
-        {# Kalkulasi Progress Kuota #}
-        {% set target = section.content.get('target_quota', section.content.get('target', 0))|float %}
-        {% set collected = section.content.get('filled_quota', section.content.get('collected', 0))|float %}
+        <!-- KALKULASI PROGRESS KUOTA -->
+        {% set target = (section.content.get('target_quota') or section.content.get('target') or 0)|float %}
+        {% set collected = (section.content.get('filled_quota') or section.content.get('collected') or 0)|float %}
         {% set percent = (collected / target * 100) if target > 0 else 0 %}
-        {% set progress_width = 100 if percent > 100 else percent %}
+        {% set progress_width = 100 if percent > 100 else (0 if percent < 0 else percent) %}
 
-        {# Progress Bar Container #}
-        <div class="w-full max-w-2xl mx-auto bg-gray-200/90 rounded-full h-7 p-1 overflow-hidden shadow-inner mb-4 relative">
-            <!-- Inner Fill Progress Bar -->
-            <div class="bg-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-center text-xs font-bold text-white shadow-xs"
-                 style="width: {{ progress_width }}%;">
-                {% if percent >= 10 %}
-                    <span>{{ "{:.0f}".format(percent) }}%</span>
+        <!-- WADAH PROGRESS BAR -->
+        <div class="max-w-xl mx-auto space-y-3">
+            <div class="w-full bg-slate-200/90 rounded-full h-8 p-1 overflow-hidden shadow-inner relative flex items-center border border-slate-300/50">
+
+                <!-- INNER FILL PROGRESS BAR -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-700 ease-out flex items-center justify-end pr-2.5 text-xs font-bold text-white shadow-xs relative overflow-hidden"
+                     style="width: {{ progress_width }}%;">
+
+                    <!-- Efek Shimmer Halus -->
+                    <div class="absolute inset-0 bg-white/20 -skew-x-12 animate-pulse"></div>
+
+                    {% if percent >= 12 %}
+                        <span class="relative z-10 drop-shadow-xs">{{ "{:.0f}".format(percent) }}%</span>
+                    {% endif %}
+                </div>
+
+                <!-- TEKS PERSENTASE JIKA PERSEN < 12% (AGAR KONTRAST TETAP TERBACA) -->
+                {% if percent < 12 %}
+                    <span class="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-slate-700 pointer-events-none">
+                        {{ "{:.0f}".format(percent) }}%
+                    </span>
                 {% endif %}
             </div>
 
-            {# Penanganan Teks jika Persentase < 10% (Agar Teks Tetap Terbaca di Luar Fill Bar) #}
-            {% if percent < 10 %}
-                <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-600 pointer-events-none">
-                    {{ "{:.0f}".format(percent) }}%
-                </span>
-            {% endif %}
+            <!-- TEKS KETERANGAN PENDAFTARAN SISWA -->
+            <p class="text-sm sm:text-base text-slate-600 font-medium">
+                <strong class="text-blue-600 font-bold text-base sm:text-lg">{{ collected|int }} Siswa Terdaftar</strong>
+                <span class="text-slate-400 mx-1 border-r border-slate-300 h-4 inline-block align-middle"></span>
+                Target Kuota <strong class="text-slate-900 font-bold">{{ target|int }} Siswa</strong>
+            </p>
         </div>
 
-        {# Teks Keterangan Pendaftaran Siswa #}
-        <p class="text-base md:text-lg text-slate-600 font-medium leading-relaxed">
-            <strong class="text-blue-600 font-bold text-lg md:text-xl">{{ collected|int }} Siswa Terdaftar</strong>
-            <span class="text-gray-400 mx-1">/</span>
-            Target Kuota <strong class="text-gray-900 font-bold">{{ target|int }} Siswa</strong>
-        </p>
-
+        <!-- TOMBOL AKSI (CTA BUTTON) -->
         {% set button = section.content.get('button', {}) %}
-        {% if button.get('text') %}
-            <div class="mt-6">
-                <a href="{{ button.get('url', '#') }}"
-                   class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    {{ button.get('text') }}
+        {% set button_text = button.get('text') or section.content.get('button_text') %}
+        {% set button_url = button.get('url') or section.content.get('button_url') or '#' %}
+
+        {% if button_text %}
+            <div class="pt-2">
+                <a href="{{ button_url }}"
+                   class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <span>{{ button_text }}</span>
+                    <i class="bi bi-arrow-right text-base"></i>
                 </a>
             </div>
         {% endif %}

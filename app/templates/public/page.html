@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS (Diperlukan jika section publik menggunakan kelas Tailwind) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -23,6 +23,13 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #f8fafc;
             color: #0f172a;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Smoothing Scroll untuk Live Preview & Navigation Anchor */
+        html {
+            scroll-behavior: smooth;
         }
 
         /* Card Ultra Minimalis */
@@ -49,21 +56,14 @@
             letter-spacing: 0.3px;
         }
 
-        /* Smoothing Scroll untuk Live Preview Scroll */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Reset spacing pada wrapper CMS; setiap section mengatur spacing-nya sendiri. */
-        body { margin: 0; padding: 0; }
+        /* Reset spacing pada wrapper CMS */
         main.w-full { margin: 0; padding: 0; }
         .section-wrapper { margin: 0; padding: 0; }
-        .section-wrapper.navbar { margin: 0; padding: 0; }
     </style>
 </head>
-<body class="{% if not page.sections %}d-flex align-items-center justify-content-center min-vh-100 p-3{% else %}bg-white{% endif %}">
+<body class="{% if not page or not page.sections %}d-flex align-items-center justify-content-center min-vh-100 p-3{% else %}bg-white{% endif %}">
 
-    {% if not page.sections %}
+    {% if not page or not page.sections %}
         <!-- KONDISI BELUM ADA SECTION (MAINTENANCE / PEMBARUAN KONTEN) -->
         <div class="container" style="max-width: 420px;">
             <div class="card minimal-card p-4 p-sm-5 text-center">
@@ -84,13 +84,13 @@
                     </span>
                 </div>
 
-                <!-- TEKS BARU -->
+                <!-- TEKS INFO -->
                 <h5 class="fw-bold text-dark mb-2">Menyiapkan Layanan Terbaik</h5>
                 <p class="text-muted small mb-0 leading-relaxed" style="font-size: 0.875rem;">
                     Kami sedang melakukan pembaruan konten. Silakan kembali beberapa saat lagi untuk melihat informasi lengkapnya.
                 </p>
 
-                <!-- FOOTER -->
+                <!-- FOOTER CARD -->
                 <div class="mt-4 pt-3 border-top border-light-subtle">
                     <span class="text-muted fs-8 fw-medium" style="font-size: 0.75rem;">
                         <i class="bi bi-shield-check text-success me-1"></i>YPI Baitussalam Official
@@ -104,14 +104,17 @@
         <!-- RENDER NORMAL JIKA SECTION SUDAH TERSEDIA -->
         <main class="w-full">
             {% for section in page.sections|sort(attribute='order') %}
-                {% set public_anchor = section.type ~ "-" ~ section.id %}
-                {% set editor_mode = editor_section_id is not none and editor_section_id == section.id %}
-                <div id="{{ public_anchor }}"
-                     data-section-type="{{ section.type }}" 
-                     data-section-id="{{ section.id }}" 
-                     class="section-wrapper{% if section.type == 'progress' %} section-progress{% else %} {{ section.type }}{% endif %}">
-                    {% include 'sections/' ~ section.type ~ '.html' ignore missing %}
-                </div>
+                {# Hanya tampilkan section yang berstatus active (jika ada atribut is_active) #}
+                {% if section.is_active is not defined or section.is_active %}
+                    {% set public_anchor = "sec_" ~ section.id %}
+
+                    <div id="{{ public_anchor }}"
+                         data-section-type="{{ section.type }}"
+                         data-section-id="{{ section.id }}"
+                         class="section-wrapper{% if section.type == 'progress' %} section-progress{% else %} {{ section.type }}{% endif %}">
+                        {% include 'sections/' ~ section.type ~ '.html' ignore missing %}
+                    </div>
+                {% endif %}
             {% endfor %}
         </main>
     {% endif %}

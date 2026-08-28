@@ -1,4 +1,4 @@
-{# Mengambil ID unik section #}
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 {% set eyebrow = section.content.get('eyebrow', 'ARAH & STRATEGI INSTITUSI') %}
 {% set title = section.content.get('title', 'Visi & Misi Yayasan') %}
@@ -6,14 +6,21 @@
 {% set visi_text = section.content.get('visi') %}
 {% set misi_data = section.content.get('misi', []) %}
 
-{# Normalisasi Data Misi #}
+{# NORMALISASI DATA MISI (Mendukung String, Array of Strings, & Array of Objects) #}
+{% set misi_list = [] %}
 {% if misi_data is string %}
     {% set misi_list = misi_data.split('\n') %}
-{% else %}
-    {% set misi_list = misi_data %}
+{% elif misi_data is iterable %}
+    {% for item in misi_data %}
+        {% if item is mapping %}
+            {% set _ = misi_list.append(item.get('text', '') or item.get('misi', '')) %}
+        {% else %}
+            {% set _ = misi_list.append(item) %}
+        {% endif %}
+    {% endfor %}
 {% endif %}
 
-<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b-2 border-black">
+<section data-nav-id="{{ section_anchor_id }}" class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b-2 border-black">
     <div class="max-w-6xl mx-auto">
 
         {# Header Polos & Tegas #}
@@ -63,13 +70,13 @@
                 <div class="space-y-4">
                     {% set count = namespace(val=1) %}
                     {% for item in misi_list %}
-                        {% if item and item.strip() %}
+                        {% if item and item|string|trim != '' %}
                             <div class="flex items-start gap-4 pb-4 border-b border-neutral-200 last:border-0 last:pb-0">
                                 <span class="text-sm font-black text-black pt-0.5">
                                     {{ "%02d." % count.val }}
                                 </span>
                                 <p class="text-black text-base font-bold leading-relaxed">
-                                    {{ item.strip() }}
+                                    {{ item|string|trim }}
                                 </p>
                             </div>
                             {% set count.val = count.val + 1 %}

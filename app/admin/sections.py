@@ -10,7 +10,6 @@ from app.admin import admin_bp
 from app.admin.templates import (
     DEFAULT_SECTION_CONTENTS,
     SECTION_NAV_NAMES,
-    generate_nav_items_for_page,
     save_uploaded_file
 )
 from app.models import Page, Section
@@ -44,9 +43,6 @@ def add_section(page_id):
     nav_text_default = SECTION_NAV_NAMES.get(section_type, section_type.replace('_', ' ').title())
     initial_content.setdefault("title", nav_text_default)
     initial_content["nav_id"] = sec_id_key
-
-    if section_type == 'navbar':
-        initial_content['nav_items'] = generate_nav_items_for_page(page.id)
 
     new_section = Section(
         page_id=page.id,
@@ -90,28 +86,10 @@ def edit_section(section_id):
             content['brand_subtitle'] = request.form.get('brand_subtitle', content.get('brand_subtitle', '')).strip()
 
             def parse_nav_items(prefix='nav_parents'):
-                """
-                FIXED: parsing nav_items & sub-menu (children).
-
-                Sebelumnya fungsi ini membaca children lewat
-                request.form.getlist(f'{prefix}[{idx}][children][][text]')
-                yaitu format array flat (bracket kosong []).
-
-                Tapi form HTML (forms/navbar.html) mengirim field dengan format
-                terindeks: nav_parents[idx][children][c_idx][text]
-
-                Karena nama field tidak pernah cocok, children selalu terbaca
-                kosong -> dropdown/sub-menu hilang setiap kali navbar disimpan.
-
-                Sekarang di-parse pakai regex yang sesuai dengan struktur field
-                yang benar-benar dikirim oleh form.
-                """
                 parents = {}
                 children_map = {}
 
-                # Pattern untuk field parent, contoh: nav_parents[0][text]
                 parent_pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[(\w+)\]$')
-                # Pattern untuk field child, contoh: nav_parents[0][children][2][text]
                 child_pattern = re.compile(rf'^{re.escape(prefix)}\[(\d+)\]\[children\]\[(\d+)\]\[(\w+)\]$')
 
                 for key, value in request.form.items():
@@ -178,7 +156,7 @@ def edit_section(section_id):
             content['button_text_1'] = request.form.get('button_text_1', '').strip()
             target = request.form.get('button_target_section_id', '').strip()
             content['button_target_section_id'] = int(target) if target.isdigit() else None
-            content['button_link_1'] = request.form.get('button_link_1', '').strip()  # penting!
+            content['button_link_1'] = request.form.get('button_link_1', '').strip()
             content['button_bg_color'] = request.form.get('button_bg_color', content.get('button_bg_color', '#2563eb'))
             content['button_text_color'] = request.form.get('button_text_color', content.get('button_text_color', '#ffffff'))
 
@@ -273,14 +251,14 @@ def edit_section(section_id):
 @admin_bp.route("/section/<int:section_id>/delete", methods=["POST"])
 @login_required
 def delete_section(section_id):
-    """HAPUS SECTION DAN MENU TERHUBUNG"""
+    """HAPUS SECTION DAN KIRIM RESPON BERSIH"""
     section = Section.query.get_or_404(section_id)
     page_id = section.page_id
     db.session.delete(section)
     db.session.commit()
 
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({"status": "success", "message": "Section & Menu berhasil dihapus"})
+        return jsonify({"status": "success", "message": "Section berhasil dihapus"})
 
     flash("Section berhasil dihapus!", "success")
     return redirect(url_for("admin.manage_section", page_id=page_id))

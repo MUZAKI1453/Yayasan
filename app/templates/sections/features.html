@@ -1,72 +1,83 @@
-<section id="{{ section.content.get('nav_id', 'sec_features') }}" class="py-5 bg-light">
-    <div class="container py-4">
-        
-        <!-- Header Section (Judul & Subtitle) -->
-        {% if section.content.get('title') or section.content.get('subtitle') %}
-        <div class="row justify-content-center text-center mb-5">
-            <div class="col-lg-8">
-                {% if section.content.get('title') %}
-                <h2 class="fw-bold display-6 mb-3 text-dark">
+{# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
+{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
+{% set items = section.content.get('items', []) %}
+
+<section data-nav-id="{{ section_anchor_id }}" class="py-12 md:py-20 px-4 md:px-8 bg-slate-50/50 text-slate-800 transition-all duration-300">
+    <div class="max-w-6xl mx-auto space-y-10">
+
+        <!-- HEADER SECTION -->
+        {% if section.content.get('title') or section.content.get('subtitle') or section.content.get('eyebrow') %}
+        <div class="text-center max-w-3xl mx-auto space-y-3">
+            {% if section.content.get('eyebrow') %}
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-100 shadow-2xs">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    {{ section.content.get('eyebrow') }}
+                </span>
+            {% endif %}
+
+            {% if section.content.get('title') %}
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
                     {{ section.content.get('title') }}
                 </h2>
-                {% endif %}
-                
-                {% if section.content.get('subtitle') %}
-                <p class="lead text-muted fs-5">
-                    {{ section.content.get('subtitle') }}
+            {% endif %}
+
+            {% if section.content.get('subtitle') or section.content.get('description') %}
+                <p class="text-slate-600 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+                    {{ section.content.get('subtitle') or section.content.get('description') }}
                 </p>
-                {% endif %}
-                <div class="mx-auto mt-3 border-top border-primary border-3" style="width: 60px;"></div>
-            </div>
+            {% endif %}
+
+            <div class="w-12 h-1 bg-blue-600 mx-auto rounded-full mt-4"></div>
         </div>
         {% endif %}
 
-        <!-- Grid Cards Keunggulan / Fitur Dinamis -->
-        <div class="row g-4 justify-content-center">
-            {% set items = section.content.get('items', []) %}
-            
+        <!-- GRID CARDS FITUR UNGGULAN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {% for item in items %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm hover-shadow transition-all rounded-4 p-3">
-                    <div class="card-body text-center d-flex flex-column align-items-center">
-                        
-                        <!-- Icon Container -->
-                        <div class="feature-icon-wrapper bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 70px; height: 70px;">
-                            <i class="bi {{ item.get('icon', 'bi-check-circle') }} fs-2"></i>
-                        </div>
+                {% set item_title = item.get('title') or item.get('heading') or 'Fitur Unggulan' %}
+                {% set item_desc = item.get('desc') or item.get('description') or item.get('content') or '' %}
+                {% set icon_class = item.get('icon', '') %}
 
-                        <!-- Judul Fitur -->
-                        <h5 class="card-title fw-bold text-dark mb-3">
-                            {{ item.get('title', 'Fitur Unggulan') }}
-                        </h5>
+                <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center group">
 
-                        <!-- Deskripsi Fitur -->
-                        <p class="card-text text-secondary mb-0 flex-grow-1">
-                            {{ item.get('desc', item.get('description', '')) }}
-                        </p>
-
+                    <!-- ICON WRAPPER -->
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-5 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shrink-0 shadow-xs">
+                        {% if icon_class %}
+                            {% if 'bi-' in icon_class or 'fa-' in icon_class %}
+                                <i class="{{ icon_class }} text-2xl"></i>
+                            {% else %}
+                                <i class="bi {{ icon_class }} text-2xl"></i>
+                            {% endif %}
+                        {% else %}
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        {% endif %}
                     </div>
+
+                    <!-- JUDUL FITUR -->
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">
+                        {{ item_title }}
+                    </h3>
+
+                    <!-- DESKRIPSI FITUR -->
+                    {% if item_desc %}
+                        <p class="text-slate-600 text-xs md:text-sm leading-relaxed flex-1">
+                            {{ item_desc }}
+                        </p>
+                    {% endif %}
+
                 </div>
-            </div>
             {% else %}
-            <!-- Fallback Jika Belum Ada Data -->
-            <div class="col-12 text-center text-muted py-4">
-                <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
-                <p class="mb-0">Belum ada fitur atau keunggulan yang ditambahkan.</p>
-            </div>
+                <!-- FALLBACK DATA KOSONG -->
+                <div class="col-span-full text-center py-12 bg-white rounded-3xl border border-dashed border-slate-300">
+                    <svg class="w-10 h-10 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-sm text-slate-500 font-medium">Belum ada fitur atau keunggulan yang ditambahkan.</p>
+                </div>
             {% endfor %}
         </div>
 
     </div>
 </section>
-
-<!-- Tambahan Styling CSS Opsional untuk Hover Effect -->
-<style>
-    .transition-all {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .hover-shadow:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
-    }
-</style>

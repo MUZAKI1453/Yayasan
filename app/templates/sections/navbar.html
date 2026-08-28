@@ -15,18 +15,17 @@
 
 {% set nav_items = section.content.get('nav_items', []) %}
 
-{# PRIORITAS: url eksternal > target_section_id #}
+{# MACRO PENENTUAN HREF (DIAMANKAN DARI PERILAKU /None & 404) #}
 {% macro nav_href(item, sections) -%}
-    {%- if item.get('url') -%}
-        {{ item.get('url') }}
-    {%- elif item.get('target_section_id') -%}
-        {%- set target_sec = (sections | selectattr('id', 'equalto', item.get('target_section_id')) | first) -%}
-        {%- if target_sec -%}
-            #{{ target_sec.type }}-{{ target_sec.id }}
-        {%- else -%}
-            #sec_{{ item.get('target_section_id') }}
-        {%- endif -%}
-    {%- else -%}#{%- endif -%}
+    {%- set item_url = item.get('url') if item else none -%}
+    {%- set item_target = item.get('target_section_id') if item else none -%}
+    {%- if item_url and item_url|string|trim != '' and item_url|string != 'None' -%}
+        {{ item_url|trim }}
+    {%- elif item_target and item_target|string|trim != '' and item_target|string != 'None' -%}
+        #sec_{{ item_target|trim }}
+    {%- else -%}
+        #
+    {%- endif -%}
 {%- endmacro %}
 
 {% if not nav_items %}
@@ -44,38 +43,33 @@
     {% endfor %}
 {% endif %}
 
-{# LOGIKA TOMBOL CTA: Pengecekan button_enabled (True/1/'1'/'true') #}
+{# LOGIKA TOMBOL CTA #}
 {% set raw_enabled = section.content.get('button_enabled') %}
 {% set is_btn_enabled = raw_enabled in [true, 1, '1', 'true'] or (raw_enabled is not defined and section.content.get('button_text_1')) %}
 
-{# Penentuan URL CTA #}
 {% set button_target_url = '#' %}
-{% if section.content.get('button_link_1') %}
+{% if section.content.get('button_link_1') and section.content.get('button_link_1')|string != 'None' %}
     {% set button_target_url = section.content.get('button_link_1') %}
-{% elif section.content.get('button_target_section_id') %}
-    {% set target_btn_sec = (page.sections | selectattr('id', 'equalto', section.content.get('button_target_section_id')) | first) %}
-    {% if target_btn_sec %}
-        {% set button_target_url = '#' ~ target_btn_sec.type ~ '-' ~ target_btn_sec.id %}
-    {% else %}
-        {% set button_target_url = '#sec_' ~ section.content.get('button_target_section_id') %}
-    {% endif %}
+{% elif section.content.get('button_target_section_id') and section.content.get('button_target_section_id')|string != 'None' %}
+    {% set button_target_url = '#sec_' ~ section.content.get('button_target_section_id') %}
 {% endif %}
 
 <!-- TOP NAVBAR -->
 <nav class="w-full z-40 top-0 sticky m-0 p-0 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20 md:h-24 items-center">
+        <div class="flex justify-between h-20 md:h-24 items-center gap-3">
 
-            <a href="/" class="flex-shrink-0 flex items-center gap-3 text-decoration-none group py-2">
+            <!-- BRAND & LOGO CONTAINER -->
+            <a href="/" class="flex-shrink-0 flex items-center gap-3 text-decoration-none group py-2 max-w-[85%] sm:max-w-none">
                 {% if section.content.get('logo_url') %}
-                    <img class="h-12 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
+                    <img class="h-10 sm:h-12 md:h-16 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
-                <span class="flex flex-col leading-tight">
-                    <span class="font-bold text-xl md:text-2xl tracking-tight {{ brand_text_class }}">
+                <span class="flex flex-col leading-tight min-w-0">
+                    <span class="font-bold text-sm sm:text-xl md:text-2xl tracking-tight whitespace-normal break-words {{ brand_text_class }}">
                         {{ section.content.get('brand_name', 'Yayasan') }}
                     </span>
                     {% if section.content.get('brand_subtitle') %}
-                        <span class="text-xs leading-none font-medium mt-0.5 {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
+                        <span class="text-[10px] sm:text-xs leading-tight font-medium mt-0.5 whitespace-normal break-words {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
                             {{ section.content.get('brand_subtitle') }}
                         </span>
                     {% endif %}
@@ -88,9 +82,10 @@
                         {% set children = item.get('children') or item.get('sub_items') or [] %}
 
                         {% if children|length > 0 %}
+                            {% set parent_url = nav_href(item, page.sections)|trim %}
                             <div class="nav-dropdown-item relative py-4" data-dropdown-id="{{ loop.index }}">
                                 <div class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer {{ text_class }}">
-                                    <a href="{{ nav_href(item, page.sections) }}" onclick="handleNavClick(event, '{{ nav_href(item, page.sections) }}')" class="text-inherit text-decoration-none">
+                                    <a href="{{ parent_url }}" onclick="handleNavClick(event, '{{ parent_url }}')" class="text-inherit text-decoration-none">
                                         {{ item.text }}
                                     </a>
                                     <button type="button" onclick="toggleDesktopDropdown(event, {{ loop.index }})" class="p-0.5 text-inherit focus:outline-none">
@@ -105,7 +100,8 @@
                                         <div class="flex flex-col gap-0.5">
                                             {% for child in children %}
                                                 {% if child.text %}
-                                                    <a href="{{ nav_href(child, page.sections) }}" onclick="handleNavClick(event, '{{ nav_href(child, page.sections) }}')" class="group/child flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-150 text-decoration-none">
+                                                    {% set child_url = nav_href(child, page.sections)|trim %}
+                                                    <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="group/child flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-150 text-decoration-none">
                                                         <span class="truncate">{{ child.text }}</span>
                                                         <svg class="w-3.5 h-3.5 text-blue-500 opacity-0 -translate-x-1 group-hover/child:opacity-100 group-hover/child:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -118,14 +114,15 @@
                                 </div>
                             </div>
                         {% else %}
-                            <a href="{{ nav_href(item, page.sections) }}" onclick="handleNavClick(event, '{{ nav_href(item, page.sections) }}')" class="{{ text_class }} font-semibold text-sm transition-colors text-decoration-none px-3 py-2 rounded-lg">
+                            {% set item_url = nav_href(item, page.sections)|trim %}
+                            <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="{{ text_class }} font-semibold text-sm transition-colors text-decoration-none px-3 py-2 rounded-lg">
                                 {{ item.text }}
                             </a>
                         {% endif %}
                     {% endif %}
                 {% endfor %}
 
-                {# === TOMBOL CTA DESKTOP (hanya tampil jika is_btn_enabled = true) === #}
+                {# === TOMBOL CTA DESKTOP === #}
                 {% if is_btn_enabled and section.content.get('button_text_1') %}
                     <a href="{{ button_target_url }}"
                        onclick="handleNavClick(event, '{{ button_target_url }}')"
@@ -141,6 +138,7 @@
 
 <div id="mobile-dropdown-backdrop" onclick="closeAllMobileSubmenus()" class="hidden md:hidden fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-40 transition-opacity"></div>
 
+<!-- BOTTOM NAVBAR MOBILE -->
 <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t {{ mobile_border_class }} shadow-2xl px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="flex items-center justify-around relative">
         {% for item in nav_items %}
@@ -165,7 +163,8 @@
                                 <div class="w-8 h-1 bg-slate-200 rounded-full mx-auto mb-1"></div>
                                 {% for child in children %}
                                     {% if child.text %}
-                                        <a href="{{ nav_href(child, page.sections) }}" onclick="handleNavClick(event, '{{ nav_href(child, page.sections) }}')" class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-blue-50/80 hover:text-blue-600 rounded-xl transition-colors text-decoration-none">
+                                        {% set child_url = nav_href(child, page.sections)|trim %}
+                                        <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-blue-50/80 hover:text-blue-600 rounded-xl transition-colors text-decoration-none">
                                             <span class="truncate">{{ child.text }}</span>
                                             <i class="bi bi-chevron-right text-[10px] text-slate-400"></i>
                                         </a>
@@ -175,7 +174,8 @@
                         </div>
                     </div>
                 {% else %}
-                    <a href="{{ nav_href(item, page.sections) }}" onclick="handleNavClick(event, '{{ nav_href(item, page.sections) }}')" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors text-decoration-none">
+                    {% set item_url = nav_href(item, page.sections)|trim %}
+                    <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors text-decoration-none">
                         {% set lower_text = item.text|lower %}
                         {% if 'beranda' in lower_text or 'home' in lower_text %}
                             <i class="bi bi-house-door text-lg leading-none mb-0.5"></i>
@@ -194,7 +194,7 @@
             {% endif %}
         {% endfor %}
 
-        {# === TOMBOL CTA MOBILE (hanya tampil jika is_btn_enabled = true) === #}
+        {# === TOMBOL CTA MOBILE === #}
         {% if is_btn_enabled and section.content.get('button_text_1') %}
             <a href="{{ button_target_url }}"
                onclick="handleNavClick(event, '{{ button_target_url }}')"
@@ -230,18 +230,27 @@
 
 <script>
     function handleNavClick(event, targetUrl) {
-        if (!targetUrl || targetUrl === '#') return;
+        // Cegah aksi jika URL tidak valid, 'None', atau hanya '#'
+        if (!targetUrl || targetUrl === '#' || targetUrl === 'None' || targetUrl.trim() === '') {
+            if (targetUrl === '#' || targetUrl === 'None' || !targetUrl) {
+                event.preventDefault();
+            }
+            return;
+        }
 
         if (targetUrl.includes('#')) {
-            const rawId = targetUrl.split('#')[1].trim();
-            if (!rawId) return;
+            const parts = targetUrl.split('#');
+            const rawId = parts[1] ? parts[1].trim() : '';
+            if (!rawId) {
+                event.preventDefault();
+                return;
+            }
 
             let targetElement = document.getElementById(rawId);
             if (!targetElement && !rawId.startsWith('sec_')) {
                 targetElement = document.getElementById(`sec_${rawId}`);
             }
             if (!targetElement) {
-                // Fallback tambahan: cocokkan lewat data-section-id (angka di akhir "type-123")
                 const idMatch = rawId.match(/(\d+)$/);
                 if (idMatch) {
                     targetElement = document.querySelector(`[data-section-id="${idMatch[1]}"]`);
@@ -260,7 +269,6 @@
                 window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
             }
         }
-        // URL eksternal / halaman lain → biarkan browser navigate normal
     }
 
     function toggleDesktopDropdown(event, index) {
