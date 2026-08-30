@@ -24,9 +24,11 @@
 {% set cta_text = section.content.get('cta_text', '') %}
 
 {# LOGIKA CTA URL & TARGET SECTION #}
-{% set cta_url = section.content.get('cta_url', '#') %}
-{% if section.content.get('cta_target_section_id') %}
+{% set cta_link_type = section.content.get('cta_link_type', 'section' if section.content.get('cta_target_section_id') else 'external') %}
+{% if cta_link_type == 'section' and section.content.get('cta_target_section_id') %}
     {% set cta_url = '#sec_' ~ section.content.get('cta_target_section_id') %}
+{% else %}
+    {% set cta_url = section.content.get('cta_url', '#') %}
 {% endif %}
 
 {% set cta_bg = section.content.get('cta_bg', '#2563eb') %}
@@ -64,18 +66,12 @@
     {% set _ = hero_styles.append('background-color: ' ~ bg_color) %}
 {% endif %}
 
-<!-- GOOGLE FONTS LOADER DINAMIS -->
+<!-- GOOGLE FONTS LOADER DINAMIS (JUDUL, SUBTITLE, CTA) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family={{ title_font_family.replace(' ', '+') }}:wght@400;600;700;800&family={{ subtitle_font_family.replace(' ', '+') }}:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family={{ title_font_family.replace(' ', '+') }}:wght@400;600;700;800&family={{ subtitle_font_family.replace(' ', '+') }}:wght@400;500;600&family={{ cta_font_family.replace(' ', '+') }}:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-    /* UTILITY FONT CLASSES FALLBACK */
-    .font-sans { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; }
-    .font-serif { font-family: Georgia, Cambria, "Times New Roman", Times, serif !important; }
-    .font-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important; }
-
-    /* UTILITY STYLES UNTUK KONTROL CANVAS */
     .hero-editor-canvas {
         position: relative;
         width: 100%;
@@ -193,7 +189,7 @@
     }
 </style>
 
-<section class="hero-editor-canvas" style="{{ hero_styles|join('; ') }}">
+<section id="{{ section_anchor_id }}" class="hero-editor-canvas" style="{{ hero_styles|join('; ') }}">
     <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
     {% if title_text %}
     <div
@@ -206,8 +202,7 @@
     >
         <h1
             id="render-title"
-            class="{{ title_font_family if title_font_family.startswith('font-') else '' }}"
-            style="color: {{ title_color }}; font-size: {{ title_size }}px; font-weight: 800; line-height: 1.2; margin: 0; {% if not title_font_family.startswith('font-') %}font-family: '{{ title_font_family }}', sans-serif;{% endif %}"
+            style="color: {{ title_color }}; font-size: {{ title_size }}px; font-weight: 800; line-height: 1.2; margin: 0; font-family: '{{ title_font_family }}', sans-serif;"
         >
             {{ title_text }}
         </h1>
@@ -227,8 +222,7 @@
     >
         <p
             id="render-subtitle"
-            class="{{ subtitle_font_family if subtitle_font_family.startswith('font-') else '' }}"
-            style="color: {{ subtitle_color }}; font-size: {{ subtitle_size }}px; line-height: 1.6; margin: 0; {% if not subtitle_font_family.startswith('font-') %}font-family: '{{ subtitle_font_family }}', sans-serif;{% endif %}"
+            style="color: {{ subtitle_color }}; font-size: {{ subtitle_size }}px; line-height: 1.6; margin: 0; font-family: '{{ subtitle_font_family }}', sans-serif;"
         >
             {{ subtitle_text }}
         </p>
@@ -248,9 +242,9 @@
         <a
             id="render-cta"
             href="{{ cta_url }}"
+            {% if cta_link_type == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}
             onclick="if (typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
-            class="{{ cta_font_family if cta_font_family.startswith('font-') else '' }}"
-            style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15); {% if not cta_font_family.startswith('font-') %}font-family: '{{ cta_font_family }}', sans-serif;{% endif %}"
+            style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-family: '{{ cta_font_family }}', sans-serif;"
         >
             {{ cta_text }}
         </a>
