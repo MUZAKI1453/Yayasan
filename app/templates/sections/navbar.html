@@ -1,13 +1,17 @@
 {# 1. MENGAMBIL DATA TEMA, FONT, & WARNA DINAMIS #}
 {% set nav_bg = section.content.get('nav_bg_color', '#ffffff') %}
-{% set is_light_text = section.content.get('nav_text_color') == 'light' %}
+{% set nav_text = section.content.get('nav_text_color', '#334155') %}
+{% set nav_active = section.content.get('nav_active_color', '#2563eb') %}
 {% set nav_font = section.content.get('nav_font_family', 'Plus Jakarta Sans') %}
 {% set btn_bg = section.content.get('button_bg_color', '#2563eb') %}
 {% set btn_txt = section.content.get('button_text_color', '#ffffff') %}
 
-{% set text_class = 'text-slate-100 hover:text-white hover:bg-white/10' if is_light_text else 'text-slate-700 hover:text-blue-600 hover:bg-slate-100/80' %}
-{% set brand_text_class = 'text-white' if is_light_text else 'text-slate-800' %}
-{% set mobile_border_class = 'border-white/10' if is_light_text else 'border-slate-200' %}
+{# Normalisasi warna jika dari database terkirim string preset 'light' / 'dark' #}
+{% if nav_text == 'light' %}
+    {% set nav_text = '#ffffff' %}
+{% elif nav_text == 'dark' or not nav_text %}
+    {% set nav_text = '#334155' %}
+{% endif %}
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,8 +58,69 @@
     {% set button_target_url = '#sec_' ~ section.content.get('button_target_section_id') %}
 {% endif %}
 
-<!-- TOP NAVBAR -->
-<nav class="w-full z-40 top-0 sticky m-0 p-0 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
+<style>
+    body { margin: 0 !important; padding: 0 !important; }
+    main.w-full { margin: 0 !important; padding: 0 !important; }
+
+    /* PENANGANAN FIX STICKY NAVBAR SAAT SCROLL */
+    .section-wrapper.navbar {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: normal;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+    }
+    .section-wrapper.navbar > nav {
+        display: block;
+        position: sticky !important;
+        top: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        z-index: 1000 !important;
+    }
+
+    /* STYLING WARNA MENU NAVBAR DINAMIS */
+    .custom-nav-item {
+        color: {{ nav_text }} !important;
+        background-color: transparent !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .custom-nav-item:hover,
+    .custom-nav-item:focus,
+    .custom-nav-item.active {
+        color: {{ nav_active }} !important;
+        background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .custom-dropdown-item {
+        color: {{ nav_text }} !important;
+        transition: all 0.15s ease-in-out;
+    }
+
+    .custom-dropdown-item:hover {
+        color: {{ nav_active }} !important;
+        background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .nav-dropdown-card {
+        display: none; opacity: 0; transform: translateY(8px);
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-dropdown-item:hover .nav-dropdown-card,
+    .nav-dropdown-card.show-click {
+        display: block !important; opacity: 1 !important; transform: translateY(0) !important;
+    }
+    .nav-dropdown-card::before {
+        content: ''; position: absolute; top: -16px; left: 0; right: 0; height: 16px; background: transparent;
+    }
+    .nav-dropdown-item:hover .arrow-icon { transform: rotate(180deg); }
+</style>
+
+<!-- TOP NAVBAR DESKTOP -->
+<nav class="w-full z-40 top-0 sticky m-0 p-0 transition-colors duration-300 shadow-sm" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 md:h-24 items-center gap-3">
 
@@ -65,17 +130,18 @@
                     <img class="h-10 sm:h-12 md:h-16 w-auto object-contain shrink-0 transition-transform duration-300 group-hover:scale-105" src="{{ section.content.get('logo_url') }}" alt="Logo">
                 {% endif %}
                 <span class="flex flex-col leading-tight min-w-0">
-                    <span class="font-bold text-sm sm:text-xl md:text-2xl tracking-tight whitespace-normal break-words {{ brand_text_class }}">
+                    <span class="font-bold text-sm sm:text-xl md:text-2xl tracking-tight whitespace-normal break-words" style="color: {{ nav_text }};">
                         {{ section.content.get('brand_name', 'Yayasan') }}
                     </span>
                     {% if section.content.get('brand_subtitle') %}
-                        <span class="text-[10px] sm:text-xs leading-tight font-medium mt-0.5 whitespace-normal break-words {{ 'text-white/70' if is_light_text else 'text-slate-500' }}">
+                        <span class="text-[10px] sm:text-xs leading-tight font-medium mt-0.5 whitespace-normal break-words opacity-80" style="color: {{ nav_text }};">
                             {{ section.content.get('brand_subtitle') }}
                         </span>
                     {% endif %}
                 </span>
             </a>
 
+            <!-- MENU DESKTOP -->
             <div class="hidden md:flex space-x-1 lg:space-x-2 items-center">
                 {% for item in nav_items %}
                     {% if item.text %}
@@ -84,8 +150,8 @@
                         {% if children|length > 0 %}
                             {% set parent_url = nav_href(item, page.sections)|trim %}
                             <div class="nav-dropdown-item relative py-4" data-dropdown-id="{{ loop.index }}">
-                                <div class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer {{ text_class }}">
-                                    <a href="{{ parent_url }}" onclick="handleNavClick(event, '{{ parent_url }}')" class="text-inherit text-decoration-none">
+                                <div class="inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold cursor-pointer custom-nav-item">
+                                    <a href="{{ parent_url }}" onclick="handleNavClick(event, '{{ parent_url }}')" class="text-inherit text-decoration-none" data-nav-link>
                                         {{ item.text }}
                                     </a>
                                     <button type="button" onclick="toggleDesktopDropdown(event, {{ loop.index }})" class="p-0.5 text-inherit focus:outline-none">
@@ -101,9 +167,9 @@
                                             {% for child in children %}
                                                 {% if child.text %}
                                                     {% set child_url = nav_href(child, page.sections)|trim %}
-                                                    <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="group/child flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50/80 transition-all duration-150 text-decoration-none">
+                                                    <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="group/child flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold custom-dropdown-item text-decoration-none" data-nav-link>
                                                         <span class="truncate">{{ child.text }}</span>
-                                                        <svg class="w-3.5 h-3.5 text-blue-500 opacity-0 -translate-x-1 group-hover/child:opacity-100 group-hover/child:translate-x-0 transition-all duration-150" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg class="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/child:opacity-100 group-hover/child:translate-x-0 transition-all duration-150" style="color: {{ nav_active }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                                         </svg>
                                                     </a>
@@ -115,7 +181,7 @@
                             </div>
                         {% else %}
                             {% set item_url = nav_href(item, page.sections)|trim %}
-                            <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="{{ text_class }} font-semibold text-sm transition-colors text-decoration-none px-3 py-2 rounded-lg">
+                            <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="custom-nav-item font-semibold text-sm text-decoration-none px-3 py-2 rounded-lg" data-nav-link>
                                 {{ item.text }}
                             </a>
                         {% endif %}
@@ -139,7 +205,7 @@
 <div id="mobile-dropdown-backdrop" onclick="closeAllMobileSubmenus()" class="hidden md:hidden fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-40 transition-opacity"></div>
 
 <!-- BOTTOM NAVBAR MOBILE -->
-<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t {{ mobile_border_class }} shadow-2xl px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; font-family: '{{ nav_font }}', sans-serif;">
+<div class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t shadow-2xl px-2 py-1.5 transition-colors duration-300" style="background-color: {{ nav_bg }}; border-color: rgba(0,0,0,0.08); font-family: '{{ nav_font }}', sans-serif;">
     <div class="flex items-center justify-around relative">
         {% for item in nav_items %}
             {% if item.text %}
@@ -148,7 +214,7 @@
 
                 {% if children|length > 0 %}
                     <div class="relative dropup-mobile-container">
-                        <button type="button" onclick="toggleMobileSubmenu({{ item_index }})" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors focus:outline-none">
+                        <button type="button" onclick="toggleMobileSubmenu({{ item_index }})" class="flex flex-col items-center justify-center py-1 px-2 custom-nav-item rounded-lg text-[11px] font-medium transition-colors focus:outline-none">
                             <i class="bi bi-grid text-lg leading-none mb-0.5"></i>
                             <span class="truncate max-w-[70px] flex items-center gap-0.5">
                                 {{ item.text }}
@@ -164,7 +230,7 @@
                                 {% for child in children %}
                                     {% if child.text %}
                                         {% set child_url = nav_href(child, page.sections)|trim %}
-                                        <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-blue-50/80 hover:text-blue-600 rounded-xl transition-colors text-decoration-none">
+                                        <a href="{{ child_url }}" onclick="handleNavClick(event, '{{ child_url }}')" class="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold custom-dropdown-item rounded-xl transition-colors text-decoration-none" data-nav-link>
                                             <span class="truncate">{{ child.text }}</span>
                                             <i class="bi bi-chevron-right text-[10px] text-slate-400"></i>
                                         </a>
@@ -175,7 +241,7 @@
                     </div>
                 {% else %}
                     {% set item_url = nav_href(item, page.sections)|trim %}
-                    <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="flex flex-col items-center justify-center py-1 px-2 {{ text_class }} text-[11px] font-medium transition-colors text-decoration-none">
+                    <a href="{{ item_url }}" onclick="handleNavClick(event, '{{ item_url }}')" class="flex flex-col items-center justify-center py-1 px-2 custom-nav-item rounded-lg text-[11px] font-medium transition-colors text-decoration-none" data-nav-link>
                         {% set lower_text = item.text|lower %}
                         {% if 'beranda' in lower_text or 'home' in lower_text %}
                             <i class="bi bi-house-door text-lg leading-none mb-0.5"></i>
@@ -198,7 +264,7 @@
         {% if is_btn_enabled and section.content.get('button_text_1') %}
             <a href="{{ button_target_url }}"
                onclick="handleNavClick(event, '{{ button_target_url }}')"
-               class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px] text-decoration-none"
+               class="flex flex-col items-center justify-center py-1 px-2 font-bold text-[11px] text-decoration-none rounded-lg"
                style="color: {{ btn_bg }};">
                 <i class="bi bi-box-arrow-in-right text-lg leading-none mb-0.5"></i>
                 <span class="truncate max-w-[70px]">{{ section.content.get('button_text_1') }}</span>
@@ -207,30 +273,8 @@
     </div>
 </div>
 
-<style>
-    body { margin: 0 !important; padding: 0 !important; }
-    main.w-full { margin: 0 !important; padding: 0 !important; }
-    .section-wrapper.navbar { margin: 0 !important; padding: 0 !important; line-height: normal; }
-    .section-wrapper.navbar > nav {
-        display: block; position: sticky; top: 0 !important; margin: 0 !important; border: 0 !important; box-shadow: none !important;
-    }
-    .nav-dropdown-card {
-        display: none; opacity: 0; transform: translateY(8px);
-        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .nav-dropdown-item:hover .nav-dropdown-card,
-    .nav-dropdown-card.show-click {
-        display: block !important; opacity: 1 !important; transform: translateY(0) !important;
-    }
-    .nav-dropdown-card::before {
-        content: ''; position: absolute; top: -16px; left: 0; right: 0; height: 16px; background: transparent;
-    }
-    .nav-dropdown-item:hover .arrow-icon { transform: rotate(180deg); }
-</style>
-
 <script>
     function handleNavClick(event, targetUrl) {
-        // Cegah aksi jika URL tidak valid, 'None', atau hanya '#'
         if (!targetUrl || targetUrl === '#' || targetUrl === 'None' || targetUrl.trim() === '') {
             if (targetUrl === '#' || targetUrl === 'None' || !targetUrl) {
                 event.preventDefault();
@@ -303,5 +347,39 @@
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.nav-dropdown-item')) closeAllDesktopDropdowns();
         if (!e.target.closest('.dropup-mobile-container')) closeAllMobileSubmenus();
+    });
+
+    // AUTO SCROLLSPY (WARNA MENU CHANGER BERDASARKAN SCROLL POSISI)
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('[data-nav-link]');
+        const sections = document.querySelectorAll('section[id], div[id^="sec_"], div[data-section-id]');
+
+        function updateActiveNavOnScroll() {
+            let currentSectionId = '';
+            const scrollPosition = window.scrollY + 120;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                const secId = section.getAttribute('id') || `sec_${section.getAttribute('data-section-id')}`;
+
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    currentSectionId = secId;
+                }
+            });
+
+            navLinks.forEach(link => {
+                const parentNav = link.closest('.custom-nav-item') || link;
+                parentNav.classList.remove('active');
+
+                const href = link.getAttribute('href');
+                if (href && currentSectionId && (href.includes(currentSectionId) || href.endsWith(`#${currentSectionId}`))) {
+                    parentNav.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveNavOnScroll);
+        updateActiveNavOnScroll();
     });
 </script>

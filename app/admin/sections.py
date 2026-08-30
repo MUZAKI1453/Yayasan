@@ -164,6 +164,7 @@ def edit_section(section_id):
             content['nav_font_family'] = request.form.get('nav_font_family', content.get('nav_font_family', 'Plus Jakarta Sans'))
             content['nav_bg_color'] = request.form.get('nav_bg_color', content.get('nav_bg_color', '#ffffff'))
             content['nav_text_color'] = request.form.get('nav_text_color', content.get('nav_text_color', 'dark'))
+            content['nav_active_color'] = request.form.get('nav_active_color', content.get('nav_active_color', '#2563eb'))
 
         elif section.type == 'hero':
             content['cta_enabled'] = request.form.get('cta_enabled', '0') == '1'

@@ -1,3 +1,7 @@
+<!-- Google Fonts Preconnect -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
 <!-- FORM EDITOR NAVBAR (ULTRA COMPACT & RESPONSIVE UX) -->
 <form action="{{ url_for('admin.edit_section', section_id=section.id) }}" method="POST" enctype="multipart/form-data" class="editor-navbar-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
@@ -30,7 +34,7 @@
         <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
             <div class="mb-2.5">
                 <label class="form-label fw-semibold text-dark mb-1" style="font-size: 0.75rem;">Nama Brand <span class="text-danger">*</span></label>
-                <input type="text" name="brand_name" class="form-control form-control-sm" value="{{ section.content.get('brand_name', '') }}" required placeholder="SDIP Baitussalam">
+                <input type="text" name="brand_name" class="form-control form-control-sm" value="{{ section.content.get('brand_name', '') }}" required placeholder="Yayasan Pendidikan Baitussalam">
             </div>
             <div class="mb-2.5">
                 <label class="form-label fw-semibold text-dark mb-1" style="font-size: 0.75rem;">Tagline / Subtitle</label>
@@ -148,7 +152,7 @@
             {% endfor %}
         </div>
 
-        <!-- === TOMBOL UTAMA (CTA) DIPINDAHKAN KE TAB NAVIGASI === -->
+        <!-- === TOMBOL UTAMA (CTA) === -->
         <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
             <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">
                 <i class="bi bi-box-arrow-in-right me-1 text-primary"></i>Tombol Utama (CTA)
@@ -157,7 +161,6 @@
             {% set raw_enabled = section.content.get('button_enabled') %}
             {% set is_cta_on = raw_enabled in [true, 1, '1', 'true'] or (raw_enabled is not defined and (section.content.get('button_text_1') or '') != '') %}
 
-            <!-- Switch Aktif / Nonaktif -->
             <div class="form-check form-switch mb-2.5">
                 <input type="hidden" name="button_enabled" value="0">
                 <input class="form-check-input" type="checkbox" name="button_enabled" value="1" id="button_enabled"
@@ -171,8 +174,8 @@
                 <div class="col-12">
                     <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Teks Tombol</label>
                     <input type="text" name="button_text_1" class="form-control form-control-sm"
-                           value="{{ section.content.get('button_text_1', 'Daftar PPDB') }}"
-                           placeholder="Contoh: Daftar Sekarang">
+                           value="{{ section.content.get('button_text_1', 'Wakaf') }}"
+                           placeholder="Contoh: Wakaf / Daftar PPDB">
                 </div>
                 <div class="col-12">
                     <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Tujuan Section (internal)</label>
@@ -191,9 +194,6 @@
                     <input type="text" name="button_link_1" class="form-control form-control-sm"
                            value="{{ section.content.get('button_link_1', '') }}"
                            placeholder="Contoh: /ppdb atau https://google.com">
-                    <small class="text-muted d-block mt-0.5" style="font-size: 0.65rem;">
-                        Isi URL ini akan lebih diprioritaskan daripada section di atas
-                    </small>
                 </div>
             </div>
         </div>
@@ -205,35 +205,54 @@
         <div class="p-3 bg-white border rounded-3 shadow-sm mb-3">
             <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Navbar</span>
 
+            <!-- FONT PICKER INTERAKTIF -->
             <div class="mb-2.5">
-                <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Font Family</label>
-                <select name="nav_font_family" class="form-select form-select-sm">
-                    <option value="Plus Jakarta Sans" {% if section.content.get('nav_font_family') == 'Plus Jakarta Sans' or not section.content.get('nav_font_family') %}selected{% endif %}>Plus Jakarta Sans</option>
-                    <option value="Poppins" {% if section.content.get('nav_font_family') == 'Poppins' %}selected{% endif %}>Poppins</option>
-                    <option value="Inter" {% if section.content.get('nav_font_family') == 'Inter' %}selected{% endif %}>Inter</option>
-                    <option value="Outfit" {% if section.content.get('nav_font_family') == 'Outfit' %}selected{% endif %}>Outfit</option>
+                <label class="form-label text-muted mb-1 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                    <span>Font Family</span>
+                    <small id="fontCountBadge" class="text-primary fw-normal" style="font-size: 0.65rem;">Memuat font...</small>
+                </label>
+
+                <input type="text" id="fontSearchInput" class="form-control form-control-sm mb-1.5" placeholder="🔍 Cari font (misal: Poppins, Oswald...)" oninput="filterFontOptions(this.value)">
+
+                <select name="nav_font_family" id="fontPickerSelect" class="form-select form-select-sm" onchange="applyFontPreview(this.value)">
                 </select>
+
+                <div class="mt-2 p-2 border rounded bg-light" id="fontPreviewBox" style="font-size: 0.85rem; transition: font-family 0.2s;">
+                    Sample Preview: Yayasan Pendidikan Baitussalam
+                </div>
             </div>
 
+            <!-- WARNA BACKGROUND & WARNA TEKS NAVIGASI -->
             <div class="row g-2 mb-2.5">
-                <div class="col-6">
-                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Background</label>
+                <div class="col-4">
+                    <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Bg Navbar</label>
                     <div class="input-group input-group-sm">
-                        <input type="color" id="bg_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_hex').value = this.value">
-                        <input type="text" id="bg_hex" name="nav_bg_color" class="form-control px-1" value="{{ section.content.get('nav_bg_color', '#ffffff') }}" onchange="document.getElementById('bg_picker').value = this.value">
+                        <input type="color" id="bg_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('nav_bg_color', '#e2fbe8') }}" onchange="document.getElementById('bg_hex').value = this.value">
+                        <input type="text" id="bg_hex" name="nav_bg_color" class="form-control px-1" value="{{ section.content.get('nav_bg_color', '#e2fbe8') }}" onchange="document.getElementById('bg_picker').value = this.value">
                     </div>
                 </div>
-                <div class="col-6">
-                    <label class="form-label text-muted mb-1" style="font-size: 0.72rem;">Warna Teks</label>
-                    <select name="nav_text_color" class="form-select form-select-sm">
-                        <option value="dark" {% if section.content.get('nav_text_color') == 'dark' or not section.content.get('nav_text_color') %}selected{% endif %}>Dark</option>
-                        <option value="light" {% if section.content.get('nav_text_color') == 'light' %}selected{% endif %}>Light</option>
-                    </select>
+                <div class="col-4">
+                    <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Teks Normal</label>
+                    <div class="input-group input-group-sm">
+                        {% set current_text_color = section.content.get('nav_text_color', '#1e293b') %}
+                        {% if current_text_color in ['dark', ''] %}{% set current_text_color = '#1e293b' %}{% endif %}
+                        {% if current_text_color == 'light' %}{% set current_text_color = '#ffffff' %}{% endif %}
+
+                        <input type="color" id="txt_picker" class="form-control form-control-color p-0.5" value="{{ current_text_color }}" onchange="document.getElementById('txt_hex').value = this.value">
+                        <input type="text" id="txt_hex" name="nav_text_color" class="form-control px-1" value="{{ current_text_color }}" onchange="document.getElementById('txt_picker').value = this.value">
+                    </div>
+                </div>
+                <div class="col-4">
+                    <label class="form-label text-muted mb-1" style="font-size: 0.7rem;">Teks Hover/Active</label>
+                    <div class="input-group input-group-sm">
+                        <input type="color" id="active_txt_picker" class="form-control form-control-color p-0.5" value="{{ section.content.get('nav_active_color', '#2563eb') }}" onchange="document.getElementById('active_txt_hex').value = this.value">
+                        <input type="text" id="active_txt_hex" name="nav_active_color" class="form-control px-1" value="{{ section.content.get('nav_active_color', '#2563eb') }}" onchange="document.getElementById('active_txt_picker').value = this.value">
+                    </div>
                 </div>
             </div>
 
             <hr class="my-2.5">
-            <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Tombol CTA</span>
+            <span class="fw-bold text-dark d-block mb-2" style="font-size: 0.78rem;">Styling Tombol CTA (Wakaf)</span>
 
             <div class="row g-2">
                 <div class="col-6">
@@ -276,6 +295,81 @@
 
 <script>
 let parentNavCounter = {{ section.content.get('nav_items', [])|length }};
+const currentSavedFont = "{{ section.content.get('nav_font_family', 'Plus Jakarta Sans') }}";
+let allFontList = [];
+
+const fallbackFonts = [
+    "Plus Jakarta Sans", "Poppins", "Inter", "Outfit", "Roboto", "Open Sans",
+    "Montserrat", "Lato", "Nunito", "Raleway", "Playfair Display", "Lora",
+    "Merriweather", "Cinzel", "Oswald", "Ubuntu", "Quicksand", "Work Sans",
+    "Rubik", "Kanit", "Fira Sans", "Barlow", "Josefin Sans", "Mulish",
+    "Titan One", "Caveat", "Dancing Script", "Pacifico", "Lobster", "Bebas Neue",
+    "Anton", "Abril Fatface", "Cinzel Decorative", "Sacramento", "Satisfy"
+];
+
+async function loadGoogleFontsAPI() {
+    const selectEl = document.getElementById('fontPickerSelect');
+    const badgeEl = document.getElementById('fontCountBadge');
+    if (!selectEl) return;
+
+    try {
+        const response = await fetch('https://fonts.google.com/metadata/fonts');
+        if (response.ok) {
+            const data = await response.json();
+            allFontList = data.fontFamilyMetadata.map(item => item.family);
+        } else {
+            allFontList = fallbackFonts;
+        }
+    } catch (e) {
+        allFontList = fallbackFonts;
+    }
+
+    if (currentSavedFont && !allFontList.includes(currentSavedFont)) {
+        allFontList.unshift(currentSavedFont);
+    }
+
+    populateFontSelectOptions(allFontList);
+    if (badgeEl) badgeEl.textContent = `${allFontList.length} Font Tersedia`;
+}
+
+function populateFontSelectOptions(fonts) {
+    const selectEl = document.getElementById('fontPickerSelect');
+    selectEl.innerHTML = '';
+
+    fonts.forEach(font => {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        if (font === currentSavedFont) {
+            option.selected = true;
+        }
+        selectEl.appendChild(option);
+    });
+
+    applyFontPreview(selectEl.value || currentSavedFont);
+}
+
+function filterFontOptions(keyword) {
+    const filtered = allFontList.filter(f => f.toLowerCase().includes(keyword.toLowerCase().trim()));
+    populateFontSelectOptions(filtered);
+}
+
+function applyFontPreview(fontName) {
+    const previewBox = document.getElementById('fontPreviewBox');
+    if (previewBox && fontName) {
+        const fontId = 'gf-' + fontName.toLowerCase().replace(/\s+/g, '-');
+        if (!document.getElementById(fontId)) {
+            const link = document.createElement('link');
+            link.id = fontId;
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;600&display=swap`;
+            document.head.appendChild(link);
+        }
+        previewBox.style.fontFamily = `"${fontName}", sans-serif`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadGoogleFontsAPI);
 
 function toggleCardBody(headerEl) {
     const cardBody = headerEl.nextElementSibling;
@@ -367,7 +461,6 @@ function addChildNavRow(btn, parentIndex) {
     container.insertAdjacentHTML('beforeend', html);
 }
 
-// Toggle tampilan field CTA
 document.getElementById('button_enabled')?.addEventListener('change', function () {
     const fields = document.getElementById('navbar-cta-fields');
     if (fields) {
