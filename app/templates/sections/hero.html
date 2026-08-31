@@ -78,15 +78,29 @@
         min-height: 520px;
         overflow: hidden;
         user-select: none;
+        box-sizing: border-box;
     }
+
+    .hero-canvas-inner {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 100%;
+        min-height: 520px;
+    }
+
     .draggable-box {
         position: absolute;
+        top: 0;
+        left: 0;
         cursor: {% if hero_editor_mode %}move{% else %}default{% endif %};
         border: 1px solid transparent;
         transition: border-color 0.15s ease;
         padding: 4px;
         box-sizing: border-box;
     }
+
     {% if hero_editor_mode %}
     .draggable-box:hover, .draggable-box.active-selected {
         border: 1px dashed #3b82f6 !important;
@@ -118,21 +132,26 @@
         white-space: normal !important;
     }
 
-    /* RESPONSIVE LAYOUT MOBILE & TABLET (< 768px) */
-    @media (max-width: 768px) {
+    /* RESPONSIVE LAYOUT (UNTUK TABLET & HP / LEBAR < 992PX) */
+    @media screen and (max-width: 991px) {
         .hero-editor-canvas {
+            min-height: auto !important;
+            height: auto !important;
+            padding: 2.5rem 1rem !important;
+        }
+
+        .hero-canvas-inner {
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            padding: 2.5rem 1.25rem !important;
             min-height: auto !important;
             height: auto !important;
             box-sizing: border-box !important;
             text-align: center !important;
         }
 
-        .hero-editor-canvas .draggable-box {
+        .hero-canvas-inner .draggable-box {
             position: relative !important;
             transform: none !important;
             top: auto !important;
@@ -145,36 +164,36 @@
             align-items: center !important;
         }
 
-        .hero-editor-canvas .draggable-box:last-child {
+        .hero-canvas-inner .draggable-box:last-child {
             margin-bottom: 0 !important;
         }
 
-        .hero-editor-canvas #render-title {
-            font-size: clamp(1.5rem, 5vw, 2rem) !important;
+        .hero-canvas-inner #render-title {
+            font-size: clamp(1.5rem, 5vw, 2.25rem) !important;
             line-height: 1.25 !important;
             text-align: center !important;
         }
 
-        .hero-editor-canvas #render-subtitle {
-            font-size: clamp(0.875rem, 3.5vw, 1rem) !important;
+        .hero-canvas-inner #render-subtitle {
+            font-size: clamp(0.875rem, 3.5vw, 1.1rem) !important;
             line-height: 1.5 !important;
             text-align: center !important;
         }
 
-        .hero-editor-canvas #render-cta {
-            width: 100% !important;
-            max-width: 220px !important;
+        .hero-canvas-inner #render-cta {
+            width: auto !important;
+            max-width: 280px !important;
             display: inline-block !important;
             text-align: center !important;
         }
 
-        .hero-editor-canvas [id^="box-image-"] {
+        .hero-canvas-inner [id^="box-image-"] {
             width: 100% !important;
-            max-width: 280px !important;
+            max-width: 320px !important;
             margin: 0.5rem auto !important;
         }
 
-        .hero-editor-canvas [id^="box-image-"] img {
+        .hero-canvas-inner [id^="box-image-"] img {
             width: 100% !important;
             max-width: 100% !important;
             height: auto !important;
@@ -190,102 +209,104 @@
 </style>
 
 <section id="{{ section_anchor_id }}" class="hero-editor-canvas" style="{{ hero_styles|join('; ') }}">
-    <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
-    {% if title_text %}
-    <div
-        id="box-title"
-        class="draggable-box"
-        data-target-x="pos_title_x"
-        data-target-y="pos_title_y"
-        data-target-w="pos_title_w"
-        style="transform: translate({{ pos_title_x }}px, {{ pos_title_y }}px); width: {{ pos_title_w }}px;"
-    >
-        <h1
-            id="render-title"
-            style="color: {{ title_color }}; font-size: {{ title_size }}px; font-weight: 800; line-height: 1.2; margin: 0; font-family: '{{ title_font_family }}', sans-serif;"
+    <div class="hero-canvas-inner">
+        <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
+        {% if title_text %}
+        <div
+            id="box-title"
+            class="draggable-box"
+            data-target-x="pos_title_x"
+            data-target-y="pos_title_y"
+            data-target-w="pos_title_w"
+            style="transform: translate({{ pos_title_x }}px, {{ pos_title_y }}px); width: {{ pos_title_w }}px;"
         >
-            {{ title_text }}
-        </h1>
-        <div class="resize-handle"></div>
-    </div>
-    {% endif %}
-
-    <!-- 2. ELEMEN SUBTITLE -->
-    {% if subtitle_text %}
-    <div
-        id="box-subtitle"
-        class="draggable-box"
-        data-target-x="pos_sub_x"
-        data-target-y="pos_sub_y"
-        data-target-w="pos_sub_w"
-        style="transform: translate({{ pos_sub_x }}px, {{ pos_sub_y }}px); width: {{ pos_sub_w }}px;"
-    >
-        <p
-            id="render-subtitle"
-            style="color: {{ subtitle_color }}; font-size: {{ subtitle_size }}px; line-height: 1.6; margin: 0; font-family: '{{ subtitle_font_family }}', sans-serif;"
-        >
-            {{ subtitle_text }}
-        </p>
-        <div class="resize-handle"></div>
-    </div>
-    {% endif %}
-
-    <!-- 3. ELEMEN TOMBOL CTA -->
-    {% if cta_enabled and cta_text %}
-    <div
-        id="box-cta"
-        class="draggable-box"
-        data-target-x="pos_cta_x"
-        data-target-y="pos_cta_y"
-        style="transform: translate({{ pos_cta_x }}px, {{ pos_cta_y }}px);"
-    >
-        <a
-            id="render-cta"
-            href="{{ cta_url }}"
-            {% if cta_link_type == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}
-            onclick="if (typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
-            style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-family: '{{ cta_font_family }}', sans-serif;"
-        >
-            {{ cta_text }}
-        </a>
-    </div>
-    {% endif %}
-
-    <!-- 4. MULTI-IMAGE LAYER HERO -->
-    {% for img_src in hero_images %}
-        {% if img_src and img_src.strip() != '' %}
-            {% set idx = loop.index0 %}
-
-            {% if idx == 0 %}
-                {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
-                {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}
-                {% set img_w = section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400'))|int %}
-            {% else %}
-                {% set default_offset_x = 600 + (idx * 30) %}
-                {% set default_offset_y = 50 + (idx * 30) %}
-                {% set img_x = section.content.get('pos_img_' ~ idx ~ '_x', default_offset_x)|int %}
-                {% set img_y = section.content.get('pos_img_' ~ idx ~ '_y', default_offset_y)|int %}
-                {% set img_w = section.content.get('pos_img_' ~ idx ~ '_w', '300')|int %}
-            {% endif %}
-
-            <div
-                id="box-image-{{ idx }}"
-                class="draggable-box"
-                data-target-x="pos_img_{{ idx }}_x"
-                data-target-y="pos_img_{{ idx }}_y"
-                data-target-w="pos_img_{{ idx }}_w"
-                style="transform: translate({{ img_x }}px, {{ img_y }}px); width: {{ img_w }}px; z-index: {{ 10 + idx }};"
+            <h1
+                id="render-title"
+                style="color: {{ title_color }}; font-size: {{ title_size }}px; font-weight: 800; line-height: 1.2; margin: 0; font-family: '{{ title_font_family }}', sans-serif;"
             >
-                <img
-                    id="render-image-{{ idx }}"
-                    src="{{ img_src }}"
-                    style="width: 100%; height: auto; pointer-events: none; display: block;"
-                    alt="Hero Image {{ idx + 1 }}"
-                >
-                <div class="resize-handle"></div>
-            </div>
+                {{ title_text }}
+            </h1>
+            <div class="resize-handle"></div>
+        </div>
         {% endif %}
-    {% endfor %}
+
+        <!-- 2. ELEMEN SUBTITLE -->
+        {% if subtitle_text %}
+        <div
+            id="box-subtitle"
+            class="draggable-box"
+            data-target-x="pos_sub_x"
+            data-target-y="pos_sub_y"
+            data-target-w="pos_sub_w"
+            style="transform: translate({{ pos_sub_x }}px, {{ pos_sub_y }}px); width: {{ pos_sub_w }}px;"
+        >
+            <p
+                id="render-subtitle"
+                style="color: {{ subtitle_color }}; font-size: {{ subtitle_size }}px; line-height: 1.6; margin: 0; font-family: '{{ subtitle_font_family }}', sans-serif;"
+            >
+                {{ subtitle_text }}
+            </p>
+            <div class="resize-handle"></div>
+        </div>
+        {% endif %}
+
+        <!-- 3. ELEMEN TOMBOL CTA -->
+        {% if cta_enabled and cta_text %}
+        <div
+            id="box-cta"
+            class="draggable-box"
+            data-target-x="pos_cta_x"
+            data-target-y="pos_cta_y"
+            style="transform: translate({{ pos_cta_x }}px, {{ pos_cta_y }}px);"
+        >
+            <a
+                id="render-cta"
+                href="{{ cta_url }}"
+                {% if cta_link_type == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}
+                onclick="if (typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
+                style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-family: '{{ cta_font_family }}', sans-serif;"
+            >
+                {{ cta_text }}
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- 4. MULTI-IMAGE LAYER HERO -->
+        {% for img_src in hero_images %}
+            {% if img_src and img_src.strip() != '' %}
+                {% set idx = loop.index0 %}
+
+                {% if idx == 0 %}
+                    {% set img_x = section.content.get('pos_img_0_x', section.content.get('pos_img_x', '600'))|int %}
+                    {% set img_y = section.content.get('pos_img_0_y', section.content.get('pos_img_y', '50'))|int %}
+                    {% set img_w = section.content.get('pos_img_0_w', section.content.get('pos_img_w', '400'))|int %}
+                {% else %}
+                    {% set default_offset_x = 600 + (idx * 30) %}
+                    {% set default_offset_y = 50 + (idx * 30) %}
+                    {% set img_x = section.content.get('pos_img_' ~ idx ~ '_x', default_offset_x)|int %}
+                    {% set img_y = section.content.get('pos_img_' ~ idx ~ '_y', default_offset_y)|int %}
+                    {% set img_w = section.content.get('pos_img_' ~ idx ~ '_w', '300')|int %}
+                {% endif %}
+
+                <div
+                    id="box-image-{{ idx }}"
+                    class="draggable-box"
+                    data-target-x="pos_img_{{ idx }}_x"
+                    data-target-y="pos_img_{{ idx }}_y"
+                    data-target-w="pos_img_{{ idx }}_w"
+                    style="transform: translate({{ img_x }}px, {{ img_y }}px); width: {{ img_w }}px; z-index: {{ 10 + idx }};"
+                >
+                    <img
+                        id="render-image-{{ idx }}"
+                        src="{{ img_src }}"
+                        style="width: 100%; height: auto; pointer-events: none; display: block;"
+                        alt="Hero Image {{ idx + 1 }}"
+                    >
+                    <div class="resize-handle"></div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
 </section>
 
 <!-- ENGINE INTERAKTIF (DRAG, RESIZE, & SYNC DENGAN FORM EDITOR) -->
