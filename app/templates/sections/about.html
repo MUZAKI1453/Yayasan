@@ -1,59 +1,92 @@
 {# PARSING ID ANCHOR & PROPERTI CONTENT #}
-{% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
-{% set eyebrow_text = section.content.get('eyebrow') %}
-{% set body_text = section.content.get('description') or section.content.get('content') %}
+{% set section_anchor_id = "sec_" ~ section.id %}
+
+{# PARSING KONFIGURASI BACKGROUND #}
+{% set bg_type = section.content.get('bg_type', 'color') %}
+{% set bg_color = section.content.get('bg_color', '#ffffff') %}
+{% set bg_image_url = section.content.get('bg_image_url', '') %}
+
+{# PARSING KONFIGURASI TYPOGRAPHY & STYLE TEKS #}
+{% set title_text = section.content.get('title', 'Tentang Kami') %}
+{% set title_font_family = section.content.get('title_font_family', 'Plus Jakarta Sans') %}
+{% set title_color = section.content.get('title_color', '#0f172a') %}
+{% set title_size = section.content.get('title_size', '32')|int %}
+
+{% set body_text = section.content.get('description') or section.content.get('desc') or section.content.get('content', '') %}
+{% set desc_font_family = section.content.get('desc_font_family', 'Plus Jakarta Sans') %}
+{% set desc_color = section.content.get('desc_color', '#475569') %}
+{% set desc_size = section.content.get('desc_size', '15')|int %}
+
 {% set img_src = section.content.get('image_url') or section.content.get('image') or section.content.get('photo_url') %}
 
-{# LOGIKA PARSING TOMBOL CTA (Support Object & Flat Keys) #}
+{# PARSING LOGIKA & STYLING TOMBOL CTA (EXACT HERO PARITY) #}
 {% set about_button = section.content.get('button', {}) if section.content.get('button') is mapping else {} %}
-{% set cta_text = about_button.get('text') or section.content.get('button_text_1') or section.content.get('cta_text') %}
-{% set cta_link = about_button.get('url') or section.content.get('button_link_1') or section.content.get('cta_url', '#') %}
+{% set cta_text = section.content.get('cta_text') or about_button.get('text') or section.content.get('button_text_1', '') %}
 
-{# JIKA TARGETNYA SECTION ID INTERNAL #}
-{% if section.content.get('button_target_section_id') %}
-    {% set cta_link = '#sec_' ~ section.content.get('button_target_section_id') %}
+{% set raw_cta_enabled = section.content.get('cta_enabled') %}
+{% set cta_enabled = raw_cta_enabled in [true, 1, '1', 'true'] or (raw_cta_enabled is not defined and cta_text != '') %}
+
+{% set cta_link_type = section.content.get('cta_link_type', 'section' if section.content.get('cta_target_section_id') else 'external') %}
+{% set cta_url = section.content.get('cta_url', '#') %}
+
+{% if cta_link_type == 'section' and section.content.get('cta_target_section_id') %}
+    {% set cta_url = '#sec_' ~ section.content.get('cta_target_section_id') %}
 {% endif %}
 
-<section data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
+{% set cta_bg = section.content.get('cta_bg', '#2563eb') %}
+{% set cta_color = section.content.get('cta_color', '#ffffff') %}
+{% set cta_font_family = section.content.get('cta_font_family', 'Plus Jakarta Sans') %}
+
+{# PARSING STYLES CONTAINER ABOUT #}
+{% set about_styles = [] %}
+{% if bg_type == 'image' and bg_image_url %}
+    {% set _ = about_styles.append("background-image: url('" ~ bg_image_url ~ "')") %}
+    {% set _ = about_styles.append('background-size: cover') %}
+    {% set _ = about_styles.append('background-position: center') %}
+{% else %}
+    {% set _ = about_styles.append('background-color: ' ~ bg_color) %}
+{% endif %}
+
+<!-- LOADER GOOGLE FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family={{ title_font_family.replace(' ', '+') }}:wght@400;600;700;800&family={{ desc_font_family.replace(' ', '+') }}:wght@400;500;600&family={{ cta_font_family.replace(' ', '+') }}:wght@400;600;700&display=swap" rel="stylesheet">
+
+<section id="{{ section_anchor_id }}" class="py-16 px-6 transition-all duration-300" style="{{ about_styles|join('; ') }}">
     <div class="max-w-6xl mx-auto">
-        {# Container Utama: Grid 1 kolom di Mobile, 12 kolom di Desktop #}
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
 
             {# KOLOM KIRI: TEKS & JUDUL #}
             <div class="{% if img_src %}md:col-span-7{% else %}md:col-span-12{% endif %}">
-                {# Eyebrow / Sub-heading Kecil #}
-                {% if eyebrow_text %}
-                    <span class="text-blue-600 font-semibold uppercase tracking-wider text-sm block mb-2">
-                        {{ eyebrow_text }}
-                    </span>
-                {% endif %}
 
                 {# Judul Utama Bagian #}
-                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6 tracking-tight">
-                    {{ section.content.get('title', 'Tentang Kami') }}
+                <h2 id="render-about-title" class="font-bold mb-4 tracking-tight leading-tight" style="color: {{ title_color }}; font-size: {{ title_size }}px; font-family: '{{ title_font_family }}', sans-serif;">
+                    {{ title_text }}
                 </h2>
 
-                {# Konten Teks Deskripsi #}
+                {# Konten Teks Deskripsi Lengkap #}
                 {% if body_text %}
-                    <div class="text-gray-700 leading-relaxed space-y-4 text-base md:text-lg mb-6">
+                    <div id="render-about-desc" class="leading-relaxed space-y-3 mb-6" style="color: {{ desc_color }}; font-size: {{ desc_size }}px; font-family: '{{ desc_font_family }}', sans-serif;">
                         {% if '<' in body_text and '>' in body_text %}
                             {{ body_text|safe }}
                         {% else %}
                             {% for paragraph in body_text.split('\n') %}
                                 {% if paragraph.strip() %}
-                                    <p>{{ paragraph.strip() }}</p>
+                                    <p class="mb-2.5">{{ paragraph.strip() }}</p>
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
                     </div>
                 {% endif %}
 
-                {# Tombol Aksi / Call to Action #}
-                {% if cta_text %}
+                {# Tombol Aksi / Call to Action (PERSIS PERSAMAAN STYLE HERO) #}
+                {% if cta_enabled and cta_text %}
                     <div class="mt-6">
-                        <a href="{{ cta_link }}"
-                           onclick="if (typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_link }}')"
-                           class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm text-decoration-none">
+                        <a id="render-about-cta"
+                           href="{{ cta_url }}"
+                           {% if cta_link_type == 'external' %}target="_blank" rel="noopener noreferrer"{% endif %}
+                           onclick="if (typeof handleNavClick === 'function') handleNavClick(event, '{{ cta_url }}')"
+                           style="background-color: {{ cta_bg }}; color: {{ cta_color }}; padding: 12px 28px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.15); font-family: '{{ cta_font_family }}', sans-serif;">
                             {{ cta_text }}
                         </a>
                     </div>
@@ -64,7 +97,7 @@
             {% if img_src %}
                 <div class="md:col-span-5 w-full">
                     <div class="overflow-hidden rounded-2xl shadow-md border border-gray-100 bg-gray-50">
-                        <img src="{{ img_src }}" alt="{{ section.content.get('title', 'Gambar Profil') }}" class="w-full h-auto object-cover max-h-[450px]">
+                        <img id="render-about-image" src="{{ img_src }}" alt="{{ title_text }}" class="w-full h-auto object-cover max-h-[450px]">
                         {% if section.content.get('image_caption') %}
                             <p class="text-xs md:text-sm text-gray-500 text-center py-2 bg-gray-50 border-t border-gray-100 mb-0">
                                 {{ section.content.get('image_caption') }}

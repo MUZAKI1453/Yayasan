@@ -216,6 +216,43 @@ def edit_section(section_id):
                 if uploaded_bg_url:
                     content['bg_image_url'] = uploaded_bg_url
 
+        elif section.type == 'about':
+            content['cta_enabled'] = request.form.get('cta_enabled', '0') == '1' or request.form.get('content.cta_enabled') == '1'
+
+            # --- 1. SINKRONISASI SUBTITLE ---
+            sub_val = request.form.get('subtitle_text') or request.form.get('subtitle') or request.form.get('content.subtitle_text') or request.form.get('content.subtitle')
+            if sub_val is not None:
+                content['subtitle_text'] = sub_val.strip()
+                content['subtitle'] = sub_val.strip()
+
+            # --- 2. SINKRONISASI DESKRIPSI ---
+            desc_val = request.form.get('description') or request.form.get('desc') or request.form.get('content.description') or request.form.get('content.desc')
+            if desc_val is not None:
+                content['description'] = desc_val.strip()
+                content['desc'] = desc_val.strip()
+
+            # --- 3. BACKGROUND SECTION ABOUT ---
+            existing_bg_image = request.form.get('content.bg_image_url') or content.get('bg_image_url')
+            if existing_bg_image:
+                content['bg_image_url'] = existing_bg_image
+
+            bg_image_preset = request.form.get('content.bg_image_preset')
+            if bg_image_preset:
+                content['bg_image_url'] = bg_image_preset
+
+            bg_file = request.files.get('bg_image') or request.files.get('content.bg_image')
+            if bg_file and bg_file.filename != '':
+                uploaded_bg_url = save_uploaded_file(bg_file)
+                if uploaded_bg_url:
+                    content['bg_image_url'] = uploaded_bg_url
+
+            # --- 4. GAMBAR UTAMA SECTION ABOUT ---
+            about_img_file = request.files.get('about_image') or request.files.get('image_file') or request.files.get('content.image_url')
+            if about_img_file and about_img_file.filename != '':
+                uploaded_about_img = save_uploaded_file(about_img_file)
+                if uploaded_about_img:
+                    content['image_url'] = uploaded_about_img
+
         elif section.type == 'gallery':
             pass
 
@@ -224,7 +261,7 @@ def edit_section(section_id):
             'gallery_files[]', 'image_file', 'logo_file', 'logo',
             'qris_file', 'image', 'content.image', 'bg_image', 'hero_image',
             'hero_images', 'images', 'hero_images[]', 'content.images', 'content.image_url',
-            'add_hero_image'
+            'add_hero_image', 'about_image'
         ]
         for key, file in request.files.items():
             if key not in excluded_file_keys and not key.startswith('hero_image_') and not key.startswith(
