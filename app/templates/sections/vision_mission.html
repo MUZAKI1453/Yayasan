@@ -20,11 +20,11 @@
     {% endfor %}
 {% endif %}
 
-<section data-nav-id="{{ section_anchor_id }}" class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b-2 border-black">
-    <div class="max-w-6xl mx-auto">
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="section-fullpage px-6 bg-white border-b-2 border-black transition-all duration-300">
+    <div class="max-w-6xl w-full mx-auto">
 
         {# Header Polos & Tegas #}
-        <div class="mb-16 border-b-2 border-black pb-8">
+        <div class="mb-12 sm:mb-16 border-b-2 border-black pb-6 sm:pb-8">
             {% if eyebrow %}
                 <span class="text-xs font-black tracking-widest text-neutral-400 uppercase block mb-2">
                     {{ eyebrow }}
@@ -43,7 +43,7 @@
         </div>
 
         {# Grid 2 Kolom Bergaris Tegas #}
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start w-full">
 
             {# KOLOM VISI #}
             <div class="md:col-span-5 border-l-4 border-black pl-6 py-1">

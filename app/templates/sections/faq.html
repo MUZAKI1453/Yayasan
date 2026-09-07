@@ -2,11 +2,13 @@
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 {% set faq_items = section.content.get('items', []) %}
 
-<section data-nav-id="{{ section_anchor_id }}" class="py-16 px-6 bg-white transition-all duration-300">
-    <div class="max-w-3xl mx-auto">
+<section id="{{ section_anchor_id }}"
+         data-nav-id="{{ section_anchor_id }}"
+         class="section-fullpage px-6 bg-white transition-all duration-300">
+    <div class="max-w-3xl w-full mx-auto my-auto">
 
         <!-- HEADER SECTION -->
-        <div class="text-center mb-10">
+        <div class="text-center mb-8 md:mb-10">
             {% if section.content.get('eyebrow') %}
                 <span class="text-blue-600 font-semibold uppercase tracking-wider text-xs block mb-2">
                     {{ section.content.get('eyebrow') }}
@@ -25,7 +27,7 @@
         </div>
 
         <!-- LIST FAQ ACCORDION -->
-        <div class="space-y-3">
+        <div class="space-y-3 w-full">
             {% for item in faq_items %}
                 {% set q_text = item.get('question') or item.get('title') or '' %}
                 {% set a_text = item.get('answer') or item.get('content') or item.get('description') or '' %}
@@ -55,6 +57,13 @@
                         </div>
                     </div>
                 {% endif %}
+            {% else %}
+                <!-- FALLBACK DATA KOSONG -->
+                <div class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6">
+                    <p class="text-sm font-medium text-gray-500 m-0">
+                        Belum ada pertanyaan FAQ yang ditambahkan.
+                    </p>
+                </div>
             {% endfor %}
         </div>
 

@@ -11,8 +11,8 @@
     {% set button_url = '#sec_' ~ section.content.get('button_target_section_id') %}
 {% endif %}
 
-<section data-nav-id="{{ section_anchor_id }}" class="py-20 px-6 bg-blue-600 text-white text-center transition-all duration-300 relative overflow-hidden">
-    <div class="max-w-4xl mx-auto relative z-10">
+<section id="{{ section_anchor_id }}" data-nav-id="{{ section_anchor_id }}" class="section-fullpage px-6 bg-blue-600 text-white text-center transition-all duration-300 relative overflow-hidden">
+    <div class="max-w-4xl w-full mx-auto my-auto relative z-10">
 
         {# Judul Utama CTA #}
         <h2 class="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">

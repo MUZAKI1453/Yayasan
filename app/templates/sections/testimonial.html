@@ -1,8 +1,10 @@
 {# PARSING ID ANCHOR UNTUK INTERNAL SCROLL #}
 {% set section_anchor_id = section.content.get('nav_id') or ('sec_' ~ section.id) %}
 
-<section data-nav-id="{{ section_anchor_id }}" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-slate-50/80 text-slate-800 transition-all duration-300 font-sans">
-    <div class="max-w-6xl mx-auto space-y-10">
+<section id="{{ section_anchor_id }}"
+         data-nav-id="{{ section_anchor_id }}"
+         class="section-fullpage px-4 sm:px-6 lg:px-8 bg-slate-50/80 text-slate-800 transition-all duration-300 font-sans">
+    <div class="max-w-6xl w-full mx-auto space-y-10 my-auto">
 
         <!-- HEADER SECTION -->
         {% if section.content.get('title') or section.content.get('subtitle') or section.content.get('eyebrow') %}
@@ -41,7 +43,7 @@
         {% endif %}
 
         <!-- GRID TESTIMONIAL CARDS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch w-full">
             {% for item in testimonials_list %}
                 {% set quote_text = item.get('quote') or item.get('testimonial') or item.get('desc') or item.get('content') or item.get('text') or '' %}
                 {% set author_name = item.get('name') or item.get('author') or item.get('user') or 'Wali Murid' %}

@@ -72,22 +72,15 @@
 <link href="https://fonts.googleapis.com/css2?family={{ title_font_family.replace(' ', '+') }}:wght@400;600;700;800&family={{ subtitle_font_family.replace(' ', '+') }}:wght@400;500;600&family={{ cta_font_family.replace(' ', '+') }}:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+    /* CSS KANVAS EDITOR HERO (RINGKAS & DUKUNG FULLPAGE) */
     .hero-editor-canvas {
-        position: relative;
-        width: 100%;
-        min-height: 520px;
-        overflow: hidden;
         user-select: none;
-        box-sizing: border-box;
     }
 
     .hero-canvas-inner {
         position: relative;
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
         height: 100%;
-        min-height: 520px;
+        min-height: 100%;
     }
 
     .draggable-box {
@@ -132,22 +125,12 @@
         white-space: normal !important;
     }
 
-    /* RESPONSIVE LAYOUT (UNTUK TABLET & HP / LEBAR < 992PX) */
+    /* OVERRIDE RESPONSIVE UNTUK ELEMENT CANVAS DI LAYAR KECIL */
     @media screen and (max-width: 991px) {
-        .hero-editor-canvas {
-            min-height: auto !important;
-            height: auto !important;
-            padding: 2.5rem 1rem !important;
-        }
-
         .hero-canvas-inner {
             display: flex !important;
             flex-direction: column !important;
-            justify-content: flex-start !important;
             align-items: center !important;
-            min-height: auto !important;
-            height: auto !important;
-            box-sizing: border-box !important;
             text-align: center !important;
         }
 
@@ -161,54 +144,31 @@
             margin-bottom: 1.25rem !important;
             display: flex !important;
             justify-content: center !important;
-            align-items: center !important;
-        }
-
-        .hero-canvas-inner .draggable-box:last-child {
-            margin-bottom: 0 !important;
         }
 
         .hero-canvas-inner #render-title {
             font-size: clamp(1.5rem, 5vw, 2.25rem) !important;
-            line-height: 1.25 !important;
-            text-align: center !important;
         }
 
         .hero-canvas-inner #render-subtitle {
             font-size: clamp(0.875rem, 3.5vw, 1.1rem) !important;
-            line-height: 1.5 !important;
-            text-align: center !important;
-        }
-
-        .hero-canvas-inner #render-cta {
-            width: auto !important;
-            max-width: 280px !important;
-            display: inline-block !important;
-            text-align: center !important;
         }
 
         .hero-canvas-inner [id^="box-image-"] {
-            width: 100% !important;
             max-width: 320px !important;
-            margin: 0.5rem auto !important;
         }
 
         .hero-canvas-inner [id^="box-image-"] img {
             width: 100% !important;
-            max-width: 100% !important;
             height: auto !important;
-            object-fit: contain !important;
-            display: block !important;
-            margin: 0 auto !important;
         }
 
-        .resize-handle {
-            display: none !important;
-        }
+        .resize-handle { display: none !important; }
     }
 </style>
 
-<section id="{{ section_anchor_id }}" class="hero-editor-canvas" style="{{ hero_styles|join('; ') }}">
+<!-- PENAMBAHAN CLASS section-fullpage UNTUK TAMPILAN FULLSCREEN -->
+<section id="{{ section_anchor_id }}" class="section-fullpage hero-editor-canvas" style="{{ hero_styles|join('; ') }}">
     <div class="hero-canvas-inner">
         <!-- 1. ELEMEN JUDUL UTAMA (TITLE) -->
         {% if title_text %}

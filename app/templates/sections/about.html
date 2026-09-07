@@ -19,7 +19,7 @@
 
 {% set img_src = section.content.get('image_url') or section.content.get('image') or section.content.get('photo_url') %}
 
-{# PARSING LOGIKA & STYLING TOMBOL CTA (EXACT HERO PARITY) #}
+{# PARSING LOGIKA & STYLING TOMBOL CTA #}
 {% set about_button = section.content.get('button', {}) if section.content.get('button') is mapping else {} %}
 {% set cta_text = section.content.get('cta_text') or about_button.get('text') or section.content.get('button_text_1', '') %}
 
@@ -52,9 +52,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family={{ title_font_family.replace(' ', '+') }}:wght@400;600;700;800&family={{ desc_font_family.replace(' ', '+') }}:wght@400;500;600&family={{ cta_font_family.replace(' ', '+') }}:wght@400;600;700&display=swap" rel="stylesheet">
 
-<section id="{{ section_anchor_id }}" class="py-16 px-6 transition-all duration-300" style="{{ about_styles|join('; ') }}">
-    <div class="max-w-6xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
+<!-- PERBAIKAN: Menggunakan class "section-fullpage" menggantikan "py-16" -->
+<section id="{{ section_anchor_id }}" class="section-fullpage px-6 transition-all duration-300" style="{{ about_styles|join('; ') }}">
+    <div class="max-w-6xl w-full mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
 
             {# KOLOM KIRI: TEKS & JUDUL #}
             <div class="{% if img_src %}md:col-span-7{% else %}md:col-span-12{% endif %}">
@@ -79,7 +80,7 @@
                     </div>
                 {% endif %}
 
-                {# Tombol Aksi / Call to Action (PERSIS PERSAMAAN STYLE HERO) #}
+                {# Tombol Aksi / Call to Action #}
                 {% if cta_enabled and cta_text %}
                     <div class="mt-6">
                         <a id="render-about-cta"
